@@ -1,97 +1,105 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Cool Website</title>
+<html>
+    <head>
+        <title>cool website</title>
+        <link rel="stylesheet" href="style.css">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.2/ScrollSmoother.min.js"></script>
 
-    <!-- GSAP Core and ScrollSmoother -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.2/ScrollSmoother.min.js"></script>
+        <script>
+            gsap.registerPlugin(ScrollSmoother);
+            ScrollSmoother.create({
+                wrapper: '#smooth-wrapper',   // outer container
+                content: '#smooth-content',   // inner content to scroll
+                smooth: 1.5,                  // higher = smoother, default is 1
+                effects: true                 // enable effects (like parallax data-speed)
+            });
+        </script>
 
-    <style>
-      /* Basic Reset */
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
-      html,
-      body {
-        height: 100%;
-        overflow: hidden; /* important for ScrollSmoother */
-        font-family: sans-serif;
-      }
-
-      #smooth-wrapper {
-        height: 100vh;
-        overflow: hidden;
-        position: relative;
-      }
-
-      #smooth-content {
-        will-change: transform;
-      }
-
-      section {
-        height: 100vh;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 2rem;
-        color: white;
-      }
-
-      .blue {
-        background: #3b82f6;
-      }
-
-      .green {
-        background: #10b981;
-      }
-
-      .red {
-        background: #ef4444;
-      }
-    </style>
-  </head>
-
-  <body>
-    <div id="smooth-wrapper">
-      <div id="smooth-content">
-        <section class="blue">
-          <div>
-            <h1>Welcome to Smooth Scrolling!</h1>
-            <p>Scroll down to see the effect</p>
-          </div>
-        </section>
-        <section class="green">
-          <div>
-            <h2>This is Section 2</h2>
-            <p>It's nice and tall.</p>
-          </div>
-        </section>
-        <section class="red">
-          <div>
-            <h2>This is Section 3</h2>
-            <p>Smooth Scroll is working 🎉</p>
-          </div>
-        </section>
-      </div>
-    </div>
-
-    <!-- ScrollSmoother must be initialized after content is loaded -->
-    <script>
-      window.addEventListener("load", () => {
-        gsap.registerPlugin(ScrollSmoother);
-
-        ScrollSmoother.create({
-          wrapper: "#smooth-wrapper",
-          content: "#smooth-content",
-          smooth: 1.5,
-          effects: true,
-        });
-      });
-    </script>
-  </body>
+        
+    </head>
+    
+    <body style="background-color: #fff3d0;">
+        <div id="smooth-wrapper">
+        <div id="smooth-content">
+        <!-- Your whole page content here -->
+        <h1>Welcome to Smooth Scrolling!</h1>
+        <p>Scroll down to see the effect.</p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p></p>
+        <p>hi</p>
+        
+        <!-- More content -->
+        </div>
+        </div>
+        <script src="script.js"></script>
+    </body>
 </html>
