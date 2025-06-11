@@ -1,15 +1,21 @@
-html, body {
-  height: 100%;
-  overflow: hidden; /* disable native scroll */
-  margin: 0;
-  padding: 0;
+@font-face {
+  font-family: 'NMSGeoSans_Kerned';
+  src: url('fonts/NMSGeoSans_Kerned.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
 }
 
-#smooth-wrapper {
+.page {
   height: 100vh;
-  overflow: hidden;
+  background: #fff3d0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-#smooth-content {
-  will-change: transform;
+.header {
+  font-family: 'NMSGeoSans_Kerned', sans-serif;
+  font-size: 3rem;
+  text-align: center;
+  color: #333;
 }
