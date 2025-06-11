@@ -1,44 +1,8 @@
-@font-face {
-  font-family: 'NMSGeoSans';
-  src: url('fonts/NMSGeoSans_Kerned.ttf') format('truetype');
-}
-
-/* Required for ScrollSmoother */
-html, body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-}
-
-#smooth-wrapper {
-  position: fixed;
-  inset: 0;
-  overflow: hidden;
-  width: 100%;
-  height: 100%;
-}
-
-#smooth-content {
-  will-change: transform;
-}
-
-/* Your main section */
 .wrapper {
-  min-height: 100vh;
+  height: 500px;
   background-color: #fff3d0;
-
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-
-  padding-top: 50px; /* move closer to top by reducing this */
 }
 
-/* Header style */
-.header {
-  font-family: 'NMSGeoSans', sans-serif;
-  font-size: 7rem;
-  color: #1f1230;
-  text-align: center;
+.filler {
+  height: 5000px;
 }
