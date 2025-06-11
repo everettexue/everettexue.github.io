@@ -4,11 +4,16 @@
 }
 
 .wrapper {
+  height: 100vh;
+  background-color: #fff3d0;
+
+  /* Align to top */
   display: flex;
   justify-content: center;
-  align-items: center;
-  height: 100vh;           /* full screen height */
-  background-color: #fff3d0;
+  align-items: flex-start;
+
+  /* Add spacing from top */
+  padding-top: 100px; /* you can adjust this number */
 }
 
 .header {
