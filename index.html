@@ -1,19 +1,65 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Centered Header</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="script.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollSmoother.min.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GSAP Smooth Scroll</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    #smooth-wrapper {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    #smooth-content {
+      will-change: transform;
+    }
+
+    section {
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 3em;
+      color: white;
+    }
+
+    .one { background: #111; }
+    .two { background: #444; }
+    .three { background: #777; }
+  </style>
 </head>
 <body>
   <div id="smooth-wrapper">
-  <div id="smooth-content">
-    <div class="wrapper">
-      <div class="header">cool website</div>
+    <div id="smooth-content">
+      <section class="one">Section 1</section>
+      <section class="two">Section 2</section>
+      <section class="three">Section 3</section>
     </div>
   </div>
-  </div>
+
+  <!-- GSAP Core -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <!-- ScrollTrigger (required for ScrollSmoother) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  <!-- ScrollSmoother (Club only) -->
+  <script src="https://assets.codepen.io/16327/ScrollSmoother.min.js"></script>
+
+  <script>
+    gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
+
+    ScrollSmoother.create({
+      wrapper: "#smooth-wrapper",
+      content: "#smooth-content",
+      smooth: 1.2, // higher = slower + smoother
+      effects: true
+    });
+  </script>
 </body>
 </html>
