@@ -35,9 +35,13 @@ html, body {
   padding-top: 50px; /* move closer to top by reducing this */
 }
 
-.filler {
-  height: 2000px;
-  background: linear-gradient(#fff3d0, #d0eaff);
+.section {
+  height: 100vh;
+  background: #eee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
 }
 
 /* Header style */
