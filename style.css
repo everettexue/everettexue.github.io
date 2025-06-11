@@ -7,14 +7,13 @@
   height: 100vh;
   background-color: #fff3d0;
 
-  /* Align to top */
   display: flex;
   justify-content: center;
   align-items: flex-start;
 
-  /* Add spacing from top */
-  padding-top: 100px; /* you can adjust this number */
+  padding-top: 50px; /* reduce this number to move it closer to the top */
 }
+
 
 .header {
   font-family: 'NMSGeoSans', sans-serif;
