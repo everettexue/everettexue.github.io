@@ -1,21 +1,19 @@
 @font-face {
-  font-family: 'NMSGeoSans_Kerned';
+  font-family: 'NMSGeoSans';
   src: url('fonts/NMSGeoSans_Kerned.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
 }
 
-.page {
-  height: 100vh;
-  background: #fff3d0;
+.wrapper {
   display: flex;
   justify-content: center;
   align-items: center;
+  height: 100vh;           /* full screen height */
+  background-color: #fff3d0;
 }
 
 .header {
-  font-family: 'NMSGeoSans_Kerned', sans-serif;
+  font-family: 'NMSGeoSans', sans-serif;
   font-size: 3rem;
-  text-align: center;
   color: #333;
+  text-align: center;
 }
