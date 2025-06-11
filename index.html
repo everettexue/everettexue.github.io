@@ -4,10 +4,27 @@
   <meta charset="UTF-8">
   <title>Centered Header</title>
   <link rel="stylesheet" href="style.css">
+  <script src="script.js"></script>
+  <script>
+  gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
+
+  ScrollSmoother.create({
+    wrapper: "#smooth-wrapper",
+    content: "#smooth-content",
+    smooth: 1.5, // increase for smoother scroll
+    effects: true // optional for scroll-linked animations
+  });
+</script>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollSmoother.min.js"></script>
 </head>
 <body>
-  <div class="wrapper">
-    <div class="header">cool website</div>
+  <div id="smooth-wrapper">
+  <div id="smooth-content">
+    <div class="wrapper">
+      <div class="header">cool website</div>
+    </div>
+  </div>
   </div>
 </body>
 </html>
