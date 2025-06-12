@@ -24,6 +24,9 @@
 }
 
 h1 {
+  font-family: 'NMSGeoSans', sans-serif;
+  font-size: 7rem;
+  color: #1f1230;
   opacity: 0;
 }
 
