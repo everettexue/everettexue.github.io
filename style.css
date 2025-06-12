@@ -3,6 +3,13 @@
   src: url('fonts/NMSGeoSans_Kerned.ttf') format('truetype');
 }
 
+/* Required for ScrollSmoother */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
 
 #smooth-wrapper {
   position: fixed;
@@ -10,6 +17,10 @@
   overflow: hidden;
   width: 100%;
   height: 100%;
+}
+
+#smooth-content {
+  will-change: transform;
 }
 
 /* Your main section */
