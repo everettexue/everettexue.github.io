@@ -8,6 +8,11 @@
   src: url('fonts/Anurati-Regular.otf') format('truetype');
 }
 
+@font-face {
+  font-family: 'FenomenSans-Thin';
+  src: url('fonts/FenomenSans-Thin.ttf') format('truetype');
+}
+
 /* Your main section */
 .wrapper {
   height: 500px
@@ -36,7 +41,7 @@ h1 {
 }
 
 h2 {
-  font-family: 'Anurati', sans-serif;
+  font-family: 'FenomenSans-Thin', sans-serif;
   right: 50px;
   font-size: 4rem;
   color: #1f1230;
