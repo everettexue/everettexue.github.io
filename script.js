@@ -21,9 +21,9 @@ gsap.from(split.chars, {
 
 gsap.set("h2", { opacity: 1 });
 
-let split = SplitText.create("#title", { type: "chars" });
+let splitt = SplitText.create("#title", { type: "chars" });
 //now animate each character into place from 20px below, fading in:
-gsap.from(split.chars, {
+gsap.from(splitt.chars, {
   y: 28,
   autoAlpha: 0,
   stagger: 0.05
