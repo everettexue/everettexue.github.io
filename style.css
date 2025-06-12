@@ -3,6 +3,11 @@
   src: url('fonts/NMSGeoSans_Kerned.ttf') format('truetype');
 }
 
+@font-face {
+  font-family: 'Anurati';
+  src: url('fonts/Anurati-Regular.otf') format('truetype');
+}
+
 /* Your main section */
 .wrapper {
   height: 500px
@@ -31,7 +36,7 @@ h1 {
 }
 
 h2 {
-  font-family: 'NMSGeoSans', sans-serif;
+  font-family: 'Anurati', sans-serif;
   font-size: 5rem;
   color: #1f1230;
   opacity: 0;
