@@ -15,14 +15,14 @@
 
 /* Your main section */
 .wrapper {
-  height: 500px
+  height: 500px;
   background-color: #fff3d0;
 
   display: flex;
   justify-content: center;
   align-items: flex-start;
 
-  padding-top: -20px; /* move closer to top by reducing this */
+  padding-top: 0px; /* move closer to top by reducing this */
 }
 
 /* Header style */
