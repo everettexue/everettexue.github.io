@@ -13,11 +13,11 @@
   src: url('fonts/FenomenSans-Thin.ttf') format('truetype');
 }
 
-body {
+.background-grid {
   background-color: #fff3d0;
-  background-image:
-    radial-gradient(circle, rgba(0, 0, 0, 0.15) 2px, transparent 2px);
-  background-size: 30px 30px;
+  background-image: radial-gradient(circle, rgba(0, 0, 0, 0.2) 2px, transparent 2px);
+  background-size: 25px 25px;
+  min-height: 100%;
 }
 
 /* Your main section */
