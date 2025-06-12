@@ -3,9 +3,18 @@
   src: url('fonts/NMSGeoSans_Kerned.ttf') format('truetype');
 }
 
+
+#smooth-wrapper {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+}
+
 /* Your main section */
 .wrapper {
-  height: 500px
+  min-height: 100vh;
   background-color: #fff3d0;
 
   display: flex;
@@ -22,7 +31,5 @@
   color: #1f1230;
   text-align: center;
 }
-
-
 
 
