@@ -43,6 +43,7 @@ h1 {
   color: #1f1230;
   opacity: 0;
   transform: translateY(-10%);
+  letter-spacing: normal;
 }
 
 h2 {
