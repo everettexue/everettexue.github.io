@@ -5,7 +5,7 @@ window.addEventListener("load", () => {
     wrapper: "#smooth-wrapper",
     content: "#smooth-content",
     smooth: 2,
-    speed: 2,
+    speed: 1.4,
     effects: true,
   });
 });
