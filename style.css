@@ -3,9 +3,29 @@
   src: url('fonts/NMSGeoSans_Kerned.ttf') format('truetype');
 }
 
+/* Required for ScrollSmoother */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+#smooth-wrapper {
+/* position: fixed; */
+  inset: 0;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+}
+
+#smooth-content {
+  will-change: transform;
+}
+
 /* Your main section */
 .wrapper {
-  height: 500px
+  min-height: 100vh;
   background-color: #fff3d0;
 
   display: flex;
@@ -22,7 +42,5 @@
   color: #1f1230;
   text-align: center;
 }
-
-
 
 
