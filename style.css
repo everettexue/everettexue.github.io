@@ -52,7 +52,7 @@ h2 {
   font-size: 4rem;
   color: #1f1230;
   opacity: 0;
-    transform: translateY(100%);
+  margin-top: 300px; /* adjust as needed */
 }
 
 
