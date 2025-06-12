@@ -30,14 +30,15 @@
 
 h1 {
   font-family: 'NMSGeoSans', sans-serif;
-  font-size: 4rem;
+  font-size: 7rem;
   color: #1f1230;
   opacity: 0;
 }
 
 h2 {
   font-family: 'Anurati', sans-serif;
-  font-size: 5rem;
+  right: 50px;
+  font-size: 4rem;
   color: #1f1230;
   opacity: 0;
 }
