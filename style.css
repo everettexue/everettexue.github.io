@@ -42,6 +42,7 @@ h1 {
   font-size: 7rem;
   color: #1f1230;
   opacity: 0;
+  transform: translateY(-10%);
 }
 
 h2 {
