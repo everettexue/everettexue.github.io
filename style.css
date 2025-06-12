@@ -30,6 +30,13 @@ h1 {
   opacity: 0;
 }
 
+h2 {
+  font-family: 'NMSGeoSans', sans-serif;
+  font-size: 3rem;
+  color: #1f1230;
+  opacity: 0;
+}
+
 
 
 
