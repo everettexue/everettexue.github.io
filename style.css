@@ -12,7 +12,7 @@
   justify-content: center;
   align-items: flex-start;
 
-  padding-top: 30px; /* move closer to top by reducing this */
+  padding-top: 5px; /* move closer to top by reducing this */
 }
 
 /* Header style */
