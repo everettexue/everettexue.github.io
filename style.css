@@ -23,7 +23,6 @@
 /* Your main section */
 .wrapper {
   height: 500px;
-  background-color: #fff3d0;
 
   display: flex;
   justify-content: center;
