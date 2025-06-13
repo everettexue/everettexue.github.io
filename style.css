@@ -85,6 +85,9 @@ h2 {
   transition: width 1s ease-out;
 }
 
+.line.line-visible {
+  width: 800px;
+}
 
 
 
