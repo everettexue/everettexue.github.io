@@ -1,9 +1,10 @@
 gsap.registerPlugin(ScrollTrigger, ScrollSmoother, SplitText);
 
+// Grid + physics constants
 const grid = document.querySelector('.background-grid');
-const spacing = 32; // space between dots
-const radius = 250; // effect radius
-const strength = 50; // max repulsion distance
+const spacing = 32;
+const radius = 250;
+const strength = 50;
 
 window.addEventListener("load", () => {
   ScrollSmoother.create({
@@ -15,8 +16,8 @@ window.addEventListener("load", () => {
   });
 });
 
+// Split & animate h1
 gsap.set("h1", { opacity: 1 });
-
 let split = SplitText.create("#heading", { type: "chars" });
 gsap.from(split.chars, {
   y: 56,
@@ -24,9 +25,21 @@ gsap.from(split.chars, {
   stagger: 0.05
 });
 
+// Fade out h1 as it scrolls to top
+gsap.to("#heading", {
+  opacity: 0,
+  ease: "none",
+  scrollTrigger: {
+    trigger: "#heading",
+    start: "top 40%", // starts fading just before halfway up
+    end: "top top",   // fully faded when it hits the top
+    scrub: true
+  }
+});
+
+// Split & animate h2 on scroll into view
 gsap.set("h2", { opacity: 1 });
 let splitt = SplitText.create("#title", { type: "chars" });
-
 gsap.from(splitt.chars, {
   y: 28,
   autoAlpha: 0,
@@ -40,31 +53,7 @@ gsap.from(splitt.chars, {
   }
 });
 
-// Shrink h1 and pin
-gsap.to("#heading", {
-  scale: 0.4,
-  transformOrigin: "top center",
-  scrollTrigger: {
-    trigger: "#heading",
-    start: "top top",
-    end: "+=400",
-    scrub: true,
-    pin: true
-  }
-});
-
-// Fade out h1 as it scrolls
-gsap.to("#heading", {
-  opacity: 0,
-  ease: "none",
-  scrollTrigger: {
-    trigger: "#heading",
-    start: "top center",
-    end: "top top",
-    scrub: true
-  }
-});
-
+// Grid dot generation
 let dots = [];
 
 function createGridDots() {
@@ -83,6 +72,7 @@ function createGridDots() {
   }
 }
 
+// Dot hover movement
 function handleMouseMove(e) {
   const rect = grid.getBoundingClientRect();
   const mouseX = e.clientX - rect.left;
@@ -105,6 +95,7 @@ function handleMouseMove(e) {
   });
 }
 
+// Event listeners
 grid.addEventListener('mousemove', handleMouseMove);
 grid.addEventListener('mouseleave', () => {
   dots.forEach(dot => dot.el.style.transform = 'translate(0, 0)');
