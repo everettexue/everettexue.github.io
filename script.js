@@ -46,6 +46,22 @@ gsap.from(splitt.chars, {
   }
 });
 
+gsap.fromTo("#line-under-title",
+  { width: "0%", opacity: 0 },
+  {
+    width: "60%", // You can tweak this width
+    opacity: 1,
+    duration: 1.2,
+    ease: "power2.out",
+    scrollTrigger: {
+      trigger: "#title",
+      start: "top 90%", // When h2 enters viewport
+      toggleActions: "play none none none"
+    }
+  }
+);
+
+
 
 
 
