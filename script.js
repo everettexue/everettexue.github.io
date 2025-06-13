@@ -1,5 +1,11 @@
 gsap.registerPlugin(ScrollTrigger, ScrollSmoother, SplitText);
 
+const grid = document.querySelector('.background-grid');
+const spacing = 40; // space between dots
+const radius = 100; // effect radius
+const strength = 50; // max repulsion distance
+
+
 window.addEventListener("load", () => {
   ScrollSmoother.create({
     wrapper: "#smooth-wrapper",
@@ -40,3 +46,51 @@ gsap.from(splitt.chars, {
   }
 });
 
+
+
+let dots = [];
+
+function createGridDots() {
+  const cols = Math.ceil(grid.clientWidth / spacing);
+  const rows = Math.ceil(grid.clientHeight / spacing);
+
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      const dot = document.createElement('div');
+      dot.classList.add('dot');
+      dot.style.left = `${x * spacing}px`;
+      dot.style.top = `${y * spacing}px`;
+      grid.appendChild(dot);
+      dots.push({ el: dot, x: x * spacing, y: y * spacing });
+    }
+  }
+}
+
+function handleMouseMove(e) {
+  const rect = grid.getBoundingClientRect();
+  const mouseX = e.clientX - rect.left;
+  const mouseY = e.clientY - rect.top;
+
+  dots.forEach(dot => {
+    const dx = mouseX - dot.x;
+    const dy = mouseY - dot.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    if (dist < radius) {
+      const angle = Math.atan2(dy, dx);
+      const offset = (1 - dist / radius) * strength;
+      const tx = -Math.cos(angle) * offset;
+      const ty = -Math.sin(angle) * offset;
+      dot.el.style.transform = `translate(${tx}px, ${ty}px)`;
+    } else {
+      dot.el.style.transform = `translate(0, 0)`;
+    }
+  });
+}
+
+grid.addEventListener('mousemove', handleMouseMove);
+grid.addEventListener('mouseleave', () => {
+  dots.forEach(dot => dot.el.style.transform = 'translate(0, 0)');
+});
+
+createGridDots();
