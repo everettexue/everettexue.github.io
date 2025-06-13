@@ -53,6 +53,10 @@ h1 {
 }
 
 h2 {
+  display: flex;
+  justify-content: center;   /* horizontal centering */
+  align-items: center;       /* vertical centering */
+  height: 100vh;   
   font-family: 'FenomenSans-Thin', sans-serif;
   right: 50px;
   font-size: 4rem;
