@@ -85,15 +85,6 @@ h2 {
   transition: width 1s ease-out;
 }
 
-.line-wrapper {
-  position: absolute;
-  top: calc(100vh + 80px);
-  left: 50%;
-  transform: translateX(-50%);
-  width: 0;
-  overflow: visible;
-}
-
 
 
 
