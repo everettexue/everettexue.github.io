@@ -49,7 +49,7 @@ gsap.from(splitt.chars, {
 gsap.fromTo("#line-under-title",
   { width: "0%", opacity: 0 },
   {
-    width: "80", // You can tweak this width
+    width: "90%", // You can tweak this width
     opacity: 1,
     duration: 0.5,
     ease: "power2.out",
