@@ -51,7 +51,7 @@ gsap.fromTo("#line-under-title",
   {
     width: "80", // You can tweak this width
     opacity: 1,
-    duration: 0.8,
+    duration: 0.5,
     ease: "power2.out",
     scrollTrigger: {
       trigger: "#title",
