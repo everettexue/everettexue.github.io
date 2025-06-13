@@ -93,6 +93,45 @@ grid.addEventListener('mouseleave', () => {
   dots.forEach(dot => dot.el.style.transform = 'translate(0, 0)');
 });
 
+document.addEventListener("click", function(e) {
+  const clickX = e.clientX;
+  const clickY = e.clientY;
+
+  document.querySelectorAll(".dot").forEach(dot => {
+    const rect = dot.getBoundingClientRect();
+    const dotX = rect.left + rect.width / 2;
+    const dotY = rect.top + rect.height / 2;
+
+    const dx = dotX - clickX;
+    const dy = dotY - clickY;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    const angle = Math.atan2(dy, dx);
+
+    const maxDistance = 150; // how far to jump
+    const force = Math.max(0, (maxDistance - distance) / maxDistance);
+    const jumpDistance = force * 60; // max jump length
+
+    const offsetX = Math.cos(angle) * jumpDistance;
+    const offsetY = Math.sin(angle) * jumpDistance;
+
+    gsap.to(dot, {
+      x: `+=${offsetX}`,
+      y: `+=${offsetY}`,
+      duration: 0.4,
+      ease: "power2.out",
+      onComplete: () => {
+        gsap.to(dot, {
+          x: 0,
+          y: 0,
+          duration: 0.6,
+          ease: "power3.inOut"
+        });
+      }
+    });
+  });
+});
+
+
 
 createGridDots();
 
