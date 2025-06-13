@@ -1,7 +1,7 @@
 gsap.registerPlugin(ScrollTrigger, ScrollSmoother, SplitText);
 
 const grid = document.querySelector('.background-grid');
-const spacing = 27; // space between dots
+const spacing = 32; // space between dots
 const radius = 100; // effect radius
 const strength = 50; // max repulsion distance
 
