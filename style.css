@@ -76,6 +76,16 @@ h2 {
   text-align: center;
 }
 
+.line {
+  width: 0%; /* Start at 0% for animation */
+  height: 4px;
+  background-color: #1f1230; /* Match your heading color */
+  margin: 0 auto;
+  opacity: 0;
+  transition: width 1s ease-out;
+}
+
+
 
 
 
