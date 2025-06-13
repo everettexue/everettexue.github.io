@@ -35,7 +35,7 @@ gsap.from(splitt.chars, {
   ease: "power2.out",
   scrollTrigger: {
     trigger: "#title",
-    start: "top 80%",  // when top of h2 is 80% down the viewport
+    start: "top 90%",  // when top of h2 is 80% down the viewport
     toggleActions: "play none none none" // play once
   }
 });
