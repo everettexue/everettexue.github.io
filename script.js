@@ -5,7 +5,6 @@ const spacing = 32; // space between dots
 const radius = 250; // effect radius
 const strength = 50; // max repulsion distance
 
-
 window.addEventListener("load", () => {
   ScrollSmoother.create({
     wrapper: "#smooth-wrapper",
@@ -19,20 +18,15 @@ window.addEventListener("load", () => {
 gsap.set("h1", { opacity: 1 });
 
 let split = SplitText.create("#heading", { type: "chars" });
-//now animate each character into place from 20px below, fading in:
 gsap.from(split.chars, {
   y: 56,
   autoAlpha: 0,
   stagger: 0.05
 });
 
-// Set initial opacity (if not already in CSS)
 gsap.set("h2", { opacity: 1 });
-
-// Split the text into characters
 let splitt = SplitText.create("#title", { type: "chars" });
 
-// Animate when it enters the viewport
 gsap.from(splitt.chars, {
   y: 28,
   autoAlpha: 0,
@@ -41,12 +35,35 @@ gsap.from(splitt.chars, {
   ease: "power2.out",
   scrollTrigger: {
     trigger: "#title",
-    start: "top 90%",  // when top of h2 is 80% down the viewport
-    toggleActions: "play none none none" // play once
+    start: "top 90%",
+    toggleActions: "play none none none"
   }
 });
 
+// Shrink h1 and pin
+gsap.to("#heading", {
+  scale: 0.4,
+  transformOrigin: "top center",
+  scrollTrigger: {
+    trigger: "#heading",
+    start: "top top",
+    end: "+=400",
+    scrub: true,
+    pin: true
+  }
+});
 
+// Fade out h1 as it scrolls
+gsap.to("#heading", {
+  opacity: 0,
+  ease: "none",
+  scrollTrigger: {
+    trigger: "#heading",
+    start: "top center",
+    end: "top top",
+    scrub: true
+  }
+});
 
 let dots = [];
 
@@ -93,9 +110,6 @@ grid.addEventListener('mouseleave', () => {
   dots.forEach(dot => dot.el.style.transform = 'translate(0, 0)');
 });
 
-
-
-
 createGridDots();
 
 window.addEventListener('resize', () => {
@@ -103,5 +117,3 @@ window.addEventListener('resize', () => {
   dots = [];
   createGridDots();
 });
-
-
