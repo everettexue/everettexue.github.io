@@ -5,6 +5,7 @@ const spacing = 32; // space between dots
 const radius = 250; // effect radius
 const strength = 50; // max repulsion distance
 
+
 window.addEventListener("load", () => {
   ScrollSmoother.create({
     wrapper: "#smooth-wrapper",
@@ -45,6 +46,8 @@ gsap.from(splitt.chars, {
   }
 });
 
+
+
 let dots = [];
 
 function createGridDots() {
@@ -63,25 +66,12 @@ function createGridDots() {
   }
 }
 
-function isUnderText(dotEl) {
-  const dotRect = dotEl.getBoundingClientRect();
-  const centerX = dotRect.left + dotRect.width / 2;
-  const centerY = dotRect.top + dotRect.height / 2;
-  const elem = document.elementFromPoint(centerX, centerY);
-  return elem && (elem.closest('h1') || elem.closest('h2'));
-}
-
 function handleMouseMove(e) {
   const rect = grid.getBoundingClientRect();
   const mouseX = e.clientX - rect.left;
   const mouseY = e.clientY - rect.top;
 
   dots.forEach(dot => {
-    if (isUnderText(dot.el)) {
-      dot.el.style.transform = 'translate(0, 0)';
-      return;
-    }
-
     const dx = mouseX - dot.x;
     const dy = mouseY - dot.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
@@ -103,6 +93,9 @@ grid.addEventListener('mouseleave', () => {
   dots.forEach(dot => dot.el.style.transform = 'translate(0, 0)');
 });
 
+
+
+
 createGridDots();
 
 window.addEventListener('resize', () => {
@@ -110,3 +103,5 @@ window.addEventListener('resize', () => {
   dots = [];
   createGridDots();
 });
+
+
