@@ -46,16 +46,16 @@ gsap.from(splitt.chars, {
   }
 });
 
-gsap.fromTo("#line-under-title",
+gsap.fromTo("#line-under-projects",
   { width: "0%", opacity: 0 },
   {
-    width: "60%", // You can tweak this width
+    width: "60%", // or 100% based on how long you want it
     opacity: 1,
     duration: 1.2,
     ease: "power2.out",
     scrollTrigger: {
-      trigger: "#title",
-      start: "top 90%", // When h2 enters viewport
+      trigger: "#projects-wrapper",
+      start: "top 90%",
       toggleActions: "play none none none"
     }
   }
