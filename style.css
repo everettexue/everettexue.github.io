@@ -107,7 +107,8 @@ h2 {
   flex-wrap: wrap;
   gap: 40px;
   align-items: flex-start;
-  margin-top: 100px; /* Space between title and project */
+  margin-top: 50px;
+  margin-left: -450px;
 }
 
 .project-image {
