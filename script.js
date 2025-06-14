@@ -34,7 +34,7 @@ let splitt = SplitText.create("#title", { type: "chars" });
 
 // Animate when it enters the viewport
 gsap.from(splitt.chars, {
-  y: 28,
+  y: 52,
   autoAlpha: 0,
   stagger: 0.05,
   duration: 2,
