@@ -37,11 +37,11 @@ gsap.from(splitt.chars, {
   y: 28,
   autoAlpha: 0,
   stagger: 0.05,
-  duration: 1,
+  duration: 2,
   ease: "power2.out",
   scrollTrigger: {
     trigger: "#title",
-    start: "top 90%",  // when top of h2 is 80% down the viewport
+    start: "top 80%",  // when top of h2 is 80% down the viewport
     toggleActions: "play none none none" // play once
   }
 });
@@ -51,11 +51,11 @@ gsap.fromTo("#line-under-title",
   {
     width: "90%", // You can tweak this width
     opacity: 1,
-    duration: 0.6,
+    duration: 1.2,
     ease: "power2.out",
     scrollTrigger: {
       trigger: "#title",
-      start: "top 90%", // When h2 enters viewport
+      start: "top 80%", // When h2 enters viewport
       toggleActions: "play none none none"
     }
   }
