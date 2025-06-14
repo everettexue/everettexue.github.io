@@ -108,12 +108,12 @@ h2 {
   gap: 40px;
   align-items: flex-start;
   margin-top: 50px;
-  margin-left: 35vw;
+  margin-left: -35vw;
 }
 
 .project-image {
   width: 33vw;
-  height: -30vh;
+  height: 30vh;
   object-fit: cover; /* ensures image fills box nicely */
 }
 
