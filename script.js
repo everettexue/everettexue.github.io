@@ -37,7 +37,7 @@ gsap.from(splitt.chars, {
   y: 52,
   autoAlpha: 0,
   stagger: 0.05,
-  duration: 2,
+  duration: 1.2,
   ease: "power2.out",
   scrollTrigger: {
     trigger: "#title",
@@ -51,7 +51,7 @@ gsap.fromTo("#line-under-title",
   {
     width: "90%", // You can tweak this width
     opacity: 1,
-    duration: 1.2,
+    duration: 2,
     ease: "power2.out",
     scrollTrigger: {
       trigger: "#title",
