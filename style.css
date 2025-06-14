@@ -27,7 +27,6 @@
   border-radius: 50%;
   transition: transform 0.2s ease-out;
   pointer-events: none;
-  z-index: -1000;
 }
 
 /* Your main section */
@@ -78,6 +77,7 @@ h2 {
 
   white-space: nowrap;
   text-align: center;
+  z-index: -1;
 }
 
 .line {
