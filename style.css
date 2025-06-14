@@ -92,6 +92,11 @@ h2 {
   width: 800px;
 }
 
+#title-wrapper {
+  position: relative;
+  top: 100vh; /* Push below the full screen hero */
+  text-align: center;
+}
 
 /* Layout */
 .project-entry {
@@ -99,6 +104,7 @@ h2 {
   flex-wrap: wrap;
   gap: 40px;
   align-items: flex-start;
+  margin-top: 100px; /* Space between title and project */
 }
 
 /* Left image box */
@@ -154,6 +160,7 @@ h2 {
   color: #fff3d0;
   box-shadow: 0 0 20px rgba(255, 59, 0, 0.7), 0 0 40px rgba(255, 59, 0, 0.5);
 }
+
 
 
 
