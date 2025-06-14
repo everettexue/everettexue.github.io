@@ -68,7 +68,7 @@ h2 {
   transform: translateX(-50%);
   
   font-family: 'NMSGeoSans', sans-serif;
-  font-size: clamp(2rem, 6vw, 6.1rem);
+  font-size: 6.1rem;
   color: #1f1230;
   opacity: 0;
 
