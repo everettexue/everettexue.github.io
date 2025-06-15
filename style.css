@@ -112,7 +112,6 @@ h2 {
 
 .project-image {
   width: 33vw;
-  height: 30vh;
   object-fit: cover; /* ensures image fills box nicely */
 }
 
