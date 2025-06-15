@@ -202,7 +202,7 @@ h2 {
   pointer-events: none;
 }
 .ui-button__text {
-  -webkit-text-fill-color: transparent;
+  -webkit-text-fill-color: #f0fcff;
   background: var(--text-gradient);
   -webkit-background-clip: text;
   background-clip: text;
