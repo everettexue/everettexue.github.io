@@ -154,7 +154,7 @@ h2 {
   position: relative;
   box-shadow: 0 0 10px rgba(255, 59, 0, 0.4);
   width: 600px;
-  transform: translate(170px, -100px);
+  transform: translate(13.25vw, -10.82vh);
 }
 
 .more-button:hover {
