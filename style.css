@@ -17,7 +17,7 @@
   position: relative;
   overflow: hidden;
   background-color: #fff3d0;
-  z-index: -3
+  z-index: -2
 }
 
 .dot {
@@ -28,7 +28,7 @@
   border-radius: 50%;
   transition: transform 0.2s ease-out;
   pointer-events: none;
-  z-index: -2
+  z-index: -1
 }
 
 /* Your main section */
@@ -40,6 +40,7 @@
   align-items: flex-start;
 
   padding-top: 0px; /* move closer to top by reducing this */
+  z-index: 4;
 }
 
 /* Header style */
