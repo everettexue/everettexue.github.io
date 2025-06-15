@@ -177,9 +177,7 @@ h2 {
   transform: translate(13.56vw, -11.58vh);
 }
 .ui-button__background {
-  --gradient: linear-gradient(276.56deg,#5be1ff -37.86%,#fec5fb 78.99%);
-  --gradient-background: radial-gradient(89.35% 218.47% at 12.74% 84.68%,#f0fcff 0%,#5bc2d9 0.01%,#0ba3c5 29.69%,#037f9a 66.78%,#0ba3c5 86.98%,#00bae2 100%);
-  --text-gradient: radial-gradient(122% 400% at -30.17% 120%,#f0fcff 0%,#def9ff 40.7%,#aaefff 73.35%,#99e7f8 83.9%,#d1f7ff 96.79%);
+  --gradient-background: #1f1230;
   align-items: center;
   background: var(--gradient-background);
   border-radius: 1rem;
@@ -239,7 +237,7 @@ h2 {
   transition: transform .3s cubic-bezier(.05,.87,.32,1.07),opacity .1s ease-out;
 }
 .ui-button:before {
-  background: radial-gradient(634.66% 92.73% at 64.14% 13.83%,#0dd2fd 0,#f7bdf8 82.29%);
+  background: #1f1230;;
   border-radius: 1rem;
   bottom: -.5rem;
   content: "";
@@ -251,7 +249,7 @@ h2 {
   position: absolute;
   right: -.5rem;
   top: -.5rem;
-  transform: rotate(-17deg);
+  transform: rotate(-8deg);
   transition: all .15s cubic-bezier(.5,0,.75,0);
 }
 
