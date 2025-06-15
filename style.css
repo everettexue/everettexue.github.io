@@ -104,11 +104,10 @@ h2 {
 /* Layout */
 .project-entry {
   display: flex;
-  flex-wrap: wrap;
   gap: 40px;
   align-items: flex-start;
   margin-top: 50px;
-  margin-left: -35vw;
+  margin-left: -13vw;
 }
 
 .project-image {
@@ -120,17 +119,19 @@ h2 {
 /* Right side content */
 .project-content {
   max-width: 600px;
+  margin-left: 220px;
+  margin-top: -55px;
 }
 
 .project-heading {
-  font-size: 2.5rem;
+  font-size: 3.5rem;
   font-weight: 800;
   margin-bottom: 20px;
   color: #1f1230;
 }
 
 .project-description {
-  font-size: 1.2rem;
+  font-size: 1.8rem;
   font-weight: 600;
   color: #1f1230;
   margin-bottom: 30px;
