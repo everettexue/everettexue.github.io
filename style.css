@@ -113,13 +113,17 @@ h2 {
 .project-image {
   width: 33vw;
   object-fit: cover; /* ensures image fills box nicely */
+  transform: translate(-80px);
+
 }
 
 /* Right side content */
 .project-content {
   max-width: 600px;
-  margin-left: 220px;
+  margin-left: 6vh;
   margin-top: -55px;
+  transform: translate(-7px);
+
 }
 
 .project-heading {
@@ -149,6 +153,8 @@ h2 {
   text-transform: uppercase;
   position: relative;
   box-shadow: 0 0 10px rgba(255, 59, 0, 0.4);
+  width: 600px;
+  transform: translate(170px, -100px);
 }
 
 .more-button:hover {
