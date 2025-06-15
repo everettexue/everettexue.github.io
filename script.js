@@ -128,3 +128,32 @@ window.addEventListener('resize', () => {
 
 
 
+
+
+
+
+// Animate the shine on hover/focus using GSAP
+const btn = document.getElementById('shine-btn');
+const gradient = document.getElementById('shine-gradient');
+let shineTween;
+
+function shine() {
+  if (shineTween) shineTween.kill();
+  gradient.style.transform = 'translateX(-440px)';
+  shineTween = gsap.to(gradient, {
+    x: 440,
+    duration: 0.7,
+    ease: "power2.inOut",
+    overwrite: true,
+    onComplete: () => {
+      gradient.style.transform = 'translateX(-440px)';
+    }
+  });
+}
+
+btn.addEventListener('mouseenter', shine);
+btn.addEventListener('focus', shine);
+
+
+
+
