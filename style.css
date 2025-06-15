@@ -114,7 +114,7 @@ h2 {
 .project-image {
   width: 33vw;
   object-fit: cover; /* ensures image fills box nicely */
-  transform: translate(-80px);
+  transform: translate(-8.65vw);
 
 }
 
