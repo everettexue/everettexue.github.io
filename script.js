@@ -70,7 +70,7 @@ gsap.fromTo("#line-under-title",
 let dots = [];
 
 function createGridDots() {
-  const cols = Math.ceil(grid.clientWidth / spacing);
+  const cols = 64;
   const rows = Math.ceil(grid.clientHeight / spacing);
 
   for (let y = 0; y < rows; y++) {
