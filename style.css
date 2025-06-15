@@ -163,6 +163,94 @@ h2 {
   box-shadow: 0 0 20px rgba(255, 59, 0, 0.7), 0 0 40px rgba(255, 59, 0, 0.5);
 }
 
+/* button */
+.ui-button {
+  background: transparent;
+  border: none;
+  border-radius: 1rem;
+  position: relative;
+  cursor: pointer;
+  padding: 0;
+  outline: none;
+  overflow: visible;
+}
+.ui-button__background {
+  --gradient: linear-gradient(276.56deg,#5be1ff -37.86%,#fec5fb 78.99%);
+  --gradient-background: radial-gradient(89.35% 218.47% at 12.74% 84.68%,#f0fcff 0%,#5bc2d9 0.01%,#0ba3c5 29.69%,#037f9a 66.78%,#0ba3c5 86.98%,#00bae2 100%);
+  --text-gradient: radial-gradient(122% 400% at -30.17% 120%,#f0fcff 0%,#def9ff 40.7%,#aaefff 73.35%,#99e7f8 83.9%,#d1f7ff 96.79%);
+  align-items: center;
+  background: var(--gradient-background);
+  border-radius: 1rem;
+  box-shadow: inset 0 0 20px #51cbf1;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+  padding: 1.8125rem 4rem 1.6875rem 4.25rem;
+  position: relative;
+}
+.ui-button__background:after {
+  background: var(--gradient);
+  content: "";
+  height: 100%;
+  left: 0;
+  mix-blend-mode: overlay;
+  position: absolute;
+  top: 0;
+  width: 100%;
+  pointer-events: none;
+}
+.ui-button__text {
+  -webkit-text-fill-color: transparent;
+  background: var(--text-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  font-size: 1.375rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  transition: all .2s ease-in-out;
+  will-change: transform;
+  z-index: 2;
+  position: relative;
+}
+.ui-button__gradient {
+  pointer-events: none;
+  position: absolute;
+  left: -50%;
+  top: 0;
+  width: 200%;
+  height: 100%;
+  opacity: 0.3;
+  background: linear-gradient(120deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0.2) 100%);
+  transform: translateX(-440px);
+  transition: none;
+  z-index: 1;
+}
+/* Optional: subtle glow on hover */
+.ui-button:focus:before,
+.ui-button:hover:before {
+  opacity: 1;
+  transform: rotate(0);
+  transition: transform .3s cubic-bezier(.05,.87,.32,1.07),opacity .1s ease-out;
+}
+.ui-button:before {
+  background: radial-gradient(634.66% 92.73% at 64.14% 13.83%,#0dd2fd 0,#f7bdf8 82.29%);
+  border-radius: 1rem;
+  bottom: -.5rem;
+  content: "";
+  display: block;
+  filter: blur(23.5px);
+  left: -.5rem;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  right: -.5rem;
+  top: -.5rem;
+  transform: rotate(-17deg);
+  transition: all .15s cubic-bezier(.5,0,.75,0);
+}
+
 
 
 
