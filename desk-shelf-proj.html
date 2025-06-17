@@ -58,11 +58,32 @@
       position: relative;
       z-index: 0;
     }
+
+    .site-title {
+  display: inline-block;
+  margin: 20px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: white;
+  text-decoration: none;
+  background: #00000088;
+  padding: 6px 10px;
+  border-radius: 6px;
+  z-index:5000;
+  position:absolute;
+}
+
+
+.site-title:hover {
+  background: rgba(0, 0, 0, 0.7);
+}
   </style>
 </head>
 <body>
-
-  <div class="parallax"></div>
+  
+  <div class="parallax">
+        <a href="index.html" class="site-title">Everette's Website</a>
+  </div>
 
   <div class="video-section">
     <video class="scrub-video" muted playsinline preload="auto">
@@ -72,7 +93,7 @@
   </div>
 
   <div class="normal-section">
-    Back to normal scrolling
+    test
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
