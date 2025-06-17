@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Scroll Scrub Video After Parallax</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Scroll Scrub Video</title>
   <style>
     * {
       margin: 0;
@@ -16,25 +17,17 @@
       font-family: sans-serif;
     }
 
-    .parallax, .parallax1 {
+    .parallax {
       height: 100vh;
+      background-image: url('images/without.JPG');
       background-attachment: fixed;
       background-position: center;
       background-repeat: no-repeat;
       background-size: cover;
     }
 
-    .parallax {
-      background-image: url('images/without.JPG');
-    }
-
-    .parallax1 {
-      background-image: url('images/with.JPG');
-    }
-
     .video-section {
-      position: relative;
-      height: 500vh; /* makes scroll long enough to scrub */
+      height: 400vh; /* Long scroll */
       background: #000;
     }
 
@@ -44,15 +37,13 @@
       width: 100%;
       height: 100vh;
       object-fit: cover;
-      z-index: 1;
+      z-index: 0;
     }
 
     .normal-section {
       height: 100vh;
       background: #fff;
-      color: #000;
       display: flex;
-      flex-direction: column;
       justify-content: center;
       align-items: center;
       font-size: 2rem;
@@ -63,9 +54,6 @@
 
   <div class="parallax"></div>
 
-  <div class="parallax1"></div>
-
-  <!-- Scroll-Scrubbed Video Comes AFTER .parallax1 -->
   <div class="video-section">
     <video class="scrub-video" muted playsinline preload="auto">
       <source src="https://www.dropbox.com/scl/fi/cfngzrxmibxnwto5481k4/wow.mp4?rlkey=wl39sd1cmtj4p59j025sibce5&st=clprvb71&raw=1" type="video/mp4">
@@ -74,11 +62,9 @@
   </div>
 
   <div class="normal-section">
-    <h2>Scroll is now normal</h2>
-    <p>This section scrolls like usual.</p>
+    <p>Back to normal scrolling</p>
   </div>
 
-  <!-- GSAP Scripts -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
   <script>
@@ -86,24 +72,37 @@
 
     const video = document.querySelector(".scrub-video");
 
-    video.onloadedmetadata = () => {
-      gsap.to(video, {
-        currentTime: video.duration,
-        ease: "none",
-        scrollTrigger: {
-          trigger: ".video-section",
-          start: "top top",
-          end: "bottom bottom",
-          scrub: true,
-          // markers: true // for debugging
+    // Unlock video seeking on mobile
+    function unlockVideo(video) {
+      video.muted = true;
+      video.currentTime = 0.01;
+      video.play().then(() => {
+        video.pause();
+        video.currentTime = 0;
+      });
+    }
+
+    // Wait until metadata is loaded
+    video.addEventListener("loadedmetadata", () => {
+      unlockVideo(video);
+
+      const duration = video.duration;
+
+      ScrollTrigger.create({
+        trigger: ".video-section",
+        start: "top top",
+        end: "bottom+=-13% top",
+        scrub: true,
+        onUpdate: self => {
+          const scrollPos = self.progress;
+          video.currentTime = scrollPos * duration;
         }
       });
-    };
+    });
 
-    // Touch fallback: triggers loading
+    // Also unlock on touch (mobile)
     if ("ontouchstart" in window || navigator.maxTouchPoints > 0) {
-      video.play();
-      video.pause();
+      unlockVideo(video);
     }
   </script>
 
