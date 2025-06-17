@@ -3,50 +3,60 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Scroll Scrub Video</title>
+  <title>Scroll Crop Bottom to Top + Video Scrub</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body, html {
-      height: 100%;
+    html, body {
+      margin: 0; padding: 0; height: 100%;
       overflow-x: hidden;
       font-family: sans-serif;
     }
 
     .parallax {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
       height: 100vh;
-      background-image: url('images/without.JPG');
-      background-attachment: fixed;
+      background-image: url('https://www.dropbox.com/scl/fi/cx9gmbi4srurchce4creo/ok.jpg?rlkey=yx08d79sgrpqa3znf9jy8mxdq&st=ftyom4be&raw=1'); /* Replace with your image */
       background-position: center;
       background-repeat: no-repeat;
       background-size: cover;
+      z-index: 10;
+      pointer-events: none;
+
+      /* fully visible initially */
+      clip-path: inset(0 0 0 0);
     }
 
     .video-section {
-      height: 400vh; /* Long scroll */
-      background: #000;
-    }
-
-    .scrub-video {
-      position: sticky;
-      top: 0;
-      width: 100%;
-      height: 100vh;
-      object-fit: cover;
+      position: relative;
+      height: 400vh; /* long scroll */
+      background: black;
+      margin-top: 100vh; /* push below fixed parallax */
       z-index: 0;
     }
 
+    .scrub-video {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      z-index: 1;
+      /* Make video visible immediately */
+      opacity: 1;
+      pointer-events: none;
+    }
+
+
     .normal-section {
       height: 100vh;
-      background: #fff;
+      background: white;
       display: flex;
       justify-content: center;
       align-items: center;
       font-size: 2rem;
+      position: relative;
+      z-index: 0;
     }
   </style>
 </head>
@@ -56,13 +66,13 @@
 
   <div class="video-section">
     <video class="scrub-video" muted playsinline preload="auto">
-      <source src="https://www.dropbox.com/scl/fi/cfngzrxmibxnwto5481k4/wow.mp4?rlkey=wl39sd1cmtj4p59j025sibce5&st=clprvb71&raw=1" type="video/mp4">
+      <source src="https://www.dropbox.com/scl/fi/cfngzrxmibxnwto5481k4/wow.mp4?rlkey=wl39sd1cmtj4p59j025sibce5&st=clprvb71&raw=1" type="video/mp4" />
       Your browser does not support HTML5 video.
     </video>
   </div>
 
   <div class="normal-section">
-    <p>Back to normal scrolling</p>
+    Back to normal scrolling
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -70,9 +80,23 @@
   <script>
     gsap.registerPlugin(ScrollTrigger);
 
+    const parallax = document.querySelector(".parallax");
     const video = document.querySelector(".scrub-video");
 
-    // Unlock video seeking on mobile
+    // Animate clip-path bottom inset from 0 to 100% (crop bottom to top)
+    gsap.to(parallax, {
+      clipPath: "inset(0 0 100% 0)",
+      ease: "none",
+      scrollTrigger: {
+        trigger: ".parallax",
+        start: "top top",
+        end: "bottom top",
+        scrub: true,
+      }
+    });
+
+
+    // Unlock video on mobile
     function unlockVideo(video) {
       video.muted = true;
       video.currentTime = 0.01;
@@ -82,25 +106,21 @@
       });
     }
 
-    // Wait until metadata is loaded
     video.addEventListener("loadedmetadata", () => {
       unlockVideo(video);
-
       const duration = video.duration;
 
       ScrollTrigger.create({
         trigger: ".video-section",
         start: "top top",
-        end: "bottom+=-13% top",
+        end: "bottom+=-15% top",
         scrub: true,
         onUpdate: self => {
-          const scrollPos = self.progress;
-          video.currentTime = scrollPos * duration;
+          video.currentTime = self.progress * duration;
         }
       });
     });
 
-    // Also unlock on touch (mobile)
     if ("ontouchstart" in window || navigator.maxTouchPoints > 0) {
       unlockVideo(video);
     }
