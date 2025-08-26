@@ -28,15 +28,29 @@
   <script src="https://cdn.jsdelivr.net/npm/vue@2.7.8/dist/vue.min.js"></script>
 </head>
 <body>
-        <nav class="navbar">
-        <div class="logo">MySite</div>
-          <div class="links">
-            <a href="#">Home</a>
-            <a href="#">About</a>
-            <a href="#">Services</a>
-            <a href="#">Contact</a>
-        </div>
-      </nav>
+  <nav class="navbar">
+    <!-- Changed from a div with text to a link containing an image -->
+    <a class="logo" href="/">
+      <!-- Prefer an SVG if you have one: /images/logo.svg -->
+      <!-- If you want retina support, use srcset with 1x/2x files -->
+      <img
+        src="/images/logo.png"
+        srcset="/images/logo.png 1x, /images/logo@2x.png 2x"
+        alt="Everette Xue"
+        class="logo-img"
+        loading="lazy"
+        width="160"
+        height="40"
+      />
+    </a>
+
+    <div class="links">
+      <a href="#">Home</a>
+      <a href="#">About</a>
+      <a href="#">Services</a>
+      <a href="#">Contact</a>
+    </div>
+  </nav>
   <div id="smooth-wrapper">
   <div id="smooth-content">
     <div class="background-grid">
