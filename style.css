@@ -264,6 +264,13 @@ h2 {
 }
 
 
+.menu-bar nav {
+  margin-left: 0;        /* remove any unwanted extra margin */
+  padding-right: 20px;   /* add space from the right edge */
+}
+
+
+
 
 
 .navbar a {
