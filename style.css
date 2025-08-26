@@ -267,23 +267,6 @@ h2 {
 
 
 
-.navbar .logo {
-  height: 60px;           /* fixed container for logo */
-  overflow: hidden;       /* prevents stretching */
-}
-
-.navbar .logo img {
-  height: 100%;           /* fills container */
-  width: auto;
-  transition: height 0.3s ease;
-}
-
-
-
-.navbar.shrink .logo {
-  height: 40px;           /* shrink container */
-}
-
 
 
 
