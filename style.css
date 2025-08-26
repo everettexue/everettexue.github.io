@@ -279,6 +279,13 @@ color: #007bff;
 }
 
 
+.logo img {
+  height: 50px; /* or whatever fits */
+  width: auto;  /* keeps rectangle shape */
+}
+
+
+
 
 
 
