@@ -257,12 +257,33 @@ h2 {
   padding: 30px 40px;    /* larger at top */
   transition: padding 0.3s ease, background-color 0.3s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
 }
 
 .navbar.shrink {
   padding: 10px 20px;    /* smaller after scroll */
 }
+
+
+
+
+
+.navbar .logo {
+  height: 60px;           /* fixed container for logo */
+  overflow: hidden;       /* prevents stretching */
+}
+
+.navbar .logo img {
+  height: 100%;           /* fills container */
+  width: auto;
+  transition: height 0.3s ease;
+}
+
+
+
+.navbar.shrink .logo {
+  height: 40px;           /* shrink container */
+}
+
 
 
 
