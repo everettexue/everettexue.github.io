@@ -123,16 +123,6 @@ window.addEventListener('scroll', () => {
   }
 });
 
-.navbar .logo img {
-  height: 60px;
-  transition: height 0.3s ease;
-}
-
-.navbar.shrink .logo img {
-  height: 40px;
-}
-
-
 
 
 
@@ -173,7 +163,3 @@ function shine() {
 
 btn.addEventListener('mouseenter', shine);
 btn.addEventListener('focus', shine);
-
-
-
-
