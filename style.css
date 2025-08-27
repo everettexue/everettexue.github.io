@@ -270,7 +270,9 @@ h2 {
 }
 
 
-
+.links {
+  transform: translateX(-5vw);
+}
 
 
 .navbar a {
