@@ -244,19 +244,23 @@ h2 {
 }
 
 .navbar {
-  position: fixed;       /* stays at the top */
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
-  background-color: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(5px);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 30px 40px;    /* larger at top */
-  transition: padding 0.3s ease, background-color 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 30px 40px;
   z-index: 1000;
+
+  background: rgba(255, 255, 255, 0.2); /* semi-transparent */
+  backdrop-filter: blur(20px) saturate(180%); /* frosted glass effect */
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-radius: 15px; /* optional rounded corners */
+  border: 1px solid rgba(255,255,255,0.3);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
 }
 
 .navbar.shrink {
