@@ -3,50 +3,9 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Black Grid with Thick Lines</title>
+<title>Simple White Grid</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="panel">
-<label>Cell size: <span id="cellVal">24</span>px</label>
-<input id="cell" type="range" min="8" max="64" step="1" value="24">
-
-
-<label>Thick line every <span id="stepVal">5</span> cells</label>
-<input id="step" type="range" min="2" max="12" step="1" value="5">
-
-
-<label>Thin line width: <span id="thinVal">1</span>px</label>
-<input id="thin" type="range" min="1" max="3" step="1" value="1">
-
-
-<label>Thick line width: <span id="thickVal">2</span>px</label>
-<input id="thick" type="range" min="2" max="6" step="1" value="2">
-</div>
-
-
-<div class="hint">Tip: tweak sliders or edit the CSS variables in <code>:root</code>.</div>
-
-
-<script src="script.js"></script>
 </body>
 </html>
-
-
-/* style.css */
-:root {
---bg: #000000;
---thin: #ffffff22;
---thick: #ffffff66;
-
-
---cell: 24px;
---thick-step: 5;
---thin-w: 1px;
---thick-w: 2px;
-}
-
-
-html, body {
-height: 100%;
-}
