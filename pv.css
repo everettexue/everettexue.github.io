@@ -1,1 +1,70 @@
+:root {
+--bg: #000000;
+--thin: #ffffff22;
+--thick: #ffffff66;
 
+
+--cell: 24px;
+--thick-step: 5;
+--thin-w: 1px;
+--thick-w: 2px;
+}
+
+
+html, body {
+height: 100%;
+}
+
+
+body {
+margin: 0;
+background:
+repeating-linear-gradient(
+to right,
+transparent 0,
+transparent calc(var(--cell) * var(--thick-step) - var(--thick-w) / 2),
+var(--thick) calc(var(--cell) * var(--thick-step) - var(--thick-w) / 2),
+var(--thick) calc(var(--cell) * var(--thick-step) + var(--thick-w) / 2)
+),
+repeating-linear-gradient(
+to bottom,
+transparent 0,
+transparent calc(var(--cell) * var(--thick-step) - var(--thick-w) / 2),
+var(--thick) calc(var(--cell) * var(--thick-step) - var(--thick-w) / 2),
+var(--thick) calc(var(--cell) * var(--thick-step) + var(--thick-w) / 2)
+),
+repeating-linear-gradient(
+to right,
+var(--thin) 0,
+var(--thin) var(--thin-w),
+transparent var(--thin-w),
+transparent var(--cell)
+),
+repeating-linear-gradient(
+to bottom,
+var(--thin) 0,
+var(--thin) var(--thin-w),
+transparent var(--thin-w),
+transparent var(--cell)
+),
+var(--bg);
+
+
+color: #fff;
+font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+display: grid;
+place-items: center;
+min-height: 100svh;
+}
+
+
+.panel {
+position: fixed;
+top: 12px;
+left: 12px;
+padding: 10px 12px;
+background: #0008;
+border: 1px solid #ffffff22;
+border-radius: 12px;
+backdrop-filter: blur(6px);
+}
