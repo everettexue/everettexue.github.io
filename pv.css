@@ -1,20 +1,20 @@
 body {
-margin: 0;
-height: 100vh;
-background:
-repeating-linear-gradient(
-to right,
-white 0,
-white 1px,
-transparent 1px,
-transparent 40px
-),
-repeating-linear-gradient(
-to bottom,
-white 0,
-white 1px,
-transparent 1px,
-transparent 40px
-);
-background-color: black;
+  margin: 0;
+  height: 100vh;
+  background-color: black; /* solid black background */
+  background-image:
+    repeating-linear-gradient(
+      to right,
+      white 0,
+      white 1px,
+      transparent 1px,
+      transparent 40px
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      white 0,
+      white 1px,
+      transparent 1px,
+      transparent 40px
+    );
 }
