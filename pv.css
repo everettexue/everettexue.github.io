@@ -17,5 +17,5 @@ body {
       transparent 0.5px,
       transparent 40px
     );
-  background-position: 20px 20px, 20px 20px; /* shift both vertical + horizontal lines by half a cell */
+  background-position: 20px 20px, 20px 20px; /* offset both directions by half a cell */
 }
