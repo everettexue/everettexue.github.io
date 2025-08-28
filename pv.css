@@ -17,4 +17,5 @@ to bottom,
 transparent 0.5px,
 transparent 40px
 );
+background-position: 20px 0, 0 0; /* shift vertical lines by half a cell (20px) */
 }
