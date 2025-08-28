@@ -2,7 +2,29 @@ body {
   margin: 0;
   height: 100vh;
   background-color: black;
+
   background-image:
+    /* Thicker vertical lines */
+    repeating-linear-gradient(
+      to right,
+      transparent 0,
+      transparent 199.5px, /* 5 cells * 40px - half line width */
+      #888 199.5px,
+      #888 200.5px,        /* 1px thick */
+      transparent 200.5px,
+      transparent 200px
+    ),
+    /* Thicker horizontal lines */
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 199.5px,
+      #888 199.5px,
+      #888 200.5px,
+      transparent 200.5px,
+      transparent 200px
+    ),
+    /* Thin vertical lines */
     repeating-linear-gradient(
       to right,
       #ccc 0,
@@ -10,6 +32,7 @@ body {
       transparent 0.5px,
       transparent 40px
     ),
+    /* Thin horizontal lines */
     repeating-linear-gradient(
       to bottom,
       #ccc 0,
@@ -17,5 +40,6 @@ body {
       transparent 0.5px,
       transparent 40px
     );
-  background-position: 20px 20px, 20px 20px; /* offset both directions by half a cell */
+
+  background-position: 20px 20px, 20px 20px, 20px 20px, 20px 20px; /* offset all by half a cell */
 }
