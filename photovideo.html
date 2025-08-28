@@ -1,32 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Gallery on Grid</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive Media Gallery</title>
   <link rel="stylesheet" href="pv.css">
 </head>
 <body>
   <h1>Photo & Video Library</h1>
 
   <div class="gallery">
-    <!-- Photo Example -->
-    <div class="media">
-      <img 
-        class="lazy" 
-        src="lowres/photo1-low.jpg" 
-        data-src="highres/photo1-high.jpg" 
-        alt="Photo 1">
+    <!-- Photo -->
+    <div class="media" data-type="image" data-high="highres/photo1-high.jpg">
+      <img class="lazy" src="lowres/photo1-low.jpg" alt="Photo 1">
     </div>
 
-    <!-- Video Example -->
-    <div class="media">
-      <video controls poster="lowres/video1-poster-low.jpg">
-        <source data-src="highres/video1-high.mp4" type="video/mp4">
+    <!-- Video -->
+    <div class="media" data-type="video" data-high="highres/video1-high.mp4">
+      <video muted loop class="preview" poster="lowres/video1-poster-low.jpg">
+        <source src="lowres/video1-preview.mp4" type="video/mp4">
       </video>
+      <span class="duration">0:15</span>
     </div>
+  </div>
 
-    <!-- Add more items by copying the div.media blocks -->
+  <!-- Lightbox -->
+  <div class="lightbox" id="lightbox">
+    <span class="close">&times;</span>
+    <span class="prev">&#10094;</span>
+    <span class="next">&#10095;</span>
+    <div class="lightbox-content">
+      <img id="lb-image" src="" alt="">
+      <video id="lb-video" controls></video>
+    </div>
   </div>
 
   <script src="script.js"></script>
