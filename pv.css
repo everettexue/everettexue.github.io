@@ -1,45 +1,69 @@
-body {
-  margin: 0;
-  height: 100vh;
-  background-color: black;
+:root{
+  --bg: #000000;
+  --thin-color: #ccc;          /* bright gray for thin lines */
+  --thin-w: 0.5px;            /* thin line width */
+  --cell: 40px;               /* cell size */
+  --offset: calc(var(--cell) / 2); /* half-cell offset */
+  --thick-color: #888;        /* guide line color */
+  --thick-step: calc(var(--cell) * 5); /* every 5 cells */
+  --thick-w: 1.5px;           /* guide line width */
+}
 
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body{
+  background-color: var(--bg);
+
+  /* layer order:
+     1) thick vertical (under)
+     2) thick horizontal (under)
+     3) thin vertical (on top)
+     4) thin horizontal (on top)
+  */
   background-image:
-    /* Thicker vertical lines */
+    /* thick vertical lines every --thick-step */
     repeating-linear-gradient(
       to right,
       transparent 0,
-      transparent 199.5px, /* 5 cells * 40px - half line width */
-      #888 199.5px,
-      #888 200.5px,        /* 1px thick */
-      transparent 200.5px,
-      transparent 200px
+      transparent calc(var(--thick-step) - (var(--thick-w) / 2)),
+      var(--thick-color) calc(var(--thick-step) - (var(--thick-w) / 2)),
+      var(--thick-color) calc(var(--thick-step) + (var(--thick-w) / 2))
     ),
-    /* Thicker horizontal lines */
+    /* thick horizontal lines every --thick-step */
     repeating-linear-gradient(
       to bottom,
       transparent 0,
-      transparent 199.5px,
-      #888 199.5px,
-      #888 200.5px,
-      transparent 200.5px,
-      transparent 200px
+      transparent calc(var(--thick-step) - (var(--thick-w) / 2)),
+      var(--thick-color) calc(var(--thick-step) - (var(--thick-w) / 2)),
+      var(--thick-color) calc(var(--thick-step) + (var(--thick-w) / 2))
     ),
-    /* Thin vertical lines */
+    /* thin vertical lines every --cell */
     repeating-linear-gradient(
       to right,
-      #ccc 0,
-      #ccc 0.5px,
-      transparent 0.5px,
-      transparent 40px
+      var(--thin-color) 0,
+      var(--thin-color) var(--thin-w),
+      transparent var(--thin-w),
+      transparent var(--cell)
     ),
-    /* Thin horizontal lines */
+    /* thin horizontal lines every --cell */
     repeating-linear-gradient(
       to bottom,
-      #ccc 0,
-      #ccc 0.5px,
-      transparent 0.5px,
-      transparent 40px
+      var(--thin-color) 0,
+      var(--thin-color) var(--thin-w),
+      transparent var(--thin-w),
+      transparent var(--cell)
     );
 
-  background-position: 20px 20px, 20px 20px, 20px 20px, 20px 20px; /* offset all by half a cell */
+  /* offset all layers by half a cell so lines start centered */
+  background-position:
+    var(--offset) var(--offset),
+    var(--offset) var(--offset),
+    var(--offset) var(--offset),
+    var(--offset) var(--offset);
+
+  /* make sure background fills viewport */
+  background-repeat: repeat;
 }
