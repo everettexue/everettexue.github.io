@@ -1,54 +1,59 @@
 :root{
   --bg: #000000;
-  --thin-color: #ccc;        /* bright gray */
-  --thick-color: #888;       /* guide line color */
-  --cell: 40px;              /* cell size (integer px helps) */
-  --half: calc(var(--cell) / 2);
-  --thin-w: 1px;             /* use 1px to avoid subpixel gaps */
-  --thick-step-cells: 5;     /* guide every N cells */
-  --thick-w: 2px;
+  --line-color: rgb(45,45,45);   /* all lines use this color */
+  --cell: 40px;                  /* size of one grid square */
+  --half: calc(var(--cell) / 2); /* half-cell offset */
+  --thin-w: 1px;                 /* thin line width (avoid subpixel) */
+  --thick-step-cells: 5;         /* thicker guide every N cells */
+  --thick-w: 2px;                /* thicker guide width */
 }
 
-/* full-viewport */
-html,body{ height:100%; margin:0; }
+/* full viewport */
+html, body { height: 100%; margin: 0; }
 
 body{
   background-color: var(--bg);
 
-  /*
-    Order of images: thick vertical, thick horizontal, thin vertical, thin horizontal
-    We use linear-gradients + background-size to tile precisely so no lines disappear.
+  /* Layer order:
+     1) thick vertical
+     2) thick horizontal
+     3) thin vertical
+     4) thin horizontal
   */
   background-image:
-    /* thick vertical line (1 column in a N-cell tile) */
-    linear-gradient(to right,
-      var(--thick-color) 0 calc(var(--thick-w)),
-      transparent calc(var(--thick-w)) 100%),
-    /* thick horizontal line */
-    linear-gradient(to bottom,
-      var(--thick-color) 0 calc(var(--thick-w)),
-      transparent calc(var(--thick-w)) 100%),
-    /* thin vertical lines */
-    linear-gradient(to right,
-      var(--thin-color) 0 calc(var(--thin-w)),
-      transparent calc(var(--thin-w)) 100%),
-    /* thin horizontal lines */
-    linear-gradient(to bottom,
-      var(--thin-color) 0 calc(var(--thin-w)),
-      transparent calc(var(--thin-w)) 100%);
+    /* thick vertical (repeats every --thick-step-cells * --cell) */
+    linear-gradient(
+      to right,
+      var(--line-color) 0 calc(var(--thick-w)),
+      transparent calc(var(--thick-w)) 100%
+    ),
+    /* thick horizontal */
+    linear-gradient(
+      to bottom,
+      var(--line-color) 0 calc(var(--thick-w)),
+      transparent calc(var(--thick-w)) 100%
+    ),
+    /* thin vertical */
+    linear-gradient(
+      to right,
+      var(--line-color) 0 calc(var(--thin-w)),
+      transparent calc(var(--thin-w)) 100%
+    ),
+    /* thin horizontal */
+    linear-gradient(
+      to bottom,
+      var(--line-color) 0 calc(var(--thin-w)),
+      transparent calc(var(--thin-w)) 100%
+    );
 
-  /* precise tiling sizes */
+  /* Precise tiling to avoid missing lines */
   background-size:
-    /* thick vertical tile width = cell * thick-step, full height */
-    calc(var(--cell) * var(--thick-step-cells)) 100%,
-    /* thick horizontal tile height = cell * thick-step, full width */
-    100% calc(var(--cell) * var(--thick-step-cells)),
-    /* thin vertical tile width = cell, full height */
-    var(--cell) 100%,
-    /* thin horizontal tile height = cell, full width */
-    100% var(--cell);
+    calc(var(--cell) * var(--thick-step-cells)) 100%,  /* thick vertical tile width */
+    100% calc(var(--cell) * var(--thick-step-cells)),  /* thick horizontal tile height */
+    var(--cell) 100%,                                   /* thin vertical tile width */
+    100% var(--cell);                                   /* thin horizontal tile height */
 
-  /* offset everything by half a cell so lines start centered */
+  /* Half-cell offset so lines start centered */
   background-position:
     var(--half) var(--half),
     var(--half) var(--half),
