@@ -1,21 +1,21 @@
 body {
-margin: 0;
-height: 100vh;
-background-color: black; /* solid black background */
-background-image:
-repeating-linear-gradient(
-to right,
-#ccc 0,
-#ccc 0.5px,
-transparent 0.5px,
-transparent 40px
-),
-repeating-linear-gradient(
-to bottom,
-#ccc 0,
-#ccc 0.5px,
-transparent 0.5px,
-transparent 40px
-);
-background-position: 20px 0, 0 0; /* shift vertical lines by half a cell (20px) */
+  margin: 0;
+  height: 100vh;
+  background-color: black;
+  background-image:
+    repeating-linear-gradient(
+      to right,
+      #ccc 0,
+      #ccc 0.5px,
+      transparent 0.5px,
+      transparent 40px
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      #ccc 0,
+      #ccc 0.5px,
+      transparent 0.5px,
+      transparent 40px
+    );
+  background-position: 20px 20px, 20px 20px; /* shift both vertical + horizontal lines by half a cell */
 }
