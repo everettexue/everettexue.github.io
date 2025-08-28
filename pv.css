@@ -1,18 +1,19 @@
 /* Grid background */
 :root{
   --bg: #000000;
-  --thin-color: #ccc;
-  --thick-color: #888;
-  --cell: 40px;
+  --thin-color: #ccc;        /* bright gray */
+  --thick-color: #888;       /* guide line color */
+  --cell: 40px;              /* cell size */
   --half: calc(var(--cell)/2);
   --thin-w: 1px;
-  --thick-step-cells: 5;
+  --thick-step-cells: 5;     /* guide every N cells */
   --thick-w: 2px;
 }
 
 html, body { height: 100%; margin: 0; font-family: sans-serif; }
 body {
   background-color: var(--bg);
+  /* Grid background */
   background-image:
     linear-gradient(to right, var(--thick-color) 0 calc(var(--thick-w)), transparent calc(var(--thick-w)) 100%),
     linear-gradient(to bottom, var(--thick-color) 0 calc(var(--thick-w)), transparent calc(var(--thick-w)) 100%),
