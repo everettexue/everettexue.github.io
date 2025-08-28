@@ -1,64 +1,57 @@
+/* Grid Background */
 :root{
   --bg: #000000;
-  --line-color: rgb(45,45,45);   /* all lines use this color */
-  --cell: 40px;                  /* size of one grid square */
-  --half: calc(var(--cell) / 2); /* half-cell offset */
-  --thin-w: 1px;                 /* thin line width (avoid subpixel) */
-  --thick-step-cells: 5;         /* thicker guide every N cells */
-  --thick-w: 2px;                /* thicker guide width */
+  --thin-color: #ccc;
+  --thick-color: #888;
+  --cell: 40px;
+  --half: calc(var(--cell) / 2);
+  --thin-w: 1px;
+  --thick-step-cells: 5;
+  --thick-w: 2px;
 }
 
-/* full viewport */
-html, body { height: 100%; margin: 0; }
-
-body{
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: sans-serif;
   background-color: var(--bg);
-
-  /* Layer order:
-     1) thick vertical
-     2) thick horizontal
-     3) thin vertical
-     4) thin horizontal
-  */
   background-image:
-    /* thick vertical (repeats every --thick-step-cells * --cell) */
-    linear-gradient(
-      to right,
-      var(--line-color) 0 calc(var(--thick-w)),
-      transparent calc(var(--thick-w)) 100%
-    ),
-    /* thick horizontal */
-    linear-gradient(
-      to bottom,
-      var(--line-color) 0 calc(var(--thick-w)),
-      transparent calc(var(--thick-w)) 100%
-    ),
-    /* thin vertical */
-    linear-gradient(
-      to right,
-      var(--line-color) 0 calc(var(--thin-w)),
-      transparent calc(var(--thin-w)) 100%
-    ),
-    /* thin horizontal */
-    linear-gradient(
-      to bottom,
-      var(--line-color) 0 calc(var(--thin-w)),
-      transparent calc(var(--thin-w)) 100%
-    );
-
-  /* Precise tiling to avoid missing lines */
+    linear-gradient(to right, var(--thick-color) 0 calc(var(--thick-w)), transparent calc(var(--thick-w)) 100%),
+    linear-gradient(to bottom, var(--thick-color) 0 calc(var(--thick-w)), transparent calc(var(--thick-w)) 100%),
+    linear-gradient(to right, var(--thin-color) 0 calc(var(--thin-w)), transparent calc(var(--thin-w)) 100%),
+    linear-gradient(to bottom, var(--thin-color) 0 calc(var(--thin-w)), transparent calc(var(--thin-w)) 100%);
   background-size:
-    calc(var(--cell) * var(--thick-step-cells)) 100%,  /* thick vertical tile width */
-    100% calc(var(--cell) * var(--thick-step-cells)),  /* thick horizontal tile height */
-    var(--cell) 100%,                                   /* thin vertical tile width */
-    100% var(--cell);                                   /* thin horizontal tile height */
-
-  /* Half-cell offset so lines start centered */
-  background-position:
-    var(--half) var(--half),
-    var(--half) var(--half),
-    var(--half) var(--half),
-    var(--half) var(--half);
-
+    calc(var(--cell) * var(--thick-step-cells)) 100%,
+    100% calc(var(--cell) * var(--thick-step-cells)),
+    var(--cell) 100%,
+    100% var(--cell);
+  background-position: var(--half) var(--half),
+                       var(--half) var(--half),
+                       var(--half) var(--half),
+                       var(--half) var(--half);
   background-repeat: repeat;
+  color: #fff;
+  padding: 20px;
+}
+
+/* Gallery Styling */
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.media img, .media video {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 8px;
+  background: #222;
+  transition: filter 0.3s;
+}
+
+/* Optional: blur low-res images until loaded */
+.lazy {
+  filter: blur(5px);
 }
