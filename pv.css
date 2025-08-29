@@ -1,126 +1,74 @@
-/* --- Grid background & general body --- */
-:root{
-  --bg: #000000;
-  --line-color: rgb(45,45,45);
-  --cell: 40px;
-  --half: calc(var(--cell)/2);
-  --thin-w: 1px;
-  --thick-step-cells: 5;
-  --thick-w: 2px;
-}
-
-html, body {
-  height: 100%;
+body {
   margin: 0;
+  background: #000;
+  color: #fff;
   font-family: sans-serif;
 }
 
-body {
-  background-color: var(--bg);
-  background-image:
-    linear-gradient(to right, var(--line-color) 0 calc(var(--thick-w)), transparent calc(var(--thick-w)) 100%),
-    linear-gradient(to bottom, var(--line-color) 0 calc(var(--thick-w)), transparent calc(var(--thick-w)) 100%),
-    linear-gradient(to right, var(--line-color) 0 calc(var(--thin-w)), transparent calc(var(--thin-w)) 100%),
-    linear-gradient(to bottom, var(--line-color) 0 calc(var(--thin-w)), transparent calc(var(--thin-w)) 100%);
-  background-size:
-    calc(var(--cell) * var(--thick-step-cells)) 100%,
-    100% calc(var(--cell) * var(--thick-step-cells)),
-    var(--cell) 100%,
-    100% var(--cell);
-  background-position:
-    var(--half) var(--half),
-    var(--half) var(--half),
-    var(--half) var(--half),
-    var(--half) var(--half);
-  background-repeat: repeat;
-  color: #fff;
-  padding: 20px;
-}
-
-/* --- Masonry style gallery --- */
 .gallery {
-  column-count: 4;         /* auto tile images into columns */
-  column-gap: 15px;
+  margin: 20px;
 }
 
-.media {
+.gallery-item {
   position: relative;
-  cursor: pointer;
-  margin-bottom: 15px;
-  break-inside: avoid;     /* avoid breaking images */
+  margin-bottom: 10px;
   border-radius: 8px;
   overflow: hidden;
 }
 
-.media.large {
-  grid-column: span 2;     /* optional class for larger images in CSS Grid if using grid */
-  width: 100%;             /* full width for column */
-}
-
-/* Thumbnails */
-.media img.thumb,
-.media video.preview {
+.gallery-item img,
+.gallery-item video {
   width: 100%;
-  height: auto;
   display: block;
-  object-fit: cover;
-  background: #222;
+  border-radius: 8px;
+  cursor: pointer;
 }
 
-/* Video duration overlay */
-.media .duration {
+/* Video length overlay */
+.video-length {
   position: absolute;
-  top: 5px;
-  right: 5px;             /* change to left:5px for top-left */
-  background: rgba(0,0,0,0.6);
-  color: #fff;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 2px 6px;
   font-size: 12px;
-  padding: 2px 4px;
-  border-radius: 3px;
-  z-index: 10;
+  border-radius: 4px;
 }
 
-/* --- Lightbox --- */
+/* Optional larger tiles */
+.gallery-item.large {
+  grid-row-end: span 2;
+}
+
+/* Lightbox */
 .lightbox {
   display: none;
   position: fixed;
-  top:0; left:0;
-  width:100%; height:100%;
+  inset: 0;
   background: rgba(0,0,0,0.9);
-  z-index: 1000;
+  z-index: 9999;
   justify-content: center;
   align-items: center;
 }
 
-.lightbox.active { display: flex; }
-
-.lightbox-content {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+.lightbox-content img,
+.lightbox-content video {
   max-width: 90%;
-  max-height: 90%;
+  max-height: 80%;
+  border-radius: 8px;
 }
 
-.lightbox img, .lightbox video {
-  max-width: 100%;
-  max-height: 100%;
-  display: block;
-  margin: auto;
-}
-
-/* Controls */
 .lightbox .close,
 .lightbox .prev,
 .lightbox .next {
   position: absolute;
-  color: #fff;
-  font-size: 36px;
-  padding: 10px;
+  color: white;
+  font-size: 2rem;
+  font-weight: bold;
   cursor: pointer;
   user-select: none;
 }
 
-.lightbox .close { top: 10px; right: 20px; }
-.lightbox .prev { top: 50%; left: 20px; transform: translateY(-50%);}
-.lightbox .next { top: 50%; right: 20px; transform: translateY(-50%);}
+.lightbox .close { top: 20px; right: 30px; }
+.lightbox .prev { left: 30px; top: 50%; transform: translateY(-50%); }
+.lightbox .next { right: 30px; top: 50%; transform: translateY(-50%); }
