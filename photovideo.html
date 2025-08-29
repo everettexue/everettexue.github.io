@@ -5,36 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gallery</title>
   <link rel="stylesheet" href="pv.css">
-  <style>
-    /* Lightbox styles (add to pv.css if preferred) */
-    .lightbox {
-      display: none;
-      position: fixed;
-      z-index: 9999;
-      top:0; left:0;
-      width:100%;
-      height:100%;
-      background: rgba(0,0,0,0.85);
-      justify-content: center;
-      align-items: center;
-      cursor: pointer;
-    }
-    .lightbox-img {
-      max-width: 90%;
-      max-height: 90%;
-      border-radius: 6px;
-      box-shadow: 0 6px 30px rgba(0,0,0,0.5);
-    }
-    .lightbox-close {
-      position: absolute;
-      top: 20px;
-      right: 30px;
-      font-size: 36px;
-      color: #fff;
-      cursor: pointer;
-      user-select: none;
-    }
-  </style>
 </head>
 <body>
 
@@ -44,19 +14,12 @@
     <div class="grid-sizer"></div>
 
     <div class="grid-item"><div class="card"><img src="https://plus.unsplash.com/premium_photo-1661753668576-d7e14f27edf4?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8dGVtcGxhdGV8ZW58MHx8MHx8fDA%3D" alt="Image 1"></div></div>
-
     <div class="grid-item"><div class="card"><img src="https://images.unsplash.com/photo-1472289065668-ce650ac443d2?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8dGVtcGxhdGV8ZW58MHx8MHx8fDA%3D" alt="Image 2"></div></div>
-
     <div class="grid-item"><div class="card"><img src="https://images.unsplash.com/photo-1541598599844-19a0319b8846?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8dGVtcGxhdGV8ZW58MHx8MHx8fDA%3D" alt="Image 3"></div></div>
-
     <div class="grid-item"><div class="card"><img src="https://images.unsplash.com/photo-1491975474562-1f4e30bc9468?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8dGVtcGxhdGV8ZW58MHx8MHx8fDA%3D" alt="Image 4"></div></div>
-
     <div class="grid-item"><div class="card"><img src="https://plus.unsplash.com/premium_photo-1670452415632-488a882c76c7?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTN8fHRlbXBsYXRlfGVufDB8fDB8fHww" alt="Image 5"></div></div>
-
     <div class="grid-item"><div class="card"><img src="https://images.unsplash.com/reserve/LJIZlzHgQ7WPSh5KVTCB_Typewriter.jpg?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTZ8fHRlbXBsYXRlfGVufDB8fDB8fHww" alt="Image 6"></div></div>
-
     <div class="grid-item"><div class="card"><img src="https://images.unsplash.com/photo-1510070009289-b5bc34383727?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fHRlbXBsYXRlfGVufDB8fDB8fHww" alt="Image 7"></div></div>
-
     <div class="grid-item"><div class="card"><img src="https://images.unsplash.com/photo-1521572063439-8a4186b6d843?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fHRlbXBsYXRlfGVufDB8fDB8fHww" alt="Image 8"></div></div>
 
   </div>
@@ -68,49 +31,7 @@
   <img class="lightbox-img" src="" alt="">
 </div>
 
-<script src="pv.js"></script>
 <script src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.min.js"></script>
-<script>
-  // Initialize Masonry
-  var grid = document.querySelector('.grid');
-  var msnry = new Masonry(grid, {
-    itemSelector: '.grid-item',
-    columnWidth: '.grid-sizer',
-    percentPosition: true,
-    gutter: 12
-  });
-
-  // Lightbox functionality
-  const lightbox = document.getElementById("lightbox");
-  const lightboxImg = document.querySelector(".lightbox-img");
-  const closeBtn = document.querySelector(".lightbox-close");
-
-  document.querySelectorAll(".grid-item img").forEach(img => {
-    img.addEventListener("click", () => {
-      lightbox.style.display = "flex";
-      lightboxImg.src = img.src;
-      lightboxImg.alt = img.alt || "";
-    });
-  });
-
-  closeBtn.addEventListener("click", () => {
-    lightbox.style.display = "none";
-    lightboxImg.src = "";
-  });
-
-  lightbox.addEventListener("click", (e) => {
-    if(e.target === lightbox){
-      lightbox.style.display = "none";
-      lightboxImg.src = "";
-    }
-  });
-
-  document.addEventListener("keydown", (e) => {
-    if(e.key === "Escape"){
-      lightbox.style.display = "none";
-      lightboxImg.src = "";
-    }
-  });
-</script>
+<script src="pv.js"></script>
 </body>
 </html>
