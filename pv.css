@@ -6,11 +6,10 @@ html,body{margin:0;font-family:system-ui,Arial,sans-serif;width:100%;}
   margin:0;
 }
 .grid-sizer{
-  width:20%; /* dynamically allows 5 columns maximum */
+  width:0; /* placeholder for Masonry */
 }
 .grid-item{
-  width:20%;
-  padding:6px;
+  padding:6px; /* gutter */
 }
 
 .grid-item .card{
