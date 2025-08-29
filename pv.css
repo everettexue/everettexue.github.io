@@ -1,27 +1,22 @@
-/* Background */
 body {
   margin: 0;
   font-family: sans-serif;
-  background: linear-gradient(to bottom, #200020, #320032);
-  color: #fff;
+  background: #250021; /* keep your dark bg */
+  color: white;
 }
 
-/* Masonry container */
-/* Masonry container */
 .gallery {
   margin: 20px auto;
   padding: 10px;
   max-width: 1400px;
 }
 
-/* Items (FlexMasonry works on these) */
 .item {
   margin-bottom: 10px;
   border-radius: 8px;
   overflow: hidden;
 }
 
-/* Images (don't stretch huge anymore) */
 .item img {
   display: block;
   max-width: 100%;
@@ -33,34 +28,4 @@ body {
 
 .item img:hover {
   transform: scale(1.03);
-}
-
-
-/* Lightbox */
-.lightbox {
-  display: none;
-  position: fixed;
-  z-index: 1000;
-  padding-top: 60px;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.9);
-}
-
-.lightbox-content {
-  margin: auto;
-  display: block;
-  max-width: 90%;
-  max-height: 80vh;
-}
-
-.close {
-  position: absolute;
-  top: 20px;
-  right: 40px;
-  font-size: 40px;
-  color: #fff;
-  cursor: pointer;
 }
