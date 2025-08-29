@@ -1,26 +1,14 @@
 document.addEventListener("DOMContentLoaded", () => {
   const grid = document.querySelector('.grid');
-  let msnry;
-
-  function initMasonry() {
-    const columnWidth = window.innerWidth / 337; // dynamic column width based on viewport
-    imagesLoaded(grid, () => {
-      if(msnry) msnry.destroy(); // destroy previous instance
-      msnry = new Masonry(grid, {
-        itemSelector: '.grid-item',
-        columnWidth: columnWidth,
-        gutter: 12,
-        percentPosition: false
-      });
-    });
-  }
 
   // Initialize Masonry
-  initMasonry();
-
-  // Recalculate on window resize
-  window.addEventListener("resize", () => {
-    initMasonry();
+  imagesLoaded(grid, () => {
+    new Masonry(grid, {
+      itemSelector: '.grid-item',
+      columnWidth: '.grid-sizer',
+      gutter: 12,
+      percentPosition: true
+    });
   });
 
   // Lightbox
