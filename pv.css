@@ -1,26 +1,37 @@
 *{box-sizing:border-box;}
 html,body{margin:0;font-family:system-ui,Arial,sans-serif;width:100%;}
 
-/* Masonry-friendly grid: keep a visible .grid-sizer so Masonry can compute column widths */
+/* Ensure consistent gutter value if you want to reference it in CSS too */
+:root{
+  --gutter: 12px;
+}
+
+/* Masonry container */
 .grid{
   width:100%;
   margin:0 auto;
-  position: relative; /* Masonry will absolutely-position children relative to this */
+  position: relative; /* Masonry positions children absolutely relative to this */
 }
 
-/* This defines the base column width as a percentage.
-   Don't hide this — Masonry reads its width for columnWidth when percentPosition:true */
+/* Visible sizer used by Masonry. JS will set its width in px. */
 .grid-sizer{
-  width: 20%; /* 5 columns by default */
+  display: block;
+  box-sizing: border-box;
+  width: auto; /* controlled by JS */
+  height: 0;   /* keep it invisible visually; Masonry reads width */
+  padding: 0;
+  margin: 0;
 }
 
+/* Grid items: don't hardcode a percent width here — Masonry will position them.
+   Keep padding for internal spacing (optional). */
 .grid-item{
-  width:20%;
-  padding:6px;
-  /* Masonry will position items; float is harmless if present from legacy styles */
-  float: left;
+  box-sizing: border-box;
+  padding: 6px;
+  /* Do not set width here (Masonry uses columnWidth). */
 }
 
+/* Card style */
 .grid-item .card{
   background:#fff;
   border-radius:6px;
@@ -66,18 +77,4 @@ html,body{margin:0;font-family:system-ui,Arial,sans-serif;width:100%;}
   font-size:40px;
   color:#fff;
   cursor:pointer;
-}
-
-/* Responsive breakpoints: change the sizer & item widths so Masonry creates fewer columns */
-@media (max-width: 1199px) {
-  .grid-sizer, .grid-item { width: 25%; }      /* 4 columns */
-}
-@media (max-width: 899px) {
-  .grid-sizer, .grid-item { width: 33.3333%; } /* 3 columns */
-}
-@media (max-width: 599px) {
-  .grid-sizer, .grid-item { width: 50%; }      /* 2 columns */
-}
-@media (max-width: 420px) {
-  .grid-sizer, .grid-item { width: 100%; }     /* 1 column */
 }
