@@ -1,24 +1,22 @@
-/* pv.css — updated: half the padding, no items half-off-screen, images larger */
+/* Squarespace-like masonry styling */
 :root{
   --max-width: 1200px;
-  --gutter: 12px; /* <-- halved from 24px */
+  --gutter: 8px;            /* tight gutters like Squarespace */
+  --side-padding: 20px;     /* container side padding so images don't touch viewport */
+  --title-size: 18px;
+  --overlay-color: rgba(0,0,0,0.45);
+  --card-radius: 6px;
+  --transition: 300ms cubic-bezier(.2,.8,.2,1);
 }
 
-/* prevent horizontal scroll from tiny rounding issues */
-html,body { height:100%; margin:0; font-family: system-ui, Arial, sans-serif; background:#f8f8f8; color:#111; overflow-x: hidden; }
+html,body { height:100%; margin:0; font-family: "Helvetica Neue", Arial, sans-serif; background:#ffffff; color:#111; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
+.wrap { max-width: var(--max-width); margin:28px auto; padding:0 var(--side-padding); }
+.title { text-align:center; margin:0 0 18px; font-size:var(--title-size); font-weight:600; letter-spacing:.02em; color:#111; }
 
-/* give the page a bit more side padding so items don't butt right to the edge */
-.wrap { max-width: var(--max-width); margin:28px auto; padding:0 calc(var(--gutter) / 2 + 12px); }
-h1 { text-align:center; margin:0 0 18px; font-size:20px; }
+/* remove negative margins so items stay fully on-screen */
+.grid { margin-left: 0; margin-right: 0; }
 
-/* IMPORTANT: removed negative side margins so items won't be half off-screen */
-.grid {
-  margin-left: 0;
-  margin-right: 0;
-}
-
-/* each grid item keeps half-gutter padding (so horizontal spacing remains)
-   but with the gutter halved the images become wider (less inner padding) */
+/* each grid item receives half-gutter padding so spacing looks even */
 .grid > div {
   padding: calc(var(--gutter) / 2);
   box-sizing: border-box;
@@ -26,19 +24,88 @@ h1 { text-align:center; margin:0 0 18px; font-size:20px; }
   background: transparent;
 }
 
-/* visual card inside each item (JS wraps images in .card) */
+/* the .card wraps the image and contains overlay/caption */
 .grid > div .card {
-  background: #fff;
-  border-radius: 8px;
+  position: relative;
   overflow: hidden;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  border-radius: var(--card-radius);
+  background: #111; /* provides dark placeholder while image loads */
+  transform: translateZ(0);
+  transition: transform var(--transition), box-shadow var(--transition);
+  will-change: transform;
 }
 
-/* images use intrinsic heights (width/height attrs where provided) */
+/* subtle elevated look like Squarespace */
+.grid > div .card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+  border-radius: inherit;
+}
+
+/* image fills card and is cropped with object-fit */
 .grid img {
-  display: block;
-  width: 100%;
-  height: auto;
+  display:block;
+  width:100%;
+  height:100%;
+  min-height: 1px;
   object-fit: cover;
   vertical-align: middle;
+  transition: transform var(--transition);
+  backface-visibility: hidden;
+}
+
+/* overlay that appears on hover, uses alt text for caption (created by JS) */
+.card .overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 12px 14px;
+  background: linear-gradient(180deg, rgba(0,0,0,0) 0%, var(--overlay-color) 100%);
+  color: #fff;
+  font-size: 13px;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity var(--transition), transform var(--transition);
+  display: flex;
+  align-items: flex-end;
+  min-height: 48px;
+}
+
+/* caption text */
+.card .caption {
+  margin: 0;
+  line-height: 1.1;
+  font-weight: 500;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.35);
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* hover interactions: scale image slightly and show overlay */
+.grid > div .card:hover img,
+.grid > div .card:focus-within img {
+  transform: scale(1.04);
+}
+
+.grid > div .card:hover .overlay,
+.grid > div .card:focus-within .overlay {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* responsive tweaks: slightly larger gutters on small screens for touch comfort */
+@media (max-width: 700px) {
+  :root { --gutter: 10px; --side-padding: 18px; }
+}
+
+/* optional: nicer focus state for keyboard users */
+.card:focus-within {
+  outline: 3px solid rgba(21,156,228,0.12);
+  outline-offset: 3px;
 }
