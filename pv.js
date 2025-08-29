@@ -1,53 +1,70 @@
-// pv.js
-// - Waits for all images to load before first init
-// - Wraps images in .card so gutter padding is visible
+// pv.js — Squarespace-like behavior
+// - Waits for images to load before first init
+// - Wraps images in .card with overlay/caption (uses alt text)
 // - Re-initializes FlexMasonry on resize (debounced)
 
 const SELECTOR = '.grid';
 const DEBOUNCE_MS = 140;
 
-// debounce helper
+// simple debounce
 function debounce(fn, wait) {
-  let timer;
+  let t;
   return function(...args) {
-    clearTimeout(timer);
-    timer = setTimeout(() => fn.apply(this, args), wait);
+    clearTimeout(t);
+    t = setTimeout(() => fn.apply(this, args), wait);
   };
 }
 
-// wrap <img> with a .card if not already
+// wrap <img> with a .card and add overlay with caption (from alt)
 function wrapImages(grid) {
   Array.from(grid.querySelectorAll('img')).forEach(img => {
+    // already wrapped?
     if (img.parentElement && img.parentElement.classList.contains('card')) return;
+
     const card = document.createElement('div');
     card.className = 'card';
+
+    // overlay (caption) — uses alt text if present
+    const overlay = document.createElement('div');
+    overlay.className = 'overlay';
+
+    const caption = document.createElement('div');
+    caption.className = 'caption';
+    caption.textContent = img.alt || ''; // empty string if no alt
+
+    overlay.appendChild(caption);
+
+    // insert card and move img inside it, then append overlay
     img.parentNode.insertBefore(card, img);
     card.appendChild(img);
+    card.appendChild(overlay);
+
+    // make the card keyboard-focusable for accessibility
+    // if the image isn't already focusable, add tabindex so :focus-within styles work
+    if (!card.hasAttribute('tabindex')) {
+      card.setAttribute('tabindex', '0');
+    }
   });
 }
 
-// initialize or re-initialize FlexMasonry
+// initialize or reinitialize FlexMasonry
 function initMasonry(selector) {
   const grids = Array.from(document.querySelectorAll(selector));
   if (!grids.length) return;
 
-  // wrap images so padding becomes visible
+  // ensure images are wrapped with .card
   grids.forEach(wrapImages);
 
   // attempt to destroy prior instance if API exists
   if (typeof FlexMasonry !== 'undefined' && typeof FlexMasonry.destroy === 'function') {
-    try {
-      FlexMasonry.destroy(selector);
-    } catch (e) {
-      // ignore errors from destroy
-    }
+    try { FlexMasonry.destroy(selector); } catch (e) { /* ignore */ }
   }
 
-  // initialize with responsive breakpoints
+  // initialize with breakpoints tuned for a Squarespace-like feel
   FlexMasonry.init(selector, {
     responsive: true,
     breakpointCols: {
-      'min-width:1400px': 5,
+      'min-width:1600px': 5,
       'min-width:1200px': 4,
       'min-width:900px': 3,
       'min-width:600px': 2,
@@ -56,7 +73,7 @@ function initMasonry(selector) {
   });
 }
 
-// wait for all images to be loaded (or errored) before first init
+// wait for all images to load (or error) before first init
 (function initial() {
   const grids = Array.from(document.querySelectorAll(SELECTOR));
   if (!grids.length) return;
