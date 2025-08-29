@@ -1,72 +1,61 @@
-/* pv.css - Masonry layout using grid-sizer (percent-based column widths) */
+*{box-sizing:border-box;}
+html,body{margin:0;font-family:system-ui,Arial,sans-serif;width:100%;}
 
-:root{
-  --max-width: 1200px;
-  --gutter: 12px;         /* space between items */
-  --side-padding: 16px;   /* page side padding so nothing hugs the viewport */
-}
-
-/* basic page */
-*{box-sizing:border-box}
-html,body{height:100%;margin:0;font-family:system-ui,Arial,sans-serif;background:#fff;color:#111}
-.wrap{max-width:var(--max-width);margin:28px auto;padding:0 var(--side-padding)}
-.title{font-size:18px;margin:0 0 18px;text-align:center;font-weight:600}
-
-/* Masonry grid container */
 .grid{
-  /* clearfix for Masonry */
-  margin:0 auto;
+  width:100%;
+  margin:0;
 }
-
-/* grid-sizer sets column width percentage. Default here is 4 columns (25%) */
-.grid-sizer{ width:25%; }
-
-/* each item uses percent width as column units, gutters implemented via padding */
+.grid-sizer{
+  width:20%; /* dynamically allows 5 columns maximum */
+}
 .grid-item{
-  width:25%;                 /* fallback - Masonry uses grid-sizer for columnWidth */
-  padding: calc(var(--gutter) / 2);
-  box-sizing: border-box;
-  float:left;                /* not required, but keeps layout stable before Masonry runs */
+  width:20%;
+  padding:6px;
 }
 
-/* inner card */
 .grid-item .card{
   background:#fff;
   border-radius:6px;
   overflow:hidden;
   box-shadow:0 6px 18px rgba(0,0,0,0.06);
-  transition: transform 300ms cubic-bezier(.2,.8,.2,1);
+  transition: transform 300ms ease;
 }
 
-/* images fill card and transition filter for brightness on hover */
 .grid-item img{
-  display:block;
   width:100%;
   height:auto;
-  object-fit:cover;
-  vertical-align:middle;
-  backface-visibility:hidden;
-  transform:translateZ(0);
-  transition: transform 300ms cubic-bezier(.2,.8,.2,1), filter 260ms ease;
+  display:block;
+  object-fit:contain;
+  transition: transform 300ms ease, filter 300ms ease;
 }
 
-/* hover zoom + become whiter via brightness */
-.grid-item .card:hover img,
-.grid-item .card:focus-within img{
+.grid-item .card:hover img{
+  filter: brightness(1.08);
   transform: scale(1.03);
-  filter: brightness(1.18) saturate(1.02);
 }
 
-/* RESPONSIVE: change column counts by adjusting grid-sizer width and .grid-item width */
-@media (max-width:1200px){
-  .grid-sizer, .grid-item { width:33.333%; } /* 3 columns */
+/* Lightbox */
+.lightbox{
+  display:none;
+  position:fixed;
+  z-index:999;
+  left:0;
+  top:0;
+  width:100%;
+  height:100%;
+  background: rgba(0,0,0,0.9);
+  justify-content:center;
+  align-items:center;
 }
-@media (max-width:900px){
-  .grid-sizer, .grid-item { width:50%; }     /* 2 columns */
+.lightbox-content{
+  max-width:90%;
+  max-height:80%;
 }
-@media (max-width:600px){
-  .grid-sizer, .grid-item { width:100%; }    /* 1 column */
+.lightbox .close{
+  position:absolute;
+  top:20px;
+  right:30px;
+  font-size:40px;
+  color:#fff;
+  cursor:pointer;
 }
-
-/* accessibility: focus visible */
-.grid-item .card:focus-within{ outline: 3px solid rgba(21,156,228,0.12); outline-offset:3px; }
