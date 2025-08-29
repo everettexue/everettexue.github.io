@@ -3,13 +3,14 @@ html,body{margin:0;font-family:system-ui,Arial,sans-serif;width:100%;}
 
 .grid{
   width:100%;
-  margin:0;
+  margin:0 auto;
 }
 .grid-sizer{
-  width:0; /* placeholder for Masonry */
+  width: 20%; /* this defines 5 columns max, will scale dynamically */
 }
 .grid-item{
-  padding:6px; /* gutter */
+  width:20%;
+  padding:6px;
 }
 
 .grid-item .card{
@@ -29,7 +30,7 @@ html,body{margin:0;font-family:system-ui,Arial,sans-serif;width:100%;}
 }
 
 .grid-item .card:hover img{
-  filter: brightness(1.08);
+  filter: brightness(1.05);
   transform: scale(1.03);
 }
 
