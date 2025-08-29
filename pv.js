@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", function(){
   const lbVideo = document.getElementById("lb-video");
   let currentIndex = 0;
 
-  // Play video previews on hover
+  // Video hover preview
   galleryItems.forEach((item, index)=>{
     const type = item.dataset.type;
     if(type==="video"){
@@ -56,12 +56,12 @@ document.addEventListener("DOMContentLoaded", function(){
     showLightbox();
   }
 
-  // Lightbox controls
+  // Controls
   lightbox.querySelector(".close").addEventListener("click", hideLightbox);
   lightbox.querySelector(".next").addEventListener("click", next);
   lightbox.querySelector(".prev").addEventListener("click", prev);
 
-  // Keyboard navigation
+  // Keyboard
   document.addEventListener("keydown", e=>{
     if(lightbox.classList.contains("active")){
       if(e.key==="ArrowRight") next();
