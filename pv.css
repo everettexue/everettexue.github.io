@@ -38,20 +38,24 @@ html,body{height:100%;margin:0;font-family:system-ui,Arial,sans-serif;background
   transition: transform 300ms cubic-bezier(.2,.8,.2,1);
 }
 
-/* images fill card */
+/* images fill card and transition filter for brightness on hover */
 .grid-item img{
   display:block;
   width:100%;
   height:auto;
   object-fit:cover;
   vertical-align:middle;
-  display:block;
   backface-visibility:hidden;
   transform:translateZ(0);
+  transition: transform 300ms cubic-bezier(.2,.8,.2,1), filter 260ms ease;
 }
 
-/* hover zoom like many gallery UIs */
-.grid-item .card:hover img{ transform: scale(1.03); }
+/* hover zoom + become whiter via brightness */
+.grid-item .card:hover img,
+.grid-item .card:focus-within img{
+  transform: scale(1.03);
+  filter: brightness(1.18) saturate(1.02);
+}
 
 /* RESPONSIVE: change column counts by adjusting grid-sizer width and .grid-item width */
 @media (max-width:1200px){
