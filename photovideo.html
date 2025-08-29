@@ -1,33 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>FlexMasonry Gallery</title>
-  <link rel="stylesheet" href="pv.css">
-  <script src="https://unpkg.com/flexmasonry/dist/flexmasonry.js"></script>
-</head>
-<body>
-  <div class="gallery flexmasonry" id="gallery">
-    <div class="item"><img src="https://picsum.photos/400/600?random=1" alt=""></div>
-    <div class="item"><img src="https://picsum.photos/500/300?random=2" alt=""></div>
-    <div class="item"><img src="https://picsum.photos/400/500?random=3" alt=""></div>
-    <div class="item"><img src="https://picsum.photos/350/450?random=4" alt=""></div>
-    <div class="item"><img src="https://picsum.photos/400/400?random=5" alt=""></div>
-    <div class="item"><img src="https://picsum.photos/500/700?random=6" alt=""></div>
-    <div class="item"><img src="https://picsum.photos/450/500?random=7" alt=""></div>
-    <div class="item"><img src="https://picsum.photos/400/600?random=8" alt=""></div>
-  </div>
+<link rel="stylesheet" href="https://unpkg.com/flexmasonry/dist/flexmasonry.css">
+<script src="https://unpkg.com/flexmasonry/dist/flexmasonry.js"></script>
 
-  <script>
-    FlexMasonry.init('.gallery', {
-      responsive: true,
-      breakpoints: {
-        350: 1,   // 1 column on tiny screens
-        768: 2,   // 2 columns on tablets
-        1024: 3,  // 3 columns on small desktops
-        1400: 4   // 4 columns on large screens
-      }
-    });
-  </script>
-</body>
-</html>
+<div class="grid">
+    <div><img src="https://source.unsplash.com/t3DHojIo-08" alt=""></div>
+    <div><img src="https://source.unsplash.com/Imc-IoZDMXc" alt=""></div>
+    <div><img src="https://source.unsplash.com/SOZWHqeXcPQ" alt=""></div>
+    <div><img src="https://source.unsplash.com/bkdzvgBB7rQ" alt=""></div>
+    <div><img src="https://source.unsplash.com/Aruugw_rJCM" alt=""></div>
+</div>
+
+FlexMasonry.init('.grid');
