@@ -1,27 +1,24 @@
 *{box-sizing:border-box;}
 html,body{margin:0;font-family:system-ui,Arial,sans-serif;width:100%;}
 
-/* Responsive grid using CSS Grid:
-   - The number of columns will automatically change based on window width.
-   - Each column will be at least 180px wide (changeable) and will stretch to fill remaining space.
-*/
+/* Masonry-friendly grid: keep a visible .grid-sizer so Masonry can compute column widths */
 .grid{
   width:100%;
   margin:0 auto;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px; /* space between items */
+  position: relative; /* Masonry will absolutely-position children relative to this */
 }
 
-/* keep .grid-sizer if it's referenced by JS; otherwise it's unused */
+/* This defines the base column width as a percentage.
+   Don't hide this — Masonry reads its width for columnWidth when percentPosition:true */
 .grid-sizer{
-  display: none;
+  width: 20%; /* 5 columns by default */
 }
 
 .grid-item{
-  /* let the grid control the width; keep padding for gutters */
-  width:100%;
+  width:20%;
   padding:6px;
+  /* Masonry will position items; float is harmless if present from legacy styles */
+  float: left;
 }
 
 .grid-item .card{
@@ -71,12 +68,16 @@ html,body{margin:0;font-family:system-ui,Arial,sans-serif;width:100%;}
   cursor:pointer;
 }
 
-/* Optional: if you want different minimum column widths at breakpoints,
-   tweak minmax() with media queries below. Example:
-*/
-@media (min-width: 1200px) {
-  .grid { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+/* Responsive breakpoints: change the sizer & item widths so Masonry creates fewer columns */
+@media (max-width: 1199px) {
+  .grid-sizer, .grid-item { width: 25%; }      /* 4 columns */
 }
-@media (max-width: 480px) {
-  .grid { grid-template-columns: 1fr; gap: 8px; }
+@media (max-width: 899px) {
+  .grid-sizer, .grid-item { width: 33.3333%; } /* 3 columns */
+}
+@media (max-width: 599px) {
+  .grid-sizer, .grid-item { width: 50%; }      /* 2 columns */
+}
+@media (max-width: 420px) {
+  .grid-sizer, .grid-item { width: 100%; }     /* 1 column */
 }
