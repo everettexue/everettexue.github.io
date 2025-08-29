@@ -1,37 +1,23 @@
-:root{
-  --max-width: 1400px;
-  --gutter: 12px;
-  --side-padding: 16px;
-}
-
 *{box-sizing:border-box;}
 html,body{
   margin:0;
   font-family:system-ui,Arial,sans-serif;
   background:#fff;
   color:#111;
-}
-.wrap{
-  max-width:var(--max-width);
-  margin:28px auto;
-  padding:0 var(--side-padding);
-}
-.title{
-  font-size:20px;
-  margin:0 0 18px;
-  text-align:center;
-  font-weight:600;
+  width:100%;
 }
 
-/* Masonry grid */
 .grid{
-  margin:0 auto;
+  width:100%; /* edge-to-edge */
+  margin:0;
 }
+
 .grid-sizer{
   width:250px; /* minimum column width */
 }
+
 .grid-item{
-  padding: calc(var(--gutter)/2);
+  padding:6px; /* gutter */
 }
 
 .grid-item .card{
@@ -46,13 +32,10 @@ html,body{
   width:100%;
   height:auto;
   display:block;
-  object-fit:contain;
-  backface-visibility:hidden;
-  transform:translateZ(0);
+  object-fit:contain; /* no cropping */
   transition: transform 300ms ease, filter 300ms ease;
 }
 
-/* Hover effect */
 .grid-item .card:hover img{
   filter: brightness(1.08);
   transform: scale(1.03);
