@@ -16,16 +16,22 @@
       margin: 20px;
     }
 
-    .grid div {
-      background: #222;
-      border-radius: 8px;
-      overflow: hidden;
-      margin-bottom: 10px;
-    }
+.grid div {
+  position: relative;
+  width: 100%;
+  padding-bottom: 75%; /* 4:3 ratio, adjust as needed */
+  overflow: hidden;
+}
 
-    .grid img {
-      width: 100%;
-      display: block;
+.grid div img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
     }
   </style>
 </head>
