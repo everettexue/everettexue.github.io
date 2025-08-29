@@ -1,30 +1,27 @@
-// Init FlexMasonry
-FlexMasonry.init('.gallery', {
-  responsive: true,
-  breakpoints: {
-    350: { columns: 2 },
-    768: { columns: 3 },
-    1024: { columns: 4 },
-    1400: { columns: 6 }
-  }
-});
+// Wait for all images in .grid to finish loading (or error) before initializing FlexMasonry
+(function initFlexMasonryWhenReady(selector) {
+  const grids = Array.from(document.querySelectorAll(selector));
+  if (!grids.length) return;
 
-// Lightbox
-const lightbox = document.getElementById("lightbox");
-const lightboxImg = document.getElementById("lightbox-img");
-const closeBtn = document.querySelector(".close");
-
-document.querySelectorAll(".gallery img").forEach(img => {
-  img.addEventListener("click", () => {
-    lightbox.style.display = "block";
-    lightboxImg.src = img.src;
+  const imgs = grids.flatMap(g => Array.from(g.querySelectorAll('img')));
+  const promises = imgs.map(img => {
+    return new Promise(resolve => {
+      if (img.complete && img.naturalHeight !== 0) return resolve();
+      img.addEventListener('load', resolve, { once: true });
+      img.addEventListener('error', resolve, { once: true });
+    });
   });
-});
 
-closeBtn.addEventListener("click", () => {
-  lightbox.style.display = "none";
-});
-
-window.addEventListener("click", e => {
-  if (e.target === lightbox) lightbox.style.display = "none";
-});
+  Promise.all(promises).then(() => {
+    // Initialize FlexMasonry with responsive breakpoints
+    FlexMasonry.init(selector, {
+      responsive: true,
+      breakpointCols: {
+        'min-width:1200px': 4,
+        'min-width:900px': 3,
+        'min-width:600px': 2,
+        'min-width:0px': 1
+      }
+    });
+  });
+})('.grid');
