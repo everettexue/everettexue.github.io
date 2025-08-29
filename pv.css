@@ -1,3 +1,4 @@
+/* --- Grid background & general body --- */
 :root{
   --bg: #000000;
   --line-color: rgb(45,45,45);
@@ -8,7 +9,6 @@
   --thick-w: 2px;
 }
 
-/* Full viewport and grid background */
 html, body {
   height: 100%;
   margin: 0;
@@ -37,21 +37,27 @@ body {
   padding: 20px;
 }
 
-/* Gallery layout */
+/* --- Masonry style gallery --- */
 .gallery {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px,1fr));
-  gap: 15px;
-  margin-top: 20px;
+  column-count: 4;         /* auto tile images into columns */
+  column-gap: 15px;
 }
 
 .media {
   position: relative;
   cursor: pointer;
-  overflow: hidden;
+  margin-bottom: 15px;
+  break-inside: avoid;     /* avoid breaking images */
   border-radius: 8px;
+  overflow: hidden;
 }
 
+.media.large {
+  grid-column: span 2;     /* optional class for larger images in CSS Grid if using grid */
+  width: 100%;             /* full width for column */
+}
+
+/* Thumbnails */
 .media img.thumb,
 .media video.preview {
   width: 100%;
@@ -61,34 +67,32 @@ body {
   background: #222;
 }
 
+/* Video duration overlay */
 .media .duration {
   position: absolute;
-  bottom: 5px;
-  right: 5px;
+  top: 5px;
+  right: 5px;             /* change to left:5px for top-left */
   background: rgba(0,0,0,0.6);
   color: #fff;
   font-size: 12px;
   padding: 2px 4px;
   border-radius: 3px;
+  z-index: 10;
 }
 
-/* Lightbox */
+/* --- Lightbox --- */
 .lightbox {
   display: none;
   position: fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
+  top:0; left:0;
+  width:100%; height:100%;
   background: rgba(0,0,0,0.9);
   z-index: 1000;
   justify-content: center;
   align-items: center;
 }
 
-.lightbox.active {
-  display: flex;
-}
+.lightbox.active { display: flex; }
 
 .lightbox-content {
   display: flex;
@@ -98,8 +102,7 @@ body {
   max-height: 90%;
 }
 
-.lightbox img,
-.lightbox video {
+.lightbox img, .lightbox video {
   max-width: 100%;
   max-height: 100%;
   display: block;
@@ -118,19 +121,6 @@ body {
   user-select: none;
 }
 
-.lightbox .close {
-  top: 10px;
-  right: 20px;
-}
-
-.lightbox .prev {
-  top: 50%;
-  left: 20px;
-  transform: translateY(-50%);
-}
-
-.lightbox .next {
-  top: 50%;
-  right: 20px;
-  transform: translateY(-50%);
-}
+.lightbox .close { top: 10px; right: 20px; }
+.lightbox .prev { top: 50%; left: 20px; transform: translateY(-50%);}
+.lightbox .next { top: 50%; right: 20px; transform: translateY(-50%);}
