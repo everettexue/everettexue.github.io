@@ -23,10 +23,10 @@ html,body{height:100%;margin:0;font-family:system-ui,Arial,sans-serif;background
 
 /* each item uses percent width as column units, gutters implemented via padding */
 .grid-item{
-  width:25%;                 /* fallback - Masonry uses grid-sizer for columnWidth */
+  width:25%;                 
   padding: calc(var(--gutter) / 2);
   box-sizing: border-box;
-  float:left;                /* not required, but keeps layout stable before Masonry runs */
+  float:left;
 }
 
 /* inner card */
@@ -35,38 +35,39 @@ html,body{height:100%;margin:0;font-family:system-ui,Arial,sans-serif;background
   border-radius:6px;
   overflow:hidden;
   box-shadow:0 6px 18px rgba(0,0,0,0.06);
-  transition: transform 300ms cubic-bezier(.2,.8,.2,1);
 }
 
-/* images fill card and transition filter for brightness on hover */
+/* images fill card and transition filter */
 .grid-item img{
   display:block;
   width:100%;
   height:auto;
-  object-fit:cover;
+  object-fit:contain;   /* no cropping */
   vertical-align:middle;
   backface-visibility:hidden;
   transform:translateZ(0);
-  transition: transform 300ms cubic-bezier(.2,.8,.2,1), filter 260ms ease;
+  transition: filter 260ms ease;
 }
 
-/* hover zoom + become whiter via brightness */
+/* hover brighten without zoom */
 .grid-item .card:hover img,
 .grid-item .card:focus-within img{
-  transform: scale(1.03);
-  filter: brightness(1.18) saturate(1.02);
+  filter: brightness(1.08) saturate(1.01);
 }
 
-/* RESPONSIVE: change column counts by adjusting grid-sizer width and .grid-item width */
+/* RESPONSIVE: adjust columns */
 @media (max-width:1200px){
-  .grid-sizer, .grid-item { width:33.333%; } /* 3 columns */
+  .grid-sizer, .grid-item { width:33.333%; }
 }
 @media (max-width:900px){
-  .grid-sizer, .grid-item { width:50%; }     /* 2 columns */
+  .grid-sizer, .grid-item { width:50%; }
 }
 @media (max-width:600px){
-  .grid-sizer, .grid-item { width:100%; }    /* 1 column */
+  .grid-sizer, .grid-item { width:100%; }
 }
 
-/* accessibility: focus visible */
-.grid-item .card:focus-within{ outline: 3px solid rgba(21,156,228,0.12); outline-offset:3px; }
+/* accessibility */
+.grid-item .card:focus-within{ 
+  outline: 3px solid rgba(21,156,228,0.12); 
+  outline-offset:3px; 
+}
