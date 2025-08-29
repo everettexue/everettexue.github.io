@@ -2,32 +2,45 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Squarespace-like Masonry</title>
+  <title>Masonry (Desandro) Gallery</title>
 
-  <!-- FlexMasonry CSS (CDN) -->
-  <link rel="stylesheet" href="https://unpkg.com/flexmasonry/dist/flexmasonry.css">
+  <!-- Masonry (Desandro) - pkgd build from UNPKG -->
+  <script defer src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.min.js"></script>
+
+  <!-- imagesLoaded (Desandro) - helps Masonry wait for images -->
+  <script defer src="https://unpkg.com/imagesloaded@4/imagesloaded.pkgd.min.js"></script>
 
   <!-- page CSS -->
   <link rel="stylesheet" href="pv.css">
 </head>
 <body>
   <main class="wrap">
-    <h1 class="title">Portfolio</h1>
+    <h1 class="title">Masonry Gallery</h1>
 
+    <!-- Masonry grid:
+         - .grid-sizer defines column width (percent) used by Masonry
+         - .grid-item are the items Masonry arranges
+    -->
     <div class="grid">
-      <div><img src="https://plus.unsplash.com/premium_photo-1661753668576-d7e14f27edf4?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8dGVtcGxhdGV8ZW58MHx8MHx8fDA%3D" width="800" height="533" alt="Template 1"></div>
-      <div><img src="https://images.unsplash.com/photo-1472289065668-ce650ac443d2?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8dGVtcGxhdGV8ZW58MHx8MHx8fDA%3D" width="800" height="900" alt="Template 2"></div>
-      <div><img src="https://images.unsplash.com/photo-1541598599844-19a0319b8846?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8dGVtcGxhdGV8ZW58MHx8MHx8fDA%3D" width="800" height="600" alt="Template 3"></div>
-      <div><img src="https://images.unsplash.com/photo-1491975474562-1f4e30bc9468?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8dGVtcGxhdGV8ZW58MHx8MHx8fDA%3D" width="800" height="1200" alt="Template 4"></div>
-      <div><img src="https://plus.unsplash.com/premium_photo-1670452415632-488a882c76c7?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTN8fHRlbXBsYXRlfGVufDB8fDB8fHww" width="800" height="500" alt="Template 5"></div>
-      <div><img src="https://images.unsplash.com/reserve/LJIZlzHgQ7WPSh5KVTCB_Typewriter.jpg?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTZ8fHRlbXBsYXRlfGVufDB8fDB8fHww" width="800" height="450" alt="Typewriter"></div>
-      <div><img src="https://images.unsplash.com/photo-1510070009289-b5bc34383727?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fHRlbXBsYXRlfGVufDB8fDB8fHww" width="800" height="700" alt="Template 7"></div>
-      <div><img src="https://images.unsplash.com/photo-1521572063439-8a4186b6d843?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fHRlbXBsYXRlfGVufDB8fDB8fHww" width="800" height="533" alt="Template 8"></div>
+      <div class="grid-sizer"></div>
+
+      <div class="grid-item"><img src="https://plus.unsplash.com/premium_photo-1661753668576-d7e14f27edf4?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8dGVtcGxhdGV8ZW58MHx8MHx8fDA%3D" width="800" height="533" alt="Template 1"></div>
+
+      <div class="grid-item"><img src="https://images.unsplash.com/photo-1472289065668-ce650ac443d2?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8dGVtcGxhdGV8ZW58MHx8MHx8fDA%3D" alt="Template 2"></div>
+
+      <div class="grid-item"><img src="https://images.unsplash.com/photo-1541598599844-19a0319b8846?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8dGVtcGxhdGV8ZW58MHx8MHx8fDA%3D" width="800" height="600" alt="Template 3"></div>
+
+      <div class="grid-item"><img src="https://images.unsplash.com/photo-1491975474562-1f4e30bc9468?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8dGVtcGxhdGV8ZW58MHx8MHx8fDA%3D" width="800" height="1200" alt="Template 4"></div>
+
+      <div class="grid-item"><img src="https://plus.unsplash.com/premium_photo-1670452415632-488a882c76c7?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTN8fHRlbXBsYXRlfGVufDB8fDB8fHww" width="800" height="500" alt="Template 5"></div>
+
+      <div class="grid-item"><img src="https://images.unsplash.com/reserve/LJIZlzHgQ7WPSh5KVTCB_Typewriter.jpg?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTZ8fHRlbXBsYXRlfGVufDB8fDB8fHww" width="800" height="450" alt="Typewriter"></div>
+
+      <div class="grid-item"><img src="https://images.unsplash.com/photo-1510070009289-b5bc34383727?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fHRlbXBsYXRlfGVufDB8fDB8fHww" width="800" height="700" alt="Template 7"></div>
+
+      <div class="grid-item"><img src="https://images.unsplash.com/photo-1521572063439-8a4186b6d843?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fHRlbXBsYXRlfGVufDB8fDB8fHww" width="800" height="533" alt="Template 8"></div>
     </div>
   </main>
-
-  <!-- FlexMasonry JS (CDN) -->
-  <script src="https://unpkg.com/flexmasonry/dist/flexmasonry.js"></script>
 
   <!-- page JS -->
   <script src="pv.js"></script>
