@@ -1,9 +1,18 @@
+// Initialize Masonry
 document.addEventListener("DOMContentLoaded", function() {
+  var grid = document.querySelector('.grid');
+  var msnry = new Masonry(grid, {
+    itemSelector: '.grid-item',
+    columnWidth: '.grid-sizer',
+    percentPosition: true,
+    gutter: 12
+  });
+
+  // Lightbox
   const lightbox = document.getElementById("lightbox");
   const lightboxImg = document.querySelector(".lightbox-img");
   const closeBtn = document.querySelector(".lightbox-close");
 
-  // open lightbox on image click
   document.querySelectorAll(".grid-item img").forEach(img => {
     img.addEventListener("click", () => {
       lightbox.style.display = "flex";
@@ -12,23 +21,20 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   });
 
-  // close lightbox on close button
   closeBtn.addEventListener("click", () => {
     lightbox.style.display = "none";
     lightboxImg.src = "";
   });
 
-  // close on clicking outside image
   lightbox.addEventListener("click", (e) => {
-    if(e.target === lightbox) {
+    if(e.target === lightbox){
       lightbox.style.display = "none";
       lightboxImg.src = "";
     }
   });
 
-  // close on ESC key
   document.addEventListener("keydown", (e) => {
-    if(e.key === "Escape") {
+    if(e.key === "Escape"){
       lightbox.style.display = "none";
       lightboxImg.src = "";
     }
