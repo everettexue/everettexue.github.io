@@ -1,26 +1,40 @@
-/* Minimal page styling */
-:root {
+:root{
   --max-width: 1200px;
-  --gutter: 12px;
+  --gutter: 24px; /* change this to increase / decrease space between images */
 }
 
-html,body { height:100%; margin:0; font-family:system-ui, Arial, sans-serif; background:#fafafa; color:#111; }
+html,body { height:100%; margin:0; font-family: system-ui, Arial, sans-serif; background:#f8f8f8; color:#111; }
 .wrap { max-width: var(--max-width); margin:28px auto; padding:0 12px; }
 h1 { text-align:center; margin:0 0 18px; font-size:20px; }
 
-/* Allow FlexMasonry to handle columns — keep item style simple */
-.grid > div {
-  margin-bottom: var(--gutter);
-  border-radius: 6px;
-  overflow: hidden;
-  background: #e9e9e9;
-  box-shadow: 0 1px 0 rgba(0,0,0,0.03) inset;
+/* Use negative side margins on the grid so item padding appears as gutters but overall layout stays aligned */
+.grid {
+  margin-left: calc(-1 * var(--gutter) / 2);
+  margin-right: calc(-1 * var(--gutter) / 2);
 }
 
-/* Images use their intrinsic height (width/height attrs) */
+/* Each grid item gets half-gutter padding so items show space between them horizontally.
+   FlexMasonry handles the column ordering — we only provide visual spacing. */
+.grid > div {
+  padding: calc(var(--gutter) / 2);
+  box-sizing: border-box;
+  margin-bottom: var(--gutter);
+  background: transparent;
+}
+
+/* Inner card shows background, rounds corners, etc. JS will wrap images in .card automatically */
+.grid > div .card {
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+}
+
+/* Images use intrinsic height (width/height attrs where provided) */
 .grid img {
   display: block;
   width: 100%;
   height: auto;
   object-fit: cover;
+  vertical-align: middle;
 }
