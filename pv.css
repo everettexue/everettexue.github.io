@@ -1,35 +1,49 @@
-/* pv.css - Masonry layout using grid-sizer (percent-based column widths) */
+/* pv.css - Full Masonry gallery with hover highlight and no cropping */
 
 :root{
   --max-width: 1200px;
   --gutter: 12px;         /* space between items */
-  --side-padding: 16px;   /* page side padding so nothing hugs the viewport */
+  --side-padding: 16px;   /* page side padding */
 }
 
-/* basic page */
-*{box-sizing:border-box}
-html,body{height:100%;margin:0;font-family:system-ui,Arial,sans-serif;background:#fff;color:#111}
-.wrap{max-width:var(--max-width);margin:28px auto;padding:0 var(--side-padding)}
-.title{font-size:18px;margin:0 0 18px;text-align:center;font-weight:600}
+/* basic page styles */
+*{box-sizing:border-box;}
+html,body{
+  height:100%;
+  margin:0;
+  font-family:system-ui,Arial,sans-serif;
+  background:#fff;
+  color:#111;
+}
+.wrap{
+  max-width:var(--max-width);
+  margin:28px auto;
+  padding:0 var(--side-padding);
+}
+.title{
+  font-size:18px;
+  margin:0 0 18px;
+  text-align:center;
+  font-weight:600;
+}
 
 /* Masonry grid container */
 .grid{
-  /* clearfix for Masonry */
   margin:0 auto;
 }
+.grid-sizer{
+  width:25%;
+}
 
-/* grid-sizer sets column width percentage. Default here is 4 columns (25%) */
-.grid-sizer{ width:25%; }
-
-/* each item uses percent width as column units, gutters implemented via padding */
+/* each grid item */
 .grid-item{
-  width:25%;                 
+  width:25%;
   padding: calc(var(--gutter) / 2);
   box-sizing: border-box;
   float:left;
 }
 
-/* inner card */
+/* inner card for each image */
 .grid-item .card{
   background:#fff;
   border-radius:6px;
@@ -37,37 +51,38 @@ html,body{height:100%;margin:0;font-family:system-ui,Arial,sans-serif;background
   box-shadow:0 6px 18px rgba(0,0,0,0.06);
 }
 
-/* images fill card and transition filter */
+/* images fill card, no cropping */
 .grid-item img{
   display:block;
   width:100%;
   height:auto;
-  object-fit:contain;   /* no cropping */
+  object-fit:contain;  /* show full image */
   vertical-align:middle;
   backface-visibility:hidden;
   transform:translateZ(0);
-  transition: filter 260ms ease;
+  transition: transform 280ms ease, filter 280ms ease;
 }
 
-/* hover brighten without zoom */
+/* hover/focus: brighten slightly + gentle scale */
 .grid-item .card:hover img,
 .grid-item .card:focus-within img{
   filter: brightness(1.08) saturate(1.01);
+  transform: scale(1.02);   /* slightly larger without cropping */
 }
 
 /* RESPONSIVE: adjust columns */
 @media (max-width:1200px){
-  .grid-sizer, .grid-item { width:33.333%; }
+  .grid-sizer, .grid-item { width:33.333%; } /* 3 columns */
 }
 @media (max-width:900px){
-  .grid-sizer, .grid-item { width:50%; }
+  .grid-sizer, .grid-item { width:50%; }     /* 2 columns */
 }
 @media (max-width:600px){
-  .grid-sizer, .grid-item { width:100%; }
+  .grid-sizer, .grid-item { width:100%; }    /* 1 column */
 }
 
 /* accessibility */
-.grid-item .card:focus-within{ 
-  outline: 3px solid rgba(21,156,228,0.12); 
-  outline-offset:3px; 
+.grid-item .card:focus-within{
+  outline: 3px solid rgba(21,156,228,0.12);
+  outline-offset:3px;
 }
