@@ -21,33 +21,23 @@ document.addEventListener("DOMContentLoaded", function(){
     });
   });
 
-  function showLightbox(direction){
+  function showLightbox(){
     const item = galleryItems[currentIndex];
     const type = item.dataset.type;
-    const currentMedia = (type==="image") ? lbImage : lbVideo;
 
-    lightbox.classList.add("active");
     lbImage.style.display = "none";
     lbVideo.style.display = "none";
 
-    currentMedia.style.transition = "none";
-    currentMedia.classList.remove("swipe-left","swipe-right","swipe-in");
+    if(type==="image"){
+      lbImage.src = item.dataset.high;
+      lbImage.style.display = "block";
+    } else {
+      lbVideo.src = item.dataset.high;
+      lbVideo.style.display = "block";
+      lbVideo.play();
+    }
 
-    // Set starting position based on direction
-    if(direction==="next") currentMedia.classList.add("swipe-right");
-    else if(direction==="prev") currentMedia.classList.add("swipe-left");
-
-    setTimeout(()=>{
-      if(type==="image"){
-        lbImage.src = item.dataset.high;
-        lbImage.style.display = "block";
-      } else {
-        lbVideo.src = item.dataset.high;
-        lbVideo.style.display = "block";
-        lbVideo.play();
-      }
-      currentMedia.classList.add("swipe-in");
-    },50);
+    lightbox.classList.add("active");
   }
 
   function hideLightbox(){
@@ -57,28 +47,13 @@ document.addEventListener("DOMContentLoaded", function(){
   }
 
   function next(){
-    const oldIndex = currentIndex;
     currentIndex = (currentIndex+1)%galleryItems.length;
-    animateSwipe(oldIndex,"next");
+    showLightbox();
   }
 
   function prev(){
-    const oldIndex = currentIndex;
     currentIndex = (currentIndex-1+galleryItems.length)%galleryItems.length;
-    animateSwipe(oldIndex,"prev");
-  }
-
-  function animateSwipe(oldIndex,direction){
-    const oldItem = galleryItems[oldIndex];
-    const oldType = oldItem.dataset.type;
-    const oldMedia = (oldType==="image") ? lbImage : lbVideo;
-
-    // Animate old media out
-    oldMedia.classList.remove("swipe-in");
-    oldMedia.classList.add(direction==="next" ? "swipe-left" : "swipe-right");
-
-    // Show new media after animation
-    setTimeout(()=> showLightbox(direction),500);
+    showLightbox();
   }
 
   // Lightbox controls
