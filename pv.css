@@ -1,60 +1,37 @@
 :root{
   --bg: #000000;
-  --line-color: rgb(45,45,45);   /* all lines use this color */
-  --cell: 40px;                  /* size of one grid square */
-  --half: calc(var(--cell) / 2); /* half-cell offset */
-  --thin-w: 1px;                 /* thin line width (avoid subpixel) */
-  --thick-step-cells: 5;         /* thicker guide every N cells */
-  --thick-w: 2px;                /* thicker guide width */
+  --line-color: rgb(45,45,45);
+  --cell: 40px;
+  --half: calc(var(--cell)/2);
+  --thin-w: 1px;
+  --thick-step-cells: 5;
+  --thick-w: 2px;
 }
 
-/* full viewport */
+/* Full viewport and grid background */
 html, body { height: 100%; margin: 0; font-family: sans-serif; }
-
 body{
   background-color: var(--bg);
-
-  /* Grid background layers */
   background-image:
-    linear-gradient(
-      to right,
-      var(--line-color) 0 calc(var(--thick-w)),
-      transparent calc(var(--thick-w)) 100%
-    ),
-    linear-gradient(
-      to bottom,
-      var(--line-color) 0 calc(var(--thick-w)),
-      transparent calc(var(--thick-w)) 100%
-    ),
-    linear-gradient(
-      to right,
-      var(--line-color) 0 calc(var(--thin-w)),
-      transparent calc(var(--thin-w)) 100%
-    ),
-    linear-gradient(
-      to bottom,
-      var(--line-color) 0 calc(var(--thin-w)),
-      transparent calc(var(--thin-w)) 100%
-    );
-
+    linear-gradient(to right, var(--line-color) 0 calc(var(--thick-w)), transparent calc(var(--thick-w)) 100%),
+    linear-gradient(to bottom, var(--line-color) 0 calc(var(--thick-w)), transparent calc(var(--thick-w)) 100%),
+    linear-gradient(to right, var(--line-color) 0 calc(var(--thin-w)), transparent calc(var(--thin-w)) 100%),
+    linear-gradient(to bottom, var(--line-color) 0 calc(var(--thin-w)), transparent calc(var(--thin-w)) 100%);
   background-size:
-    calc(var(--cell) * var(--thick-step-cells)) 100%,  /* thick vertical tile width */
-    100% calc(var(--cell) * var(--thick-step-cells)),  /* thick horizontal tile height */
-    var(--cell) 100%,                                   /* thin vertical tile width */
-    100% var(--cell);                                   /* thin horizontal tile height */
-
-  background-position:
-    var(--half) var(--half),
-    var(--half) var(--half),
-    var(--half) var(--half),
-    var(--half) var(--half);
-
+    calc(var(--cell) * var(--thick-step-cells)) 100%,
+    100% calc(var(--cell) * var(--thick-step-cells)),
+    var(--cell) 100%,
+    100% var(--cell);
+  background-position: var(--half) var(--half),
+                       var(--half) var(--half),
+                       var(--half) var(--half),
+                       var(--half) var(--half);
   background-repeat: repeat;
   color: #fff;
   padding: 20px;
 }
 
-/* Gallery */
+/* Gallery layout */
 .gallery {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px,1fr));
@@ -68,6 +45,7 @@ body{
   overflow: hidden;
   border-radius: 8px;
 }
+
 .media img.thumb, .media video.preview {
   width: 100%;
   height: auto;
@@ -99,26 +77,23 @@ body{
   align-items: center;
 }
 .lightbox.active { display: flex; }
+
 .lightbox-content {
   position: relative;
   max-width: 90%;
   max-height: 90%;
   overflow: hidden;
 }
+
 .lightbox img, .lightbox video {
   max-width: 100%;
   max-height: 100%;
   display: block;
   position: absolute;
   top:0; left:0;
-  transition: transform 0.5s ease, opacity 0.5s ease;
 }
 
-/* Swipe animations */
-.lightbox .swipe-left { transform: translateX(-100%); opacity: 0; }
-.lightbox .swipe-right { transform: translateX(100%); opacity: 0; }
-.lightbox .swipe-in { transform: translateX(0); opacity: 1; }
-
+/* Controls */
 .lightbox .close, .lightbox .prev, .lightbox .next {
   position: absolute;
   color: #fff;
