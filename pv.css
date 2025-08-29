@@ -1,111 +1,68 @@
-/* quarespace-like masonry styling */
+/* pv.css - Masonry layout using grid-sizer (percent-based column widths) */
+
 :root{
   --max-width: 1200px;
-  --gutter: 8px;            /* tight gutters like Squarespace */
-  --side-padding: 20px;     /* container side padding so images don't touch viewport */
-  --title-size: 18px;
-  --overlay-color: rgba(0,0,0,0.45);
-  --card-radius: 6px;
-  --transition: 300ms cubic-bezier(.2,.8,.2,1);
+  --gutter: 12px;         /* space between items */
+  --side-padding: 16px;   /* page side padding so nothing hugs the viewport */
 }
 
-html,body { height:100%; margin:0; font-family: "Helvetica Neue", Arial, sans-serif; background:#ffffff; color:#111; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
-.wrap { max-width: var(--max-width); margin:28px auto; padding:0 var(--side-padding); }
-.title { text-align:center; margin:0 0 18px; font-size:var(--title-size); font-weight:600; letter-spacing:.02em; color:#111; }
+/* basic page */
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;font-family:system-ui,Arial,sans-serif;background:#fff;color:#111}
+.wrap{max-width:var(--max-width);margin:28px auto;padding:0 var(--side-padding)}
+.title{font-size:18px;margin:0 0 18px;text-align:center;font-weight:600}
 
-/* remove negative margins so items stay fully on-screen */
-.grid { margin-left: 0; margin-right: 0; }
+/* Masonry grid container */
+.grid{
+  /* clearfix for Masonry */
+  margin:0 auto;
+}
 
-/* each grid item receives half-gutter padding so spacing looks even */
-.grid > div {
+/* grid-sizer sets column width percentage. Default here is 4 columns (25%) */
+.grid-sizer{ width:25%; }
+
+/* each item uses percent width as column units, gutters implemented via padding */
+.grid-item{
+  width:25%;                 /* fallback - Masonry uses grid-sizer for columnWidth */
   padding: calc(var(--gutter) / 2);
   box-sizing: border-box;
-  margin-bottom: var(--gutter);
-  background: transparent;
+  float:left;                /* not required, but keeps layout stable before Masonry runs */
 }
 
-/* the .card wraps the image and contains overlay/caption */
-.grid > div .card {
-  position: relative;
-  overflow: hidden;
-  border-radius: var(--card-radius);
-  background: #111; /* provides dark placeholder while image loads */
-  transform: translateZ(0);
-  transition: transform var(--transition), box-shadow var(--transition);
-  will-change: transform;
+/* inner card */
+.grid-item .card{
+  background:#fff;
+  border-radius:6px;
+  overflow:hidden;
+  box-shadow:0 6px 18px rgba(0,0,0,0.06);
+  transition: transform 300ms cubic-bezier(.2,.8,.2,1);
 }
 
-/* subtle elevated look like Squarespace */
-.grid > div .card::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.06);
-  border-radius: inherit;
-}
-
-/* image fills card and is cropped with object-fit */
-.grid img {
+/* images fill card */
+.grid-item img{
   display:block;
   width:100%;
-  height:100%;
-  min-height: 1px;
-  object-fit: cover;
-  vertical-align: middle;
-  transition: transform var(--transition);
-  backface-visibility: hidden;
+  height:auto;
+  object-fit:cover;
+  vertical-align:middle;
+  display:block;
+  backface-visibility:hidden;
+  transform:translateZ(0);
 }
 
-/* overlay that appears on hover, uses alt text for caption (created by JS) */
-.card .overlay {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  padding: 12px 14px;
-  background: linear-gradient(180deg, rgba(0,0,0,0) 0%, var(--overlay-color) 100%);
-  color: #fff;
-  font-size: 13px;
-  opacity: 0;
-  transform: translateY(6px);
-  transition: opacity var(--transition), transform var(--transition);
-  display: flex;
-  align-items: flex-end;
-  min-height: 48px;
+/* hover zoom like many gallery UIs */
+.grid-item .card:hover img{ transform: scale(1.03); }
+
+/* RESPONSIVE: change column counts by adjusting grid-sizer width and .grid-item width */
+@media (max-width:1200px){
+  .grid-sizer, .grid-item { width:33.333%; } /* 3 columns */
+}
+@media (max-width:900px){
+  .grid-sizer, .grid-item { width:50%; }     /* 2 columns */
+}
+@media (max-width:600px){
+  .grid-sizer, .grid-item { width:100%; }    /* 1 column */
 }
 
-/* caption text */
-.card .caption {
-  margin: 0;
-  line-height: 1.1;
-  font-weight: 500;
-  text-shadow: 0 2px 6px rgba(0,0,0,0.35);
-  width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* hover interactions: scale image slightly and show overlay */
-.grid > div .card:hover img,
-.grid > div .card:focus-within img {
-  transform: scale(1.04);
-}
-
-.grid > div .card:hover .overlay,
-.grid > div .card:focus-within .overlay {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* responsive tweaks: slightly larger gutters on small screens for touch comfort */
-@media (max-width: 700px) {
-  :root { --gutter: 10px; --side-padding: 18px; }
-}
-
-/* optional: nicer focus state for keyboard users */
-.card:focus-within {
-  outline: 3px solid rgba(21,156,228,0.12);
-  outline-offset: 3px;
-}
+/* accessibility: focus visible */
+.grid-item .card:focus-within{ outline: 3px solid rgba(21,156,228,0.12); outline-offset:3px; }
