@@ -1,13 +1,13 @@
 document.addEventListener("DOMContentLoaded", () => {
   const grid = document.querySelector('.grid');
 
-  // Initialize Masonry after images load
+  // Initialize Masonry with dynamic columns based on pixel width
   imagesLoaded(grid, () => {
     new Masonry(grid, {
       itemSelector: '.grid-item',
-      columnWidth: '.grid-sizer',
-      percentPosition: true,
-      gutter: 12
+      columnWidth: 250,  // minimum column width
+      gutter: 12,
+      percentPosition: false // must be false for pixel-based columnWidth
     });
   });
 
@@ -15,7 +15,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const lightbox = document.getElementById("lightbox");
   const lightboxImg = document.getElementById("lightbox-img");
   const closeBtn = document.querySelector(".lightbox .close");
-
   const images = Array.from(document.querySelectorAll(".grid-item img"));
   let currentIndex = 0;
 
