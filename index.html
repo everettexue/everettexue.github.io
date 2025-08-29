@@ -1,21 +1,86 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <link rel="stylesheet" href="https://unpkg.com/flexmasonry/dist/flexmasonry.css">
+  <meta charset="UTF-8">
+  <title>Everette's Website</title>
+  <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollSmoother.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/yaml@2.8.0/browser/index.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/uuid@11.1.0/dist/cjs-browser/index.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/supports-color@10.0.0/index.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/minimatch@10.0.1/dist/commonjs/index.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chalk@5.4.1/source/index.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ansi-styles@6.2.1/index.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/semver@7.7.2/index.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ms@2.1.3/index.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/debug@4.4.1/src/browser.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tslib@2.8.1/tslib.min.js"></script>
+  <script src="https://unpkg.com/gsap@3/dist/Physics2DPlugin.min.js"></script>
+  <script src="https://unpkg.com/gsap@3/dist/PhysicsPropsPlugin.min.js"></script>
+  <script src="https://unpkg.com/gsap@3/dist/ScrambleTextPlugin.min.js"></script>
+  <script src="https://unpkg.com/gsap@3/dist/SplitText.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sql.js@0.5.0/js/sql.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/knockout@3.5.1/build/output/knockout-latest.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ejs@3.1.8/ejs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.7.8/dist/vue.min.js"></script>
 </head>
 <body>
-  <div class="grid">
-    <div><img src="https://source.unsplash.com/t3DHojIo-08" alt=""></div>
-    <div><img src="https://source.unsplash.com/Imc-IoZDMXc" alt=""></div>
-    <div><img src="https://source.unsplash.com/SOZWHqeXcPQ" alt=""></div>
-    <div><img src="https://source.unsplash.com/bkdzvgBB7rQ" alt=""></div>
-    <div><img src="https://source.unsplash.com/Aruugw_rJCM" alt=""></div>
-  </div>
+  <nav class="navbar">
+    <!-- Changed from a div with text to a link containing an image -->
+    <a class="logo" href="#">
+      <!-- Prefer an SVG if you have one: /images/logo.svg -->
+      <!-- If you want retina support, use srcset with 1x/2x files -->
+      <img
+        src="/images/title.png"
+        srcset="/images/title.png 1x, /images/title.png 2x"
+        alt="Everette Xue"
+        class="logo-img"
+        loading="lazy"
+        width="60"
+        height="40"
+      />
+    </a>
 
-  <script src="https://unpkg.com/flexmasonry/dist/flexmasonry.js"></script>
-  <script>
-    FlexMasonry.init('.grid');
-  </script>
+    <div class="links">
+      <a href="photovideo.html">Photos & Videos</a>
+      <a href="#">About</a>
+      <a href="#">Contact</a>
+    </div>
+  </nav>
+  <div id="smooth-wrapper">
+  <div id="smooth-content">
+    <div class="background-grid">
+      <div class="wrapper">
+        <h1 id="heading">Everette's Website</h1>
+      </div>
+        <h2 id="title">Projects
+        <div class="line" id="line-under-title"></div>
+                                <div class="project-entry">
+                      <img src="https://images.unsplash.com/photo-1618202133208-2907bebba9e1?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1770&q=80" class="project-image" style="box-shadow: 0 8px 24px rgba(0, 0, 0, 1);">
+                      <div class="project-content">
+                        <h3 class="project-heading">title placeholder</h3>
+                        <p class="project-description">
+                          test
+                        </p>
+                      </div>
+                    </div>
+                      <a href="">
+                        <button class="ui-button" id="shine-btn">
+                        <span class="ui-button__background">
+                          <span class="ui-button__text">More</span>
+                        </span>
+                        </button>
+                        <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+                        <script src="script.js"></script>
+                      </a>
+        </h2>
+      <div style="height: 2000px;"></div> <!-- Add this for scrollable space -->
+    </div>
+  </div>
+  </div>
+  <script src="script.js"></script>
 </body>
 </html>
