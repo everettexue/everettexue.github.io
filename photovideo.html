@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Masonry Gallery with Lightbox</title>
   <link rel="stylesheet" href="pv.css">
 </head>
@@ -9,18 +10,17 @@
   <div class="wrap">
     <h1 class="title">Masonry Gallery</h1>
     <div class="grid">
-      <!-- Sizing elements for Masonry -->
+      <!-- grid-sizer for Masonry column width -->
       <div class="grid-sizer"></div>
-      <div class="gutter-sizer"></div>
 
-      <div class="grid-item"><div class="card"><img src="https://plus.unsplash.com/premium_photo-1661753668576-d7e14f27edf4?w=900&auto=format&fit=crop&q=60" alt=""></div></div>
-      <div class="grid-item"><div class="card"><img src="https://images.unsplash.com/photo-1472289065668-ce650ac443d2?w=900&auto=format&fit=crop&q=60" alt=""></div></div>
-      <div class="grid-item"><div class="card"><img src="https://images.unsplash.com/photo-1541598599844-19a0319b8846?w=900&auto=format&fit=crop&q=60" alt=""></div></div>
-      <div class="grid-item"><div class="card"><img src="https://images.unsplash.com/photo-1491975474562-1f4e30bc9468?w=900&auto=format&fit=crop&q=60" alt=""></div></div>
-      <div class="grid-item"><div class="card"><img src="https://plus.unsplash.com/premium_photo-1670452415632-488a882c76c7?w=900&auto=format&fit=crop&q=60" alt=""></div></div>
-      <div class="grid-item"><div class="card"><img src="https://images.unsplash.com/reserve/LJIZlzHgQ7WPSh5KVTCB_Typewriter.jpg?w=900&auto=format&fit=crop&q=60" alt=""></div></div>
-      <div class="grid-item"><div class="card"><img src="https://images.unsplash.com/photo-1510070009289-b5bc34383727?w=900&auto=format&fit=crop&q=60" alt=""></div></div>
-      <div class="grid-item"><div class="card"><img src="https://images.unsplash.com/photo-1521572063439-8a4186b6d843?w=900&auto=format&fit=crop&q=60" alt=""></div></div>
+      <div class="grid-item"><div class="card"><img src="https://plus.unsplash.com/premium_photo-1661753668576-d7e14f27edf4?w=900&auto=format&fit=crop&q=60" alt="Image 1"></div></div>
+      <div class="grid-item"><div class="card"><img src="https://images.unsplash.com/photo-1472289065668-ce650ac443d2?w=900&auto=format&fit=crop&q=60" alt="Image 2"></div></div>
+      <div class="grid-item"><div class="card"><img src="https://images.unsplash.com/photo-1541598599844-19a0319b8846?w=900&auto=format&fit=crop&q=60" alt="Image 3"></div></div>
+      <div class="grid-item"><div class="card"><img src="https://images.unsplash.com/photo-1491975474562-1f4e30bc9468?w=900&auto=format&fit=crop&q=60" alt="Image 4"></div></div>
+      <div class="grid-item"><div class="card"><img src="https://plus.unsplash.com/premium_photo-1670452415632-488a882c76c7?w=900&auto=format&fit=crop&q=60" alt="Image 5"></div></div>
+      <div class="grid-item"><div class="card"><img src="https://images.unsplash.com/reserve/LJIZlzHgQ7WPSh5KVTCB_Typewriter.jpg?w=900&auto=format&fit=crop&q=60" alt="Image 6"></div></div>
+      <div class="grid-item"><div class="card"><img src="https://images.unsplash.com/photo-1510070009289-b5bc34383727?w=900&auto=format&fit=crop&q=60" alt="Image 7"></div></div>
+      <div class="grid-item"><div class="card"><img src="https://images.unsplash.com/photo-1521572063439-8a4186b6d843?w=900&auto=format&fit=crop&q=60" alt="Image 8"></div></div>
     </div>
   </div>
 
@@ -30,7 +30,6 @@
     <img class="lightbox-content" id="lightbox-img" src="">
   </div>
 
-  <!-- Masonry + imagesLoaded -->
   <script src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.min.js"></script>
   <script src="https://unpkg.com/imagesloaded@4/imagesloaded.pkgd.min.js"></script>
   <script src="pv.js"></script>
