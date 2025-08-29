@@ -1,13 +1,13 @@
 document.addEventListener("DOMContentLoaded", () => {
   const grid = document.querySelector('.grid');
 
-  // Initialize Masonry with dynamic columns based on pixel width
+  // Initialize Masonry with dynamic columns
   imagesLoaded(grid, () => {
     new Masonry(grid, {
       itemSelector: '.grid-item',
-      columnWidth: 250,  // minimum column width
+      columnWidth: 250,
       gutter: 12,
-      percentPosition: false // must be false for pixel-based columnWidth
+      percentPosition: false
     });
   });
 
@@ -36,7 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
   closeBtn.addEventListener("click", hideLightbox);
   lightbox.addEventListener("click", e => { if(e.target === lightbox) hideLightbox(); });
 
-  // Keyboard navigation
+  // Arrow keys
   document.addEventListener("keydown", e => {
     if(lightbox.style.display === "flex"){
       if(e.key === "Escape") hideLightbox();
