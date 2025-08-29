@@ -1,66 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>FlexMasonry Minimal Example</title>
+  <meta charset="utf-8" />
+  <title>Masonry Image Page</title>
+
+  <!-- FlexMasonry CSS (CDN) -->
   <link rel="stylesheet" href="https://unpkg.com/flexmasonry/dist/flexmasonry.css">
-  <style>
-    body {
-      margin: 0;
-      padding: 20px;
-      background: #111;
-      font-family: Arial, sans-serif;
-    }
 
-    .grid div {
-      margin-bottom: 10px;
-      overflow: hidden;
-      border-radius: 6px;
-      background: #222;
-      position: relative;
-      padding-bottom: 66.66%; /* 3:2 aspect ratio placeholder */
-    }
-
-    .grid div img {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-  </style>
+  <!-- page styles -->
+  <link rel="stylesheet" href="pv.css">
 </head>
 <body>
+  <main class="wrap">
+    <h1>Masonry Image Page</h1>
 
-<h1 style="color:white; text-align:center;">FlexMasonry Minimal Grid</h1>
+    <div class="grid">
+      <div><img src="https://plus.unsplash.com/premium_photo-1661753668576-d7e14f27edf4?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8dGVtcGxhdGV8ZW58MHx8MHx8fDA%3D" width="800" height="533" alt=""></div>
+      <div><img src="https://images.unsplash.com/photo-1472289065668-ce650ac443d2?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8dGVtcGxhdGV8ZW58MHx8MHx8fDA%3D" alt=""></div>
+      <div><img src="https://images.unsplash.com/photo-1541598599844-19a0319b8846?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8dGVtcGxhdGV8ZW58MHx8MHx8fDA%3D" width="800" height="600" alt=""></div>
+      <div><img src="https://images.unsplash.com/photo-1491975474562-1f4e30bc9468?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8dGVtcGxhdGV8ZW58MHx8MHx8fDA%3D" width="800" height="1200" alt=""></div>
+      <div><img src="https://plus.unsplash.com/premium_photo-1670452415632-488a882c76c7?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTN8fHRlbXBsYXRlfGVufDB8fDB8fHww" width="800" height="500" alt=""></div>
+      <div><img src="https://images.unsplash.com/reserve/LJIZlzHgQ7WPSh5KVTCB_Typewriter.jpg?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTZ8fHRlbXBsYXRlfGVufDB8fDB8fHww" width="800" height="450" alt=""></div>
+      <div><img src="https://images.unsplash.com/photo-1510070009289-b5bc34383727?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fHRlbXBsYXRlfGVufDB8fDB8fHww" width="800" height="700" alt=""></div>
+      <div><img src="https://images.unsplash.com/photo-1521572063439-8a4186b6d843?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fHRlbXBsYXRlfGVufDB8fDB8fHww" width="800" height="533" alt=""></div>
+    </div>
+  </main>
 
-<div class="grid">
-  <div><img src="https://source.unsplash.com/t3DHojIo-08" alt=""></div>
-  <div><img src="https://source.unsplash.com/Imc-IoZDMXc" alt=""></div>
-  <div><img src="https://source.unsplash.com/SOZWHqeXcPQ" alt=""></div>
-  <div><img src="https://source.unsplash.com/bkdzvgBB7rQ" alt=""></div>
-  <div><img src="https://source.unsplash.com/Aruugw_rJCM" alt=""></div>
-  <div><img src="https://source.unsplash.com/7GX5aICb5i4" alt=""></div>
-  <div><img src="https://source.unsplash.com/2LowviVHZ-E" alt=""></div>
-</div>
-
-<script src="https://unpkg.com/flexmasonry/dist/flexmasonry.js"></script>
-<script>
-  // Initialize FlexMasonry after window load to ensure image sizes are known
-  window.addEventListener('load', function() {
-    FlexMasonry.init('.grid', {
-      responsive: true,
-      breakpointCols: {
-        'min-width: 1200px': 4,
-        'min-width: 900px': 3,
-        'min-width: 600px': 2,
-        'min-width: 0px': 1
-      }
-    });
-  });
-</script>
-
+  <!-- FlexMasonry JS (CDN) -->
+  <script src="https://unpkg.com/flexmasonry/dist/flexmasonry.js"></script>
+  <!-- page script -->
+  <script src="pv.js"></script>
 </body>
 </html>
