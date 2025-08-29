@@ -7,25 +7,34 @@ body {
 }
 
 /* Masonry container */
+/* Masonry container */
 .gallery {
   margin: 20px auto;
   padding: 10px;
   max-width: 1400px;
 }
 
-/* Images */
-.gallery img {
-  width: 100%;
-  display: block;
-  border-radius: 8px;
+/* Items (FlexMasonry works on these) */
+.item {
   margin-bottom: 10px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Images (don't stretch huge anymore) */
+.item img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
   cursor: pointer;
   transition: transform 0.3s;
 }
 
-.gallery img:hover {
+.item img:hover {
   transform: scale(1.03);
 }
+
 
 /* Lightbox */
 .lightbox {
