@@ -1,42 +1,33 @@
-// Initialize Masonry
-document.addEventListener("DOMContentLoaded", function() {
-  var grid = document.querySelector('.grid');
-  var msnry = new Masonry(grid, {
+// Initialize Masonry after images load
+var grid = document.querySelector('.grid');
+var msnry;
+imagesLoaded(grid, function(){
+  msnry = new Masonry(grid, {
     itemSelector: '.grid-item',
     columnWidth: '.grid-sizer',
-    percentPosition: true,
-    gutter: 12
+    gutter: '.gutter-sizer',
+    percentPosition: true
   });
+});
 
-  // Lightbox
-  const lightbox = document.getElementById("lightbox");
-  const lightboxImg = document.querySelector(".lightbox-img");
-  const closeBtn = document.querySelector(".lightbox-close");
+// Lightbox functionality
+const lightbox = document.getElementById("lightbox");
+const lightboxImg = document.getElementById("lightbox-img");
+const closeBtn = document.querySelector(".lightbox .close");
 
-  document.querySelectorAll(".grid-item img").forEach(img => {
-    img.addEventListener("click", () => {
-      lightbox.style.display = "flex";
-      lightboxImg.src = img.src;
-      lightboxImg.alt = img.alt || "";
-    });
+document.querySelectorAll(".grid-item img").forEach(img => {
+  img.addEventListener("click", () => {
+    lightbox.style.display = "flex";
+    lightboxImg.src = img.src;
   });
+});
 
-  closeBtn.addEventListener("click", () => {
+closeBtn.addEventListener("click", () => {
+  lightbox.style.display = "none";
+});
+
+lightbox.addEventListener("click", e => {
+  if (e.target === lightbox) {
     lightbox.style.display = "none";
-    lightboxImg.src = "";
-  });
-
-  lightbox.addEventListener("click", (e) => {
-    if(e.target === lightbox){
-      lightbox.style.display = "none";
-      lightboxImg.src = "";
-    }
-  });
-
-  document.addEventListener("keydown", (e) => {
-    if(e.key === "Escape"){
-      lightbox.style.display = "none";
-      lightboxImg.src = "";
-    }
-  });
+  }
 });
