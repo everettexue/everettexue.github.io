@@ -2,42 +2,30 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>FlexMasonry Gallery</title>
-  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Masonry Gallery</title>
+  <link rel="stylesheet" href="pv.css">
+  <!-- FlexMasonry -->
+  <script src="https://cdn.jsdelivr.net/npm/flexmasonry/dist/flexmasonry.js"></script>
 </head>
 <body>
-  <div class="gallery">
-    <div class="gallery-item large">
-      <img src="https://picsum.photos/600/800?random=1" alt="Large">
-    </div>
-    <div class="gallery-item">
-      <img src="https://picsum.photos/400/600?random=2" alt="Portrait">
-    </div>
-    <div class="gallery-item">
-      <img src="https://picsum.photos/600/400?random=3" alt="Landscape">
-    </div>
-    <div class="gallery-item">
-      <video src="https://www.w3schools.com/html/mov_bbb.mp4" muted loop></video>
-      <span class="video-length">2:30</span>
-    </div>
-    <div class="gallery-item">
-      <img src="https://picsum.photos/500/700?random=4" alt="Portrait">
-    </div>
-    <div class="gallery-item">
-      <img src="https://picsum.photos/800/500?random=5" alt="Landscape">
-    </div>
+  <div class="gallery flexmasonry" id="gallery">
+    <img src="https://picsum.photos/400/600?random=1" alt="">
+    <img src="https://picsum.photos/500/300?random=2" alt="">
+    <img src="https://picsum.photos/400/500?random=3" alt="">
+    <img src="https://picsum.photos/350/450?random=4" alt="">
+    <img src="https://picsum.photos/400/400?random=5" alt="">
+    <img src="https://picsum.photos/500/700?random=6" alt="">
+    <img src="https://picsum.photos/450/500?random=7" alt="">
+    <img src="https://picsum.photos/400/600?random=8" alt="">
   </div>
 
   <!-- Lightbox -->
   <div id="lightbox" class="lightbox">
     <span class="close">&times;</span>
-    <span class="prev">&#10094;</span>
-    <span class="next">&#10095;</span>
-    <div class="lightbox-content"></div>
+    <img class="lightbox-content" id="lightbox-img" alt="">
   </div>
 
-  <!-- FlexMasonry -->
-  <script src="https://unpkg.com/flexmasonry/dist/flexmasonry.js"></script>
-  <script src="script.js"></script>
+  <script src="pv.js"></script>
 </body>
 </html>
