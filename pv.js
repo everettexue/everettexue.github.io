@@ -1,17 +1,29 @@
 document.addEventListener("DOMContentLoaded", () => {
   const grid = document.querySelector('.grid');
+  let msnry;
 
-  // Initialize Masonry with dynamic columns
-  imagesLoaded(grid, () => {
-    new Masonry(grid, {
-      itemSelector: '.grid-item',
-      columnWidth: 250,
-      gutter: 12,
-      percentPosition: false
+  function initMasonry() {
+    const columnWidth = window.innerWidth / 337; // dynamic column width based on viewport
+    imagesLoaded(grid, () => {
+      if(msnry) msnry.destroy(); // destroy previous instance
+      msnry = new Masonry(grid, {
+        itemSelector: '.grid-item',
+        columnWidth: columnWidth,
+        gutter: 12,
+        percentPosition: false
+      });
     });
+  }
+
+  // Initialize Masonry
+  initMasonry();
+
+  // Recalculate on window resize
+  window.addEventListener("resize", () => {
+    initMasonry();
   });
 
-  // Lightbox functionality
+  // Lightbox
   const lightbox = document.getElementById("lightbox");
   const lightboxImg = document.getElementById("lightbox-img");
   const closeBtn = document.querySelector(".lightbox .close");
@@ -29,23 +41,19 @@ document.addEventListener("DOMContentLoaded", () => {
     lightboxImg.src = "";
   }
 
-  images.forEach((img, i) => {
-    img.addEventListener("click", () => showLightbox(i));
-  });
+  images.forEach((img,i)=>img.addEventListener("click",()=>showLightbox(i)));
+  closeBtn.addEventListener("click",hideLightbox);
+  lightbox.addEventListener("click", e=>{ if(e.target===lightbox) hideLightbox(); });
 
-  closeBtn.addEventListener("click", hideLightbox);
-  lightbox.addEventListener("click", e => { if(e.target === lightbox) hideLightbox(); });
-
-  // Arrow keys
-  document.addEventListener("keydown", e => {
-    if(lightbox.style.display === "flex"){
-      if(e.key === "Escape") hideLightbox();
-      if(e.key === "ArrowRight"){
-        currentIndex = (currentIndex + 1) % images.length;
+  document.addEventListener("keydown", e=>{
+    if(lightbox.style.display==="flex"){
+      if(e.key==="Escape") hideLightbox();
+      if(e.key==="ArrowRight"){
+        currentIndex = (currentIndex+1)%images.length;
         lightboxImg.src = images[currentIndex].src;
       }
-      if(e.key === "ArrowLeft"){
-        currentIndex = (currentIndex - 1 + images.length) % images.length;
+      if(e.key==="ArrowLeft"){
+        currentIndex = (currentIndex-1+images.length)%images.length;
         lightboxImg.src = images[currentIndex].src;
       }
     }
