@@ -1,15 +1,26 @@
 *{box-sizing:border-box;}
 html,body{margin:0;font-family:system-ui,Arial,sans-serif;width:100%;}
 
+/* Responsive grid using CSS Grid:
+   - The number of columns will automatically change based on window width.
+   - Each column will be at least 180px wide (changeable) and will stretch to fill remaining space.
+*/
 .grid{
   width:100%;
   margin:0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px; /* space between items */
 }
+
+/* keep .grid-sizer if it's referenced by JS; otherwise it's unused */
 .grid-sizer{
-  width: 20%; /* this defines 5 columns max, will scale dynamically */
+  display: none;
 }
+
 .grid-item{
-  width:20%;
+  /* let the grid control the width; keep padding for gutters */
+  width:100%;
   padding:6px;
 }
 
@@ -58,4 +69,14 @@ html,body{margin:0;font-family:system-ui,Arial,sans-serif;width:100%;}
   font-size:40px;
   color:#fff;
   cursor:pointer;
+}
+
+/* Optional: if you want different minimum column widths at breakpoints,
+   tweak minmax() with media queries below. Example:
+*/
+@media (min-width: 1200px) {
+  .grid { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+}
+@media (max-width: 480px) {
+  .grid { grid-template-columns: 1fr; gap: 8px; }
 }
