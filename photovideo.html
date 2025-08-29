@@ -1,12 +1,61 @@
-<link rel="stylesheet" href="https://unpkg.com/flexmasonry/dist/flexmasonry.css">
-<script src="https://unpkg.com/flexmasonry/dist/flexmasonry.js"></script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FlexMasonry Example</title>
+  <link rel="stylesheet" href="https://unpkg.com/flexmasonry/dist/flexmasonry.css">
+  <style>
+    body {
+      margin: 0;
+      background: #111;
+      color: white;
+      font-family: Arial, sans-serif;
+    }
 
-<div class="grid">
+    .grid {
+      margin: 20px;
+    }
+
+    .grid div {
+      background: #222;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+
+    .grid img {
+      width: 100%;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <h1 style="text-align:center; padding: 20px;">FlexMasonry Grid Demo</h1>
+
+  <div class="grid">
     <div><img src="https://source.unsplash.com/t3DHojIo-08" alt=""></div>
     <div><img src="https://source.unsplash.com/Imc-IoZDMXc" alt=""></div>
     <div><img src="https://source.unsplash.com/SOZWHqeXcPQ" alt=""></div>
     <div><img src="https://source.unsplash.com/bkdzvgBB7rQ" alt=""></div>
     <div><img src="https://source.unsplash.com/Aruugw_rJCM" alt=""></div>
-</div>
+    <div><img src="https://source.unsplash.com/7GX5aICb5i4" alt=""></div>
+    <div><img src="https://source.unsplash.com/2LowviVHZ-E" alt=""></div>
+    <div><img src="https://source.unsplash.com/eOLpJytrbsQ" alt=""></div>
+  </div>
 
-FlexMasonry.init('.grid');
+  <script src="https://unpkg.com/flexmasonry/dist/flexmasonry.js"></script>
+  <script>
+    // Initialize FlexMasonry
+    FlexMasonry.init('.grid', {
+      responsive: true,   // adjusts to screen size
+      breakpointCols: {
+        'min-width: 1500px': 5,
+        'min-width: 1200px': 4,
+        'min-width: 800px': 3,
+        'min-width: 500px': 2,
+        'min-width: 0px': 1
+      }
+    });
+  </script>
+</body>
+</html>
