@@ -2,45 +2,42 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Interactive Media Gallery</title>
-  <link rel="stylesheet" href="pv.css">
+  <title>FlexMasonry Gallery</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Photo & Video Library</h1>
-
-<div class="gallery">
-  <!-- Normal photo -->
-  <div class="media" data-type="image" data-high="https://picsum.photos/1200/800?random=1">
-    <img class="thumb" src="https://picsum.photos/300/200?random=1" alt="Photo 1">
-  </div>
-
-  <!-- Large photo -->
-  <div class="media large" data-type="image" data-high="https://picsum.photos/1200/900?random=2">
-    <img class="thumb" src="https://picsum.photos/400/300?random=2" alt="Photo 2">
-  </div>
-
-  <!-- Video with top-right duration -->
-  <div class="media" data-type="video" data-high="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4">
-    <video muted loop class="preview" poster="https://picsum.photos/300/200?random=3">
-      <source src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4" type="video/mp4">
-    </video>
-    <span class="duration">0:05</span>
-  </div>
-</div>
-
-
-  <!-- Lightbox -->
-  <div class="lightbox" id="lightbox">
-    <span class="close">&times;</span>
-    <span class="prev">&#10094;</span>
-    <span class="next">&#10095;</span>
-    <div class="lightbox-content">
-      <img id="lb-image" src="" alt="">
-      <video id="lb-video" controls></video>
+  <div class="gallery">
+    <div class="gallery-item large">
+      <img src="https://picsum.photos/600/800?random=1" alt="Large">
+    </div>
+    <div class="gallery-item">
+      <img src="https://picsum.photos/400/600?random=2" alt="Portrait">
+    </div>
+    <div class="gallery-item">
+      <img src="https://picsum.photos/600/400?random=3" alt="Landscape">
+    </div>
+    <div class="gallery-item">
+      <video src="https://www.w3schools.com/html/mov_bbb.mp4" muted loop></video>
+      <span class="video-length">2:30</span>
+    </div>
+    <div class="gallery-item">
+      <img src="https://picsum.photos/500/700?random=4" alt="Portrait">
+    </div>
+    <div class="gallery-item">
+      <img src="https://picsum.photos/800/500?random=5" alt="Landscape">
     </div>
   </div>
 
-  <script src="pv.js"></script>
+  <!-- Lightbox -->
+  <div id="lightbox" class="lightbox">
+    <span class="close">&times;</span>
+    <span class="prev">&#10094;</span>
+    <span class="next">&#10095;</span>
+    <div class="lightbox-content"></div>
+  </div>
+
+  <!-- FlexMasonry -->
+  <script src="https://unpkg.com/flexmasonry/dist/flexmasonry.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
