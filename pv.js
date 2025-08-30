@@ -1,9 +1,9 @@
 document.addEventListener("DOMContentLoaded", () => {
   const grid = document.querySelector('.grid');
   const sizer = document.querySelector('.grid-sizer');
-  const gutter = 12; // must match CSS --gutter if you use that
-  const minColumnWidth = 220; // adjust to control when columns collapse
-  const maxColumns = 5; // highest column count
+  const gutter = 12; // px; keep in sync with CSS --gutter
+  const minColumnWidth = 220; // minimum column width in px (tune to get desired density)
+  const maxColumns = 5; // maximum columns allowed
   let msnry = null;
   let lastCols = 0;
 
@@ -12,31 +12,93 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  // Compute number of columns that fit the container
+  // Compute how many columns fit in the container width
   function computeColumns(containerWidth) {
-    // formula: floor((container + gutter) / (minCol + gutter))
     const cols = Math.floor((containerWidth + gutter) / (minColumnWidth + gutter));
     return Math.max(1, Math.min(cols, maxColumns));
   }
 
-  // Compute column (sizer) width in px given container width and columns, accounting for gutters
+  // Compute pixel width for the sizer given container width & columns (accounting for gutters)
   function computeSizerWidth(containerWidth, cols) {
     if (cols <= 1) return containerWidth;
     const totalGutters = (cols - 1) * gutter;
     return Math.floor((containerWidth - totalGutters) / cols);
   }
 
-  // Set sizer width if changed and request Masonry layout
+  // Make sure item span classes don't exceed available columns
+  function clampItemSpans(cols) {
+    const items = grid.querySelectorAll('.grid-item');
+    items.forEach(item => {
+      // prefer explicit data-col if provided by markup
+      const dataCol = parseInt(item.getAttribute('data-col') || '', 10);
+      let span = Number.isFinite(dataCol) ? dataCol : null;
+
+      if (!span) {
+        // If no explicit span, respect developer-assigned classes if any
+        if (item.classList.contains('grid-item--w3')) span = 3;
+        else if (item.classList.contains('grid-item--w2')) span = 2;
+        else span = 1; // default
+      }
+
+      // make sure span is at least 1 and not more than cols
+      span = Math.max(1, Math.min(span, cols));
+
+      // normalize classes to reflect the final span
+      item.classList.remove('grid-item--w2', 'grid-item--w3', 'grid-item--w4');
+      if (span > 1) item.classList.add(`grid-item--w${span}`);
+    });
+  }
+
+  // Optionally auto-assign spans for visual variety when markup doesn't specify them.
+  // This tries to emulate a "tiler" look: a few double-wide tiles among singles.
+  function autoAssignSpansIfMissing(cols) {
+    const items = Array.from(grid.querySelectorAll('.grid-item'));
+    items.forEach((item, i) => {
+      // skip if user already specified data-col or classes
+      if (item.hasAttribute('data-col') || item.classList.contains('grid-item--w2') || item.classList.contains('grid-item--w3')) return;
+
+      // Only consider multi-column spans at larger viewports
+      if (cols >= 4) {
+        // a simple deterministic-ish pattern to produce variety:
+        // make roughly 1 in 6 items span 2, and 1 in 12 span 3
+        const r = (i % 12);
+        if (r === 2 || r === 8) item.classList.add('grid-item--w2');
+        if (r === 0) item.classList.add('grid-item--w3');
+      } else if (cols === 3) {
+        // fewer wide tiles on smaller grids
+        if ((i % 9) === 4) item.classList.add('grid-item--w2');
+      }
+    });
+
+    // ensure no span exceeds available columns
+    clampItemSpans(cols);
+  }
+
+  // Update sizer width, CSS variables, and trigger Masonry layout if necessary
   function updateLayout() {
     const containerWidth = grid.clientWidth;
     const cols = computeColumns(containerWidth);
     const sizerWidth = computeSizerWidth(containerWidth, cols);
 
-    // only update if something actually changed (prevents unnecessary layouts)
-    if (cols !== lastCols || parseInt(sizer.style.width || '0', 10) !== sizerWidth) {
-      sizer.style.width = sizerWidth + 'px';
+    // update CSS variables used by the CSS rules (so width calculations in CSS work)
+    grid.style.setProperty('--col', sizerWidth + 'px');
+    grid.style.setProperty('--gutter', gutter + 'px');
+
+    // Only reassign spans the first time or when columns count changes
+    if (cols !== lastCols) {
+      // auto-assign (if no explicit spans)
+      autoAssignSpansIfMissing(cols);
+      // ensure spans don't exceed new column count
+      clampItemSpans(cols);
       lastCols = cols;
-      if (msnry) msnry.layout();
+    }
+
+    // Update the sizer element width (Masonry uses this element for column width)
+    if (parseInt(sizer.style.width || '0', 10) !== sizerWidth) {
+      sizer.style.width = sizerWidth + 'px';
+      if (msnry) {
+        msnry.layout();
+      }
     }
   }
 
@@ -51,21 +113,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Initialize Masonry after images loaded
   imagesLoaded(grid, () => {
-    // Set an initial sizer width before Masonry initializes
+    // initial layout calculation and variable setup
     updateLayout();
 
     msnry = new Masonry(grid, {
       itemSelector: '.grid-item',
-      columnWidth: sizer,    // uses the element's width in px
+      columnWidth: sizer, // element, px width set by JS
       gutter: gutter,
-      percentPosition: false // using pixel column width for reliability
+      percentPosition: false // we use pixel columnWidth for predictable gutters
     });
 
-    // Ensure a final layout after masonry init
+    // Ensure Masonry knows about current DOM sizes
     msnry.layout();
   });
 
-  // Recompute on window resize (debounced)
+  // Recompute on resize (debounced)
   window.addEventListener('resize', debounce(updateLayout, 120));
 
   /* -------------------------
