@@ -1,7 +1,7 @@
 *{box-sizing:border-box;}
 html,body{margin:0;font-family:system-ui,Arial,sans-serif;width:100%;}
 
-/* Ensure consistent gutter value if you want to reference it in CSS too */
+/* gutter value referenced in JS; keep it in sync */
 :root{
   --gutter: 12px;
 }
@@ -11,43 +11,61 @@ html,body{margin:0;font-family:system-ui,Arial,sans-serif;width:100%;}
   width:100%;
   margin:0 auto;
   position: relative; /* Masonry positions children absolutely relative to this */
+  /* JS will set --col to the pixel width of a single column */
 }
 
-/* Visible sizer used by Masonry. JS will set its width in px. */
+/* grid-sizer is used by Masonry for columnWidth. JS will set its width in px. */
 .grid-sizer{
   display: block;
-  box-sizing: border-box;
   width: auto; /* controlled by JS */
-  height: 0;   /* keep it invisible visually; Masonry reads width */
+  height: 0;
   padding: 0;
   margin: 0;
+  box-sizing: border-box;
 }
 
-/* Grid items: don't hardcode a percent width here — Masonry will position them.
-   Keep padding for internal spacing (optional). */
+/* Default single-column item width is one column (set via --col by JS).
+   Use CSS variables to compute multi-column widths (grid-item--w2 / --w3 etc).
+*/
 .grid-item{
   box-sizing: border-box;
   padding: 6px;
-  /* Do not set width here (Masonry uses columnWidth). */
+  width: calc(var(--col));
 }
 
-/* Card style */
+/* Multi-column width helpers:
+   width for N columns = N * --col + (N - 1) * --gutter
+*/
+.grid-item--w2 { width: calc(var(--col) * 2 + var(--gutter) * 1); }
+.grid-item--w3 { width: calc(var(--col) * 3 + var(--gutter) * 2); }
+.grid-item--w4 { width: calc(var(--col) * 4 + var(--gutter) * 3); }
+
+/* Card */
 .grid-item .card{
-  background:#fff;
+  background:#7f72ff; /* sample tile color to match the example; change as needed */
   border-radius:6px;
   overflow:hidden;
   box-shadow:0 6px 18px rgba(0,0,0,0.06);
   transition: transform 300ms ease;
+  height:100%; /* let content define height, or set min-height if you want squares */
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+  font-weight:600;
+  font-size:18px;
 }
 
+/* Make images inside cards responsive */
 .grid-item img{
   width:100%;
   height:auto;
   display:block;
-  object-fit:contain;
+  object-fit:cover;
   transition: transform 300ms ease, filter 300ms ease;
 }
 
+/* Hover effect */
 .grid-item .card:hover img{
   filter: brightness(1.05);
   transform: scale(1.03);
@@ -77,4 +95,10 @@ html,body{margin:0;font-family:system-ui,Arial,sans-serif;width:100%;}
   font-size:40px;
   color:#fff;
   cursor:pointer;
+}
+
+/* Small viewport tweaks */
+@media (max-width: 480px) {
+  .grid-item { padding: 4px; }
+  .grid-item .card { font-size: 16px; }
 }
