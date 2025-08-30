@@ -1,77 +1,78 @@
 *{box-sizing:border-box;}
 html,body{margin:0;font-family:system-ui,Arial,sans-serif;width:100%;}
 
-/* gutter value referenced in JS; keep it in sync */
+/* Tune these vars to match the JS gutter and rowHeight */
 :root{
   --gutter: 12px;
+  --row-height: 8px; /* base unit used for grid-auto-rows; JS uses same value */
 }
 
-/* Masonry container */
+/* CSS Grid based "tiler" that uses dense packing to avoid row holes.
+   JS sets grid-template-columns and grid-auto-rows (pixel values) at runtime,
+   and computes grid-row spans for each item so there are no empty spaces. */
 .grid{
   width:100%;
   margin:0 auto;
-  position: relative; /* Masonry positions children absolutely relative to this */
-  /* JS will set --col to the pixel width of a single column */
+  display: grid;
+  grid-auto-flow: dense;        /* important: lets grid backfill holes */
+  grid-auto-rows: var(--row-height);
+  gap: var(--gutter);
+  position: relative;           /* safe for absolutely positioned children if any */
+  align-items: start;
+  /* grid-template-columns will be set by JS to: repeat(cols, <px>) */
 }
 
-/* grid-sizer is used by Masonry for columnWidth. JS will set its width in px. */
+/* sizer element is optional now; kept for compatibility. It's not necessary
+   for the CSS-Grid tiler but harmless if present. */
 .grid-sizer{
-  display: block;
-  width: auto; /* controlled by JS */
-  height: 0;
-  padding: 0;
-  margin: 0;
-  box-sizing: border-box;
+  display:none;
 }
 
-/* Default single-column item width is one column (set via --col by JS).
-   Use CSS variables to compute multi-column widths (grid-item--w2 / --w3 etc).
-*/
+/* Items use grid-placement. JS will set gridColumn and gridRowEnd inline.
+   You can still use helper classes or data-col to request spans. */
 .grid-item{
   box-sizing: border-box;
   padding: 6px;
-  width: calc(var(--col));
+  width: auto; /* width is determined by grid-column span */
 }
 
-/* Multi-column width helpers:
-   width for N columns = N * --col + (N - 1) * --gutter
-*/
-.grid-item--w2 { width: calc(var(--col) * 2 + var(--gutter) * 1); }
-.grid-item--w3 { width: calc(var(--col) * 3 + var(--gutter) * 2); }
-.grid-item--w4 { width: calc(var(--col) * 4 + var(--gutter) * 3); }
+/* Helpers — if you'd prefer to set spans in HTML/CSS rather than data attributes.
+   These assume JS will compute --col and --gutter if you need to reference them. */
+.grid-item--w2 { /* optional visual helper class */
+  /* actual span is enforced by JS (gridColumn inline style); this is just a fallback */
+}
+.grid-item--w3 { }
+.grid-item--w4 { }
 
-/* Card */
+/* Card / tile appearance */
 .grid-item .card{
-  background:#7f72ff; /* sample tile color to match the example; change as needed */
+  background:#7f72ff; /* sample tile color */
   border-radius:6px;
   overflow:hidden;
-  box-shadow:0 6px 18px rgba(0,0,0,0.06);
-  transition: transform 300ms ease;
-  height:100%; /* let content define height, or set min-height if you want squares */
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:#fff;
-  font-weight:600;
-  font-size:18px;
+  box-shadow:0 6px 18px rgba(0,0,0,0.08);
+  transition: transform 200ms ease;
+  display:block;
+  width:100%;
 }
 
-/* Make images inside cards responsive */
-.grid-item img{
+/* If you use images inside cards, make them cover the card area.
+   This helps shape tile heights predictably. */
+.grid-item .card img{
   width:100%;
-  height:auto;
+  height:100%;
   display:block;
   object-fit:cover;
-  transition: transform 300ms ease, filter 300ms ease;
 }
 
-/* Hover effect */
-.grid-item .card:hover img{
-  filter: brightness(1.05);
-  transform: scale(1.03);
+/* If you want consistent tile aspect ratios you can use this helper:
+   .card--square { aspect-ratio: 4 / 5; } or set min-height.
+   Otherwise heights are measured at runtime by JS to compute row spans. */
+
+.grid-item .card:hover{
+  transform: translateY(-4px);
 }
 
-/* Lightbox */
+/* Lightbox (unchanged) */
 .lightbox{
   display:none;
   position:fixed;
@@ -98,7 +99,7 @@ html,body{margin:0;font-family:system-ui,Arial,sans-serif;width:100%;}
 }
 
 /* Small viewport tweaks */
-@media (max-width: 480px) {
-  .grid-item { padding: 4px; }
-  .grid-item .card { font-size: 16px; }
+@media (max-width:480px){
+  :root { --gutter: 8px; --row-height: 6px; }
+  .grid-item{ padding:4px; }
 }
