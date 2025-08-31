@@ -1,75 +1,105 @@
-/* Add these styles to your pv.css (or replace existing preloader/lightbox blocks) */
+/* pv.css - Adds rounded corners + hover effects for grid, lightbox, preloader */
 
-/* Preloader overlay */
-.pv-preloader {
-  position: fixed;
-  inset: 0;
-  z-index: 2147483647;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(180deg, rgba(0,0,0,0.75), rgba(0,0,0,0.85));
-  transition: opacity 180ms ease;
+/* Grid items: rounded corners, clipping, smooth lift on hover */
+.grid {
+  /* keep the grid's gap set here if you prefer CSS-managed gap */
+  gap: 12px;
 }
-.pv-preloader-inner {
-  text-align: center;
-  color: #fff;
-  max-width: 92vw;
-  width: 520px;
-  padding: 22px;
+
+.grid-item {
+  border-radius: 12px;
+  overflow: hidden;               /* clip children (images/cards) to the radius */
   box-sizing: border-box;
-  border-radius: 10px;
-  background: rgba(0,0,0,0.45);
-  backdrop-filter: blur(6px);
-  box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-}
-.pv-spinner {
-  width: 56px;
-  height: 56px;
-  margin: 8px auto 14px;
-  border-radius: 50%;
-  border: 5px solid rgba(255,255,255,0.12);
-  border-top-color: #fff;
-  animation: pv-spin 1s linear infinite;
-}
-@keyframes pv-spin { to { transform: rotate(360deg); } }
-
-.pv-progress {
-  margin: 10px auto;
-  color: #fff;
-  font-weight: 600;
-}
-.pv-progress-percent {
-  font-size: 18px;
-  display: inline-block;
-  min-width: 50px;
+  transition: transform 280ms cubic-bezier(.2,.9,.2,1), box-shadow 280ms ease, z-index 0s;
+  will-change: transform;
+  position: relative;             /* allow z-index on hover */
+  background: #fff;               /* subtle bg so rounded corners show on transparent images */
 }
 
-/* Skip button */
-.pv-skip {
-  margin-top: 14px;
-  background: rgba(255,255,255,0.12);
-  color: #fff;
-  border: 1px solid rgba(255,255,255,0.12);
-  padding: 8px 14px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 600;
+/* Slight elevation and scale on hover or keyboard focus */
+.grid-item:hover,
+.grid-item:focus-within {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 14px 36px rgba(12, 24, 40, 0.24), 0 4px 12px rgba(12,24,40,0.12);
+  z-index: 3;
 }
-.pv-skip:hover { background: rgba(255,255,255,0.18); }
 
-/* Ensure lightbox-content remains flexible (existing styles remain) */
+/* Ensure images fit and are clipped; object-fit keeps composition nice */
+.grid-item img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  vertical-align: middle;
+  /* if image itself needs rounding, inherit radius (but clipping on parent covers this) */
+  border-radius: inherit;
+  -webkit-user-drag: none;
+}
+
+/* If you use a .card wrapper for tile content, ensure radius + overflow are there */
+.grid-item .card {
+  border-radius: 12px;
+  overflow: hidden;
+  background-clip: padding-box;
+}
+
+/* Lightbox: rounded corners for the content pane */
 .lightbox-content {
-  box-sizing: border-box;
-  max-width: 90vw;
-  max-height: 80vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 18px 60px rgba(0,0,0,0.6);
+  background: #111; /* fallback bg for media */
 }
 
-/* small responsive tweak */
+/* Lightbox image/video sizing to respect rounded corners and center */
+.lightbox-content img,
+.lightbox-content video {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+/* Close button style improvements */
+.lightbox .close {
+  background: rgba(0,0,0,0.25);
+  color: #fff;
+  border-radius: 999px;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  transition: background 140ms ease, transform 140ms ease;
+  cursor: pointer;
+}
+.lightbox .close:hover,
+.lightbox .close:focus {
+  background: rgba(255,255,255,0.09);
+  transform: scale(1.05);
+}
+
+/* Preloader inner card: stronger radius and subtle shadow */
+.pv-preloader .pv-preloader-inner {
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.45);
+}
+
+/* Skip button: rounded and consistent */
+.pv-skip {
+  border-radius: 8px;
+}
+
+/* Accessibility: visible keyboard focus */
+.grid-item:focus-within,
+.grid-item:focus {
+  outline: 3px solid rgba(66,153,225,0.18);
+  outline-offset: 4px;
+}
+
+/* Small screen tweak */
 @media (max-width: 480px) {
-  .pv-preloader-inner { width: 92vw; padding: 14px; }
-  .pv-spinner { width: 44px; height: 44px; border-width: 4px; }
+  .grid-item { border-radius: 10px; }
+  .lightbox .close { width: 40px; height: 40px; }
 }
