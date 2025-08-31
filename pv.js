@@ -1,246 +1,29 @@
-// pv.js — adds a page preloader that waits for grid images and videos to load,
-// shows progress, and reveals a "Skip" button after 5 seconds to dismiss the loader.
-// Integrates with the existing grid tiler + lightbox code.
-//
-// Drop this file in place of your existing pv.js
-document.addEventListener("DOMContentLoaded", () => {
-  const grid = document.querySelector('.grid');
-  const gutter = 12;           // px — keep in sync with CSS --gutter
-  const minColumnWidth = 220;  // px — controls when columns collapse
-  const maxColumns = 5;        // maximum columns
-  const rowHeight = 8;         // px — base row unit; keep in sync with CSS --row-height
+/*
+pv.js — Masonry grid + Lightbox + Preloader
+- Creates a known-good lightbox (removes any existing #lightbox)
+- Preloads grid <img> and data-video/data-video-high metadata, shows progress
+- Shows "Skip" button after 5s to dismiss preloader
+- Robust layout: uses getBoundingClientRect, relayout ticks, images load detection
+- Delegated click handlers, Esc/arrow navigation, overlay+close button to dismiss
 
-  if (!grid) {
-    console.warn('No .grid element found — tiler will not initialize.');
-    return;
-  }
+Usage:
+- Keep your grid markup similar to:
+  <div class="grid"> 
+    <div class="grid-item" data-video-high="..." data-thumb-low="..."> ... </div>
+    <div class="grid-item"><div class="card"><img src="thumb-low.jpg" data-high="image-high.jpg" /></div></div>
+  </div>
 
-  // ----------------------------
-  // Preloader overlay
-  // ----------------------------
-  let preloader = null;
-  let progressEl = null;
-  let skipBtn = null;
-  let skipShown = false;
-  let preloadPromiseResolve = null;
-  let preloadPromiseReject = null;
-  let aborted = false;
+- Optionally include the PV CSS from earlier conversation (preloader + lightbox tweaks).
+*/
 
-  function createPreloader() {
-    // If present already, remove to create a clean one
-    const existing = document.getElementById('pv-preloader');
-    if (existing) existing.remove();
+(function () {
+  // ---------- Config ----------
+  const gutter = 12;           // px
+  const minColumnWidth = 220;  // px
+  const maxColumns = 5;
+  const rowHeight = 8;         // px
 
-    preloader = document.createElement('div');
-    preloader.id = 'pv-preloader';
-    preloader.className = 'pv-preloader';
-    preloader.setAttribute('role', 'dialog');
-    preloader.setAttribute('aria-label', 'Loading gallery');
-
-    const inner = document.createElement('div');
-    inner.className = 'pv-preloader-inner';
-
-    const spinner = document.createElement('div');
-    spinner.className = 'pv-spinner';
-    spinner.setAttribute('aria-hidden', 'true');
-
-    progressEl = document.createElement('div');
-    progressEl.className = 'pv-progress';
-    progressEl.innerHTML = '<span class="pv-progress-percent">0%</span>';
-
-    skipBtn = document.createElement('button');
-    skipBtn.className = 'pv-skip';
-    skipBtn.type = 'button';
-    skipBtn.textContent = 'Skip';
-    skipBtn.style.display = 'none';
-    skipBtn.addEventListener('click', () => {
-      skipShown = true;
-      hidePreloader();
-    });
-
-    inner.appendChild(spinner);
-    inner.appendChild(progressEl);
-    inner.appendChild(skipBtn);
-    preloader.appendChild(inner);
-    document.body.appendChild(preloader);
-  }
-
-  function updatePreloaderProgress(loaded, total) {
-    if (!progressEl) return;
-    const pct = total === 0 ? 100 : Math.round((loaded / total) * 100);
-    const pctSpan = progressEl.querySelector('.pv-progress-percent');
-    if (pctSpan) pctSpan.textContent = `${pct}%`;
-    progressEl.style.setProperty('--pv-progress-pct', `${pct}%`);
-  }
-
-  function showSkipAfterDelay(delayMs = 5000) {
-    setTimeout(() => {
-      if (!preloader || skipShown) return;
-      // Only show if still visible (i.e., loading not finished)
-      if (preloader.style.display !== 'none') {
-        skipBtn.style.display = 'inline-block';
-      }
-    }, delayMs);
-  }
-
-  function hidePreloader() {
-    // hide overlay; resolve preload promise so rest of init continues
-    if (!preloader) return;
-    preloader.style.opacity = '0';
-    // small timeout to allow CSS transition
-    setTimeout(() => {
-      if (preloader && preloader.parentNode) preloader.parentNode.removeChild(preloader);
-      preloader = null;
-      if (preloadPromiseResolve) {
-        preloadPromiseResolve();
-        preloadPromiseResolve = null;
-        preloadPromiseReject = null;
-      }
-    }, 220);
-  }
-
-  // Preload grid images and referenced videos (metadata only)
-  function preloadGridMedia() {
-    return new Promise((resolve, reject) => {
-      preloadPromiseResolve = resolve;
-      preloadPromiseReject = reject;
-      createPreloader();
-      updatePreloaderProgress(0, 1); // initial small visible progress
-      showSkipAfterDelay(5000);
-
-      // collect images (<img>) inside grid and any video URLs from data attributes
-      const imgEls = Array.from(grid.querySelectorAll('img'));
-      const candidateVideoUrls = new Set();
-
-      // look for data-video / data-video-high attributes on grid-item elements
-      const tiles = Array.from(grid.querySelectorAll('.grid-item'));
-      tiles.forEach(t => {
-        if (t.dataset) {
-          if (t.dataset.video) candidateVideoUrls.add(t.dataset.video);
-          if (t.dataset.videoHigh) candidateVideoUrls.add(t.dataset.videoHigh);
-        }
-        // also check for <video> elements inside tiles (rare)
-        const videoEl = t.querySelector('video');
-        if (videoEl) {
-          const sources = videoEl.querySelectorAll('source');
-          sources.forEach(s => { if (s.src) candidateVideoUrls.add(s.src); });
-          if (videoEl.src) candidateVideoUrls.add(videoEl.src);
-        }
-      });
-
-      // unify lists
-      const images = imgEls.slice(); // array of <img>
-      const videos = Array.from(candidateVideoUrls).filter(Boolean);
-
-      const total = images.length + videos.length;
-      if (total === 0) {
-        // no media to load — hide and resolve quickly
-        updatePreloaderProgress(1, 1);
-        setTimeout(() => hidePreloader(), 200);
-        resolve();
-        return;
-      }
-
-      let loaded = 0;
-      function markLoaded() {
-        loaded += 1;
-        updatePreloaderProgress(loaded, total);
-        if (loaded >= total) {
-          // small delay to ensure user sees 100%
-          setTimeout(() => { if (!skipShown) hidePreloader(); else hidePreloader(); }, 250);
-        }
-      }
-
-      // Image loading
-      images.forEach(img => {
-        // If image is already loaded (cached), consider it done
-        if (img.complete && img.naturalWidth !== 0) {
-          markLoaded();
-          return;
-        }
-        // Otherwise attach listeners
-        const onLoad = () => { cleanup(); markLoaded(); };
-        const onError = () => { cleanup(); markLoaded(); };
-        const cleanup = () => { img.removeEventListener('load', onLoad); img.removeEventListener('error', onError); };
-        img.addEventListener('load', onLoad);
-        img.addEventListener('error', onError);
-        // as an extra safeguard, if image doesn't load within 30s, treat as loaded
-        setTimeout(() => { if (!img.complete) { cleanup(); markLoaded(); } }, 30000);
-      });
-
-      // Video metadata loading (use hidden Video elements to load metadata only)
-      if (videos.length === 0) {
-        // if only images, resolve by checking images completion (above)
-        // Wait until loaded === total then resolve
-      } else {
-        videos.forEach(url => {
-          try {
-            const v = document.createElement('video');
-            v.preload = 'metadata';
-            v.muted = true;
-            v.style.position = 'absolute';
-            v.style.left = '-9999px';
-            v.style.width = '1px';
-            v.style.height = '1px';
-            v.style.opacity = '0';
-            // attach events
-            const onMeta = () => { cleanup(); markLoaded(); v.remove(); };
-            const onError = () => { cleanup(); markLoaded(); v.remove(); };
-            const cleanup = () => { v.removeEventListener('loadedmetadata', onMeta); v.removeEventListener('error', onError); };
-            v.addEventListener('loadedmetadata', onMeta);
-            v.addEventListener('error', onError);
-            // append to body temporarily so loading works in some browsers
-            document.body.appendChild(v);
-            v.src = url;
-            // fallback timeout
-            setTimeout(() => {
-              if (!v.readyState || v.readyState < 1) {
-                cleanup();
-                try { v.remove(); } catch (e) {}
-                markLoaded();
-              }
-            }, 30000);
-          } catch (e) {
-            // if creating/using video fails, just mark as loaded
-            markLoaded();
-          }
-        });
-      }
-
-      // Poll for completion: when loaded reaches total, resolve.
-      const poll = setInterval(() => {
-        if (loaded >= total) {
-          clearInterval(poll);
-          // extra short delay for UX
-          setTimeout(() => {
-            if (!skipShown) {
-              // hide preloader (and resolve)
-              hidePreloader();
-            } else {
-              hidePreloader();
-            }
-            resolve();
-          }, 250);
-        }
-      }, 120);
-
-      // If the user clicks Skip we want to immediately resolve (hide overlay)
-      // skip button handler already calls hidePreloader which resolves the promise
-      // But in case of any error/timeouts, ensure we don't hang: set an overall max timeout (e.g., 60s)
-      setTimeout(() => {
-        if (loaded < total) {
-          console.warn('Preloader: overall timeout reached — proceeding anyway.');
-          hidePreloader();
-          resolve();
-        }
-      }, 60000);
-    });
-  }
-
-  // ----------------------------
-  // Grid tiler (unchanged)
-  // ----------------------------
-  // debounce helper
+  // ---------- Utility ----------
   function debounce(fn, wait) {
     let t;
     return function () {
@@ -249,104 +32,86 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
-  function computeColumns(containerWidth) {
-    const cols = Math.floor((containerWidth + gutter) / (minColumnWidth + gutter));
-    return Math.max(1, Math.min(cols, maxColumns));
-  }
-  function computeColumnWidth(containerWidth, cols) {
-    if (cols <= 1) return containerWidth;
-    const totalGutters = (cols - 1) * gutter;
-    return Math.floor((containerWidth - totalGutters) / cols);
-  }
-  function getRequestedColSpan(item) {
-    const dataCol = parseInt(item.getAttribute('data-col'), 10);
-    if (Number.isFinite(dataCol) && dataCol > 0) return dataCol;
-    if (item.classList.contains('grid-item--w4')) return 4;
-    if (item.classList.contains('grid-item--w3')) return 3;
-    if (item.classList.contains('grid-item--w2')) return 2;
-    return 1;
-  }
-  function computeRowSpan(item, rowHeightPx, gapPx) {
-    const card = item.querySelector('.card') || item;
-    const contentHeight = Math.ceil(card.getBoundingClientRect().height);
-    return Math.max(1, Math.ceil((contentHeight + gapPx) / (rowHeightPx + gapPx)));
-  }
-  function layoutGrid() {
-    const containerWidth = grid.clientWidth;
-    const cols = computeColumns(containerWidth);
-    const colWidth = computeColumnWidth(containerWidth, cols);
-    grid.style.gridTemplateColumns = `repeat(${cols}, ${colWidth}px)`;
-    grid.style.gridAutoRows = `${rowHeight}px`;
-    grid.style.setProperty('--gutter', `${gutter}px`);
-    grid.style.setProperty('--row-height', `${rowHeight}px`);
-    const items = Array.from(grid.querySelectorAll('.grid-item'));
-    items.forEach(item => {
-      let span = getRequestedColSpan(item);
-      span = Math.max(1, Math.min(span, cols));
-      item.style.gridColumn = `span ${span}`;
-      const rowSpan = computeRowSpan(item, rowHeight, gutter);
-      item.style.gridRowEnd = `span ${rowSpan}`;
-    });
+  // ---------- Elements & state ----------
+  const grid = document.querySelector('.grid');
+  if (!grid) {
+    console.warn('pv.js: no .grid found — aborting initialization.');
+    return;
   }
 
-  // ----------------------------
-  // Lightbox (reused from prior robust implementation)
-  // ----------------------------
   let lightbox = null;
   let lightboxContent = null;
   let keydownAttached = false;
   let mediaItems = [];
 
+  // Preloader state
+  let preloader = null;
+  let progressEl = null;
+  let skipBtn = null;
+  let skipShown = false;
+
+  // ---------- Robust lightbox creation (always create a fresh one) ----------
   function removeExistingLightbox() {
     const existing = document.getElementById('lightbox');
-    if (existing) existing.remove();
+    if (existing) {
+      try { existing.parentNode && existing.parentNode.removeChild(existing); } catch (e) {}
+    }
   }
+
   function createLightbox() {
     removeExistingLightbox();
+
     lightbox = document.createElement('div');
     lightbox.id = 'lightbox';
     lightbox.className = 'lightbox';
-    lightbox.style.position = 'fixed';
-    lightbox.style.left = '0';
-    lightbox.style.top = '0';
-    lightbox.style.width = '100%';
-    lightbox.style.height = '100%';
-    lightbox.style.display = 'none';
-    lightbox.style.zIndex = '2147483646';
-    lightbox.style.background = 'rgba(0,0,0,0.85)';
-    lightbox.style.justifyContent = 'center';
-    lightbox.style.alignItems = 'center';
-    lightbox.style.padding = '20px';
-    lightbox.style.boxSizing = 'border-box';
-    lightbox.style.overflow = 'auto';
+    // minimal inline styles for safety
+    Object.assign(lightbox.style, {
+      position: 'fixed',
+      left: '0',
+      top: '0',
+      width: '100%',
+      height: '100%',
+      display: 'none',
+      zIndex: '2147483646',
+      background: 'rgba(0,0,0,0.85)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: '20px',
+      boxSizing: 'border-box',
+      overflow: 'auto'
+    });
 
     lightboxContent = document.createElement('div');
     lightboxContent.className = 'lightbox-content';
-    lightboxContent.style.boxSizing = 'border-box';
-    lightboxContent.style.minWidth = '160px';
-    lightboxContent.style.minHeight = '120px';
-    lightboxContent.style.maxWidth = '90vw';
-    lightboxContent.style.maxHeight = '80vh';
-    lightboxContent.style.display = 'flex';
-    lightboxContent.style.alignItems = 'center';
-    lightboxContent.style.justifyContent = 'center';
-    lightboxContent.style.position = 'relative';
-    lightboxContent.style.background = 'transparent';
+    Object.assign(lightboxContent.style, {
+      boxSizing: 'border-box',
+      minWidth: '160px',
+      minHeight: '120px',
+      maxWidth: '90vw',
+      maxHeight: '80vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      position: 'relative',
+      background: 'transparent'
+    });
 
     const closeBtn = document.createElement('button');
     closeBtn.className = 'close';
     closeBtn.type = 'button';
     closeBtn.setAttribute('aria-label', 'Close');
     closeBtn.innerHTML = '×';
-    closeBtn.style.position = 'absolute';
-    closeBtn.style.top = '12px';
-    closeBtn.style.right = '16px';
-    closeBtn.style.fontSize = '30px';
-    closeBtn.style.color = '#fff';
-    closeBtn.style.background = 'transparent';
-    closeBtn.style.border = 'none';
-    closeBtn.style.cursor = 'pointer';
-    closeBtn.style.zIndex = '10';
+    Object.assign(closeBtn.style, {
+      position: 'absolute',
+      top: '12px',
+      right: '16px',
+      fontSize: '30px',
+      color: '#fff',
+      background: 'transparent',
+      border: 'none',
+      cursor: 'pointer',
+      zIndex: '10'
+    });
 
     lightbox.appendChild(closeBtn);
     lightbox.appendChild(lightboxContent);
@@ -378,14 +143,7 @@ document.addEventListener("DOMContentLoaded", () => {
     lightboxContent.style.minHeight = '120px';
   }
 
-  function collectMediaItems() {
-    mediaItems = Array.from(grid.querySelectorAll('.grid-item')).filter(item => {
-      if (item.querySelector('img')) return true;
-      if (item.dataset && (item.dataset.video || item.dataset.videoHigh || item.dataset.thumbLow || item.dataset.thumbHigh || item.dataset.high)) return true;
-      return false;
-    });
-  }
-
+  // ---------- Resolve media from a .grid-item ----------
   function resolveMediaForItem(item) {
     const data = item.dataset || {};
     const imgEl = item.querySelector('img');
@@ -401,6 +159,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // ---------- Lightbox show/hide/navigation ----------
   function computeLightboxSize() {
     const maxW = Math.min(window.innerWidth * 0.9, 1400);
     const maxH = Math.min(window.innerHeight * 0.8, 1000);
@@ -411,8 +170,8 @@ document.addEventListener("DOMContentLoaded", () => {
   function showLightboxByIndex(index) {
     if (!lightbox || !lightboxContent) createLightbox();
     collectMediaItems();
-    if (mediaItems.length === 0) return console.warn('No media items found in grid.');
-    if (index < 0 || index >= mediaItems.length) return console.warn('index out of range', index);
+    if (mediaItems.length === 0) return console.warn('pv.js: no media items found in grid.');
+    if (index < 0 || index >= mediaItems.length) return console.warn('pv.js: index out of range', index);
     currentIndex = index;
     clearLightboxContent();
 
@@ -459,10 +218,7 @@ document.addEventListener("DOMContentLoaded", () => {
       video.playsInline = true;
       video.autoplay = true;
       video.preload = 'metadata';
-      video.style.maxWidth = '100%';
-      video.style.maxHeight = '100%';
-      video.style.width = '100%';
-      video.style.height = '100%';
+      Object.assign(video.style, { maxWidth: '100%', maxHeight: '100%', width: '100%', height: '100%' });
       if (media.poster) video.setAttribute('poster', media.poster);
 
       const source = document.createElement('source');
@@ -477,16 +233,13 @@ document.addEventListener("DOMContentLoaded", () => {
         lightboxContent.style.minHeight = '';
       };
       lightboxContent.appendChild(video);
-      video.play().catch(()=>{});
+      video.play().catch(() => {});
     } else {
       const hi = media.srcHigh;
       const low = media.srcLow;
       const img = document.createElement('img');
       img.alt = item.getAttribute('aria-label') || '';
-      img.style.maxWidth = '100%';
-      img.style.maxHeight = '100%';
-      img.style.width = 'auto';
-      img.style.height = 'auto';
+      Object.assign(img.style, { maxWidth: '100%', maxHeight: '100%', width: 'auto', height: 'auto' });
 
       if (low) {
         img.src = low;
@@ -512,7 +265,7 @@ document.addEventListener("DOMContentLoaded", () => {
           lightboxContent.style.minWidth = '';
           lightboxContent.style.minHeight = '';
         };
-        hiImg.onerror = () => console.warn('failed to load hi-res image for lightbox:', hi);
+        hiImg.onerror = () => console.warn('pv.js: failed to load hi-res image for lightbox:', hi);
       } else {
         img.onload = () => {
           lightboxContent.style.width = '';
@@ -547,16 +300,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  grid.addEventListener('click', (evt) => {
-    const tile = evt.target.closest && evt.target.closest('.grid-item');
-    if (!tile || !grid.contains(tile)) return;
-    if (evt.target.closest && evt.target.closest('a')) return;
-    collectMediaItems();
-    const index = mediaItems.indexOf(tile);
-    if (index === -1) return;
-    showLightboxByIndex(index);
-  });
-
+  // Delegated close handler for any .lightbox .close
   document.addEventListener('click', (e) => {
     const closeEl = e.target.closest && e.target.closest('.lightbox .close');
     if (closeEl) {
@@ -566,21 +310,329 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Initialize: preloader -> layout -> bindings
-  createLightbox();
-  preloadGridMedia().then(() => {
-    // Once preloader promise resolves (either loads finished or skipped/timed out), run layout
-    layoutGrid();
-    requestAnimationFrame(layoutGrid);
-    collectMediaItems();
-  }).catch((err) => {
-    console.warn('Preloader promise rejected:', err);
-    // still continue
-    layoutGrid();
-    requestAnimationFrame(layoutGrid);
-    collectMediaItems();
-  });
+  // ---------- Preloader (progress + skip after 5s) ----------
+  function createPreloader() {
+    const existing = document.getElementById('pv-preloader');
+    if (existing) existing.remove();
 
-  // window resize relayout
-  window.addEventListener('resize', debounce(() => { layoutGrid(); collectMediaItems(); }, 120));
-});
+    preloader = document.createElement('div');
+    preloader.id = 'pv-preloader';
+    preloader.className = 'pv-preloader';
+    preloader.setAttribute('role', 'dialog');
+    preloader.setAttribute('aria-label', 'Loading gallery');
+    Object.assign(preloader.style, {
+      position: 'fixed',
+      inset: '0',
+      zIndex: '2147483647',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: 'rgba(0,0,0,0.85)',
+      transition: 'opacity 180ms ease'
+    });
+
+    const inner = document.createElement('div');
+    inner.className = 'pv-preloader-inner';
+    Object.assign(inner.style, {
+      textAlign: 'center',
+      color: '#fff',
+      maxWidth: '92vw',
+      width: '520px',
+      padding: '22px',
+      boxSizing: 'border-box',
+      borderRadius: '10px',
+      background: 'rgba(0,0,0,0.45)',
+      backdropFilter: 'blur(6px)'
+    });
+
+    const spinner = document.createElement('div');
+    spinner.className = 'pv-spinner';
+    Object.assign(spinner.style, {
+      width: '56px',
+      height: '56px',
+      margin: '8px auto 14px',
+      borderRadius: '50%',
+      border: '5px solid rgba(255,255,255,0.12)',
+      borderTopColor: '#fff',
+      animation: 'pv-spin 1s linear infinite'
+    });
+
+    progressEl = document.createElement('div');
+    progressEl.className = 'pv-progress';
+    Object.assign(progressEl.style, { margin: '10px auto', color: '#fff', fontWeight: '600' });
+    progressEl.innerHTML = '<span class="pv-progress-percent">0%</span>';
+
+    skipBtn = document.createElement('button');
+    skipBtn.className = 'pv-skip';
+    skipBtn.type = 'button';
+    skipBtn.textContent = 'Skip';
+    skipBtn.style.display = 'none';
+    Object.assign(skipBtn.style, {
+      marginTop: '14px', background: 'rgba(255,255,255,0.12)', color: '#fff',
+      border: '1px solid rgba(255,255,255,0.12)', padding: '8px 14px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600'
+    });
+    skipBtn.addEventListener('click', () => {
+      skipShown = true;
+      hidePreloaderImmediate();
+    });
+
+    inner.appendChild(spinner);
+    inner.appendChild(progressEl);
+    inner.appendChild(skipBtn);
+    preloader.appendChild(inner);
+    document.body.appendChild(preloader);
+
+    // add minimal keyframe for spinner if not present
+    if (!document.getElementById('pv-spin-style')) {
+      const s = document.createElement('style');
+      s.id = 'pv-spin-style';
+      s.textContent = "@keyframes pv-spin { to { transform: rotate(360deg); } }";
+      document.head.appendChild(s);
+    }
+  }
+
+  function updatePreloaderProgress(loaded, total) {
+    if (!progressEl) return;
+    const pct = total === 0 ? 100 : Math.round((loaded / total) * 100);
+    const pctSpan = progressEl.querySelector('.pv-progress-percent');
+    if (pctSpan) pctSpan.textContent = `${pct}%`;
+  }
+
+  function showSkipAfterDelay(delayMs = 5000) {
+    setTimeout(() => {
+      if (!preloader || skipShown) return;
+      if (preloader.style.display !== 'none') {
+        skipBtn.style.display = 'inline-block';
+      }
+    }, delayMs);
+  }
+
+  function hidePreloaderImmediate() {
+    if (!preloader) return;
+    try {
+      preloader.parentNode && preloader.parentNode.removeChild(preloader);
+    } catch (e) {}
+    preloader = null;
+  }
+
+  function hidePreloader() {
+    if (!preloader) return;
+    preloader.style.opacity = '0';
+    setTimeout(() => {
+      try { preloader.parentNode && preloader.parentNode.removeChild(preloader); } catch (e) {}
+      preloader = null;
+      // after the overlay is gone, do a couple of relayout ticks to stabilize masonry
+      setTimeout(() => { layoutGrid(); requestAnimationFrame(layoutGrid); window.dispatchEvent(new Event('resize')); }, 40);
+    }, 220);
+  }
+
+  function preloadGridMedia() {
+    return new Promise((resolve) => {
+      createPreloader();
+      updatePreloaderProgress(0, 1);
+      showSkipAfterDelay(5000);
+
+      const imgEls = Array.from(grid.querySelectorAll('img'));
+      const candidateVideoUrls = new Set();
+
+      const tiles = Array.from(grid.querySelectorAll('.grid-item'));
+      tiles.forEach(t => {
+        if (t.dataset) {
+          if (t.dataset.video) candidateVideoUrls.add(t.dataset.video);
+          if (t.dataset.videoHigh) candidateVideoUrls.add(t.dataset.videoHigh);
+        }
+        const videoEl = t.querySelector('video');
+        if (videoEl) {
+          const sources = videoEl.querySelectorAll('source');
+          sources.forEach(s => { if (s.src) candidateVideoUrls.add(s.src); });
+          if (videoEl.src) candidateVideoUrls.add(videoEl.src);
+        }
+      });
+
+      const images = imgEls.slice();
+      const videos = Array.from(candidateVideoUrls).filter(Boolean);
+
+      const total = images.length + videos.length;
+      if (total === 0) {
+        updatePreloaderProgress(1, 1);
+        setTimeout(() => hidePreloader(), 200);
+        resolve();
+        return;
+      }
+
+      let loaded = 0;
+      function markLoaded() {
+        loaded += 1;
+        updatePreloaderProgress(loaded, total);
+        if (loaded >= total) {
+          setTimeout(() => { hidePreloader(); resolve(); }, 250);
+        }
+      }
+
+      images.forEach(img => {
+        if (img.complete && img.naturalWidth !== 0) {
+          markLoaded();
+          return;
+        }
+        const onLoad = () => { cleanup(); markLoaded(); };
+        const onError = () => { cleanup(); markLoaded(); };
+        const cleanup = () => { img.removeEventListener('load', onLoad); img.removeEventListener('error', onError); };
+        img.addEventListener('load', onLoad);
+        img.addEventListener('error', onError);
+        setTimeout(() => { if (!img.complete) { cleanup(); markLoaded(); } }, 30000);
+      });
+
+      if (videos.length > 0) {
+        videos.forEach(url => {
+          try {
+            const v = document.createElement('video');
+            v.preload = 'metadata';
+            v.muted = true;
+            Object.assign(v.style, { position: 'absolute', left: '-9999px', width: '1px', height: '1px', opacity: '0' });
+            const onMeta = () => { cleanup(); try { v.remove(); } catch (e) {} ; markLoaded(); };
+            const onError = () => { cleanup(); try { v.remove(); } catch (e) {}; markLoaded(); };
+            const cleanup = () => { v.removeEventListener('loadedmetadata', onMeta); v.removeEventListener('error', onError); };
+            v.addEventListener('loadedmetadata', onMeta);
+            v.addEventListener('error', onError);
+            document.body.appendChild(v);
+            v.src = url;
+            setTimeout(() => {
+              if (!v.readyState || v.readyState < 1) { cleanup(); try { v.remove(); } catch (e) {} ; markLoaded(); }
+            }, 30000);
+          } catch (e) {
+            markLoaded();
+          }
+        });
+      }
+
+      // Failsafe overall timeout
+      setTimeout(() => {
+        if (preloader) {
+          console.warn('pv.js: preloader overall timeout — proceeding');
+          hidePreloader();
+          resolve();
+        }
+      }, 60000);
+    });
+  }
+
+  // ---------- Masonry/grid layout ----------
+  function computeColumns(containerWidth) {
+    const cols = Math.floor((containerWidth + gutter) / (minColumnWidth + gutter));
+    return Math.max(1, Math.min(cols, maxColumns));
+  }
+
+  function computeColumnWidth(containerWidth, cols) {
+    if (!containerWidth || containerWidth < 10) {
+      containerWidth = Math.max(containerWidth, Math.round(window.innerWidth * 0.9));
+    }
+    if (cols <= 1) return containerWidth;
+    const totalGutters = (cols - 1) * gutter;
+    return Math.round((containerWidth - totalGutters) / cols);
+  }
+
+  function computeRowSpan(item, rowHeightPx, gapPx) {
+    const card = item.querySelector('.card') || item;
+    const contentHeight = Math.ceil(card.getBoundingClientRect().height);
+    return Math.max(1, Math.ceil((contentHeight + gapPx) / (rowHeightPx + gapPx)));
+  }
+
+  function layoutGrid() {
+    const containerWidth = Math.round(grid.getBoundingClientRect().width);
+    const cols = computeColumns(containerWidth);
+    const colWidth = computeColumnWidth(containerWidth, cols);
+    grid.style.gridTemplateColumns = `repeat(${cols}, ${colWidth}px)`;
+    grid.style.gridAutoRows = `${rowHeight}px`;
+    grid.style.setProperty('--gutter', `${gutter}px`);
+    grid.style.setProperty('--row-height', `${rowHeight}px`);
+
+    const items = Array.from(grid.querySelectorAll('.grid-item'));
+    items.forEach(item => {
+      let span = 1;
+      const dataCol = parseInt(item.getAttribute('data-col'), 10);
+      if (Number.isFinite(dataCol) && dataCol > 0) span = dataCol;
+      if (item.classList.contains('grid-item--w4')) span = 4;
+      if (item.classList.contains('grid-item--w3')) span = 3;
+      if (item.classList.contains('grid-item--w2')) span = 2;
+      span = Math.max(1, Math.min(span, cols));
+      item.style.gridColumn = `span ${span}`;
+      const rowSpan = computeRowSpan(item, rowHeight, gutter);
+      item.style.gridRowEnd = `span ${rowSpan}`;
+    });
+  }
+
+  // ---------- Media collection ----------
+  function collectMediaItems() {
+    mediaItems = Array.from(grid.querySelectorAll('.grid-item')).filter(item => {
+      if (item.querySelector('img')) return true;
+      if (item.dataset && (item.dataset.video || item.dataset.videoHigh || item.dataset.thumbLow || item.dataset.thumbHigh || item.dataset.high)) return true;
+      return false;
+    });
+  }
+
+  // ---------- Initialize and wiring ----------
+  function init() {
+    createLightbox();
+    // Start preloader, then layout once resolved
+    preloadGridMedia().then(() => {
+      // ensure overlay removed and layout has a chance to settle — multiple ticks
+      setTimeout(() => {
+        layoutGrid();
+        requestAnimationFrame(() => {
+          layoutGrid();
+          window.dispatchEvent(new Event('resize'));
+        });
+      }, 40);
+      collectMediaItems();
+    }).catch((e) => {
+      console.warn('pv.js: preload rejected', e);
+      layoutGrid();
+      collectMediaItems();
+    });
+
+    // imagesLoaded style fallback: relayout after images have fully loaded
+    if (typeof imagesLoaded === 'function') {
+      imagesLoaded(grid, () => { layoutGrid(); requestAnimationFrame(layoutGrid); collectMediaItems(); });
+    } else {
+      // Basic fallback: after window load do a relayout
+      window.addEventListener('load', () => { layoutGrid(); setTimeout(layoutGrid, 80); collectMediaItems(); });
+    }
+
+    // Watch for DOM changes in grid to relayout
+    try {
+      const mo = new MutationObserver(debounce(() => { layoutGrid(); collectMediaItems(); }, 120));
+      mo.observe(grid, { childList: true, subtree: true, attributes: true });
+    } catch (e) {
+      // ignore if MutationObserver blocked
+    }
+
+    // Resize handling
+    window.addEventListener('resize', debounce(() => { layoutGrid(); collectMediaItems(); }, 120));
+
+    // Delegated click to open lightbox
+    grid.addEventListener('click', (evt) => {
+      const tile = evt.target.closest && evt.target.closest('.grid-item');
+      if (!tile || !grid.contains(tile)) return;
+      if (evt.target.closest && evt.target.closest('a')) return;
+      collectMediaItems();
+      const index = mediaItems.indexOf(tile);
+      if (index === -1) return;
+      showLightboxByIndex(index);
+    });
+  }
+
+  // start init on DOMContentLoaded
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  // expose minimal helpers for debugging (optional)
+  window._pv = {
+    layoutGrid,
+    showLightboxByIndex,
+    hideLightbox,
+    collectMediaItems
+  };
+})();
