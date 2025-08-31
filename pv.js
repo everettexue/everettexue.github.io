@@ -1,6 +1,5 @@
-// Updated pv.js — fixes lightbox close button by adding a delegated close handler,
-// ensuring keydown handler is attached only once, and making created close button
-// a proper <button type="button"> so clicks reliably work.
+// pv.js — updated: ensure lightbox content isn't 0x0 by showing overlay early,
+// using a temporary min size and listening for image/video load events.
 document.addEventListener("DOMContentLoaded", () => {
   const grid = document.querySelector('.grid');
   const gutter = 12;           // px — keep in sync with CSS --gutter
@@ -109,12 +108,17 @@ document.addEventListener("DOMContentLoaded", () => {
     // content container
     lightboxContent = document.createElement('div');
     lightboxContent.className = 'lightbox-content';
+    // important: allow the container to size to children, but give a small fallback min size
     lightboxContent.style.maxWidth = '90%';
     lightboxContent.style.maxHeight = '80%';
     lightboxContent.style.display = 'flex';
     lightboxContent.style.alignItems = 'center';
     lightboxContent.style.justifyContent = 'center';
     lightboxContent.style.position = 'relative';
+    // give a tiny min to avoid 0x0 while the media loads
+    lightboxContent.style.minWidth = '160px';
+    lightboxContent.style.minHeight = '120px';
+
     // close button (explicit type and accessible attributes)
     const closeBtn = document.createElement('button');
     closeBtn.className = 'close';
@@ -164,6 +168,9 @@ document.addEventListener("DOMContentLoaded", () => {
       } catch (e) { /* ignore */ }
     }
     lightboxContent.innerHTML = '';
+    // restore a small min-size so the container isn't 0x0 if reopened quickly
+    lightboxContent.style.minWidth = '160px';
+    lightboxContent.style.minHeight = '120px';
   }
 
   // Collect media items (images or videos)
@@ -217,26 +224,34 @@ document.addEventListener("DOMContentLoaded", () => {
     const item = mediaItems[index];
     const media = resolveMediaForItem(item);
 
+    // show the overlay early so percent/viewport-based max sizes can compute correctly
+    lightbox.style.display = 'flex';
+
     if (!media || !media.type) {
       const p = document.createElement('div');
       p.style.color = '#fff';
       p.textContent = 'No preview available';
       lightboxContent.appendChild(p);
-      lightbox.style.display = 'flex';
       return;
     }
 
     if (media.type === 'video') {
       if (!media.src) {
-        // fallback: if video missing, try to show high-res poster as image
+        // fallback: show poster image if present
         if (media.poster) {
           const img = document.createElement('img');
           img.src = media.poster;
           img.alt = item.getAttribute('aria-label') || '';
           img.style.maxWidth = '90vw';
           img.style.maxHeight = '80vh';
+          img.style.width = 'auto';
+          img.style.height = 'auto';
+          // when poster image loads remove temporary min size
+          img.onload = () => {
+            lightboxContent.style.minWidth = '';
+            lightboxContent.style.minHeight = '';
+          };
           lightboxContent.appendChild(img);
-          lightbox.style.display = 'flex';
           return;
         }
         console.warn('video tile has no data-video or data-video-high source', item);
@@ -244,7 +259,6 @@ document.addEventListener("DOMContentLoaded", () => {
         p.style.color = '#fff';
         p.textContent = 'Video not available';
         lightboxContent.appendChild(p);
-        lightbox.style.display = 'flex';
         return;
       }
 
@@ -266,9 +280,27 @@ document.addEventListener("DOMContentLoaded", () => {
       else if (ext === 'webm') source.type = 'video/webm';
       video.appendChild(source);
 
+      // When metadata is loaded we can remove the temporary min size and try play
+      video.onloadedmetadata = () => {
+        lightboxContent.style.minWidth = '';
+        lightboxContent.style.minHeight = '';
+        // try to play if browser allows it
+        video.play().catch(() => { /* autoplay blocked; user will press play */ });
+      };
+
+      // Some browsers won't fire onloadedmetadata until appended
       lightboxContent.appendChild(video);
-      // attempt to play (may be blocked)
-      video.play().catch(() => { /* autoplay blocked; user can press play */ });
+
+      // If poster exists and video playback doesn't immediately provide size,
+      // try to remove min size when poster image would be displayed:
+      if (media.poster) {
+        const posterImg = new Image();
+        posterImg.src = media.poster;
+        posterImg.onload = () => {
+          lightboxContent.style.minWidth = '';
+          lightboxContent.style.minHeight = '';
+        };
+      }
 
     } else { // image
       const hi = media.srcHigh;
@@ -279,6 +311,8 @@ document.addEventListener("DOMContentLoaded", () => {
       img.style.maxHeight = '80vh';
       img.style.width = 'auto';
       img.style.height = 'auto';
+
+      // choose hi if available else low
       img.src = hi || low || '';
       if (!img.src) {
         console.warn('image tile has no src to show', item);
@@ -286,13 +320,18 @@ document.addEventListener("DOMContentLoaded", () => {
         p.style.color = '#fff';
         p.textContent = 'Image not available';
         lightboxContent.appendChild(p);
-        lightbox.style.display = 'flex';
         return;
       }
+
+      // remove temporary min size when image loads
+      img.onload = () => {
+        lightboxContent.style.minWidth = '';
+        lightboxContent.style.minHeight = '';
+      };
+
+      // ensure we append after setting onload
       lightboxContent.appendChild(img);
     }
-
-    lightbox.style.display = "flex";
   }
 
   function hideLightbox() {
