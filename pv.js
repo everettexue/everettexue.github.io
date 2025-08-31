@@ -77,44 +77,62 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Re-apply layout after images load (ensures heights are correct)
-  imagesLoaded(grid, () => {
-    layoutGrid();
-    // A second layout tick in case fonts/images/async content changed sizes
-    requestAnimationFrame(() => layoutGrid());
-  });
+  // ---------------------------------------------------------------------------
+  // Lightbox: create if missing, safe clear, show by index, delegated click handler
+  // ---------------------------------------------------------------------------
 
-  // Relayout on resize (debounced)
-  window.addEventListener('resize', debounce(() => {
-    layoutGrid();
-  }, 120));
+  let lightbox = document.getElementById("lightbox");
+  let lightboxContent = lightbox ? lightbox.querySelector('.lightbox-content') : null;
+  const CLOSE_BTN_HTML = '<button class="close" aria-label="Close" title="Close">×</button>';
 
-  /* -------------------------
-     Lightbox with image & video support
-     - Supports low-res thumbnails for grid tiles and high-res sources for the lightbox
-     - Expected data attributes on .grid-item (video example):
-         data-video="<low-or-medium-video-url>"           (optional)
-         data-video-high="<high-resolution-video-url>"   (preferred source for lightbox)
-         data-thumb-low="<low-res-thumbnail-url>"        (used for grid if not using <img>)
-         data-thumb-high="<high-res-image-for-lightbox>" (optional poster for video or hi-res image)
-     - For images:
-         <img src="thumb-low.jpg" data-high="image-high.jpg"> OR
-         .grid-item data-thumb-low / data-thumb-high
-  ------------------------- */
+  function createLightboxIfMissing() {
+    if (lightbox && lightboxContent) return; // already present
+    // create overlay
+    lightbox = document.createElement('div');
+    lightbox.id = 'lightbox';
+    lightbox.className = 'lightbox';
+    lightbox.style.display = 'none';
+    lightbox.style.justifyContent = 'center';
+    lightbox.style.alignItems = 'center';
+    lightbox.style.position = 'fixed';
+    lightbox.style.left = '0';
+    lightbox.style.top = '0';
+    lightbox.style.width = '100%';
+    lightbox.style.height = '100%';
+    lightbox.style.zIndex = '999';
+    lightbox.style.background = 'rgba(0,0,0,0.85)';
+    lightbox.style.padding = '24px';
+    lightbox.style.boxSizing = 'border-box';
+    // content container
+    lightboxContent = document.createElement('div');
+    lightboxContent.className = 'lightbox-content';
+    lightboxContent.style.maxWidth = '90%';
+    lightboxContent.style.maxHeight = '80%';
+    lightboxContent.style.display = 'flex';
+    lightboxContent.style.alignItems = 'center';
+    lightboxContent.style.justifyContent = 'center';
+    // close button
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'close';
+    closeBtn.innerHTML = '×';
+    closeBtn.style.position = 'absolute';
+    closeBtn.style.top = '18px';
+    closeBtn.style.right = '22px';
+    closeBtn.style.fontSize = '34px';
+    closeBtn.style.color = '#fff';
+    closeBtn.style.background = 'transparent';
+    closeBtn.style.border = 'none';
+    closeBtn.style.cursor = 'pointer';
+    closeBtn.setAttribute('aria-label', 'Close');
 
-  const lightbox = document.getElementById("lightbox");
-  const lightboxContent = lightbox ? lightbox.querySelector('.lightbox-content') : null;
-  const closeBtn = document.querySelector(".lightbox .close");
-  let mediaItems = []; // array of .grid-item that contain media (images or videos)
-  let currentIndex = 0;
+    lightbox.appendChild(closeBtn);
+    lightbox.appendChild(lightboxContent);
+    document.body.appendChild(lightbox);
 
-  function collectMediaItems() {
-    // any grid-item that has either an <img> or a data-video or data-thumb-low/high counts as media
-    mediaItems = Array.from(grid.querySelectorAll('.grid-item')).filter(item => {
-      if (item.querySelector('img')) return true;
-      if (item.dataset && (item.dataset.video || item.dataset.videoHigh || item.dataset.thumbLow || item.dataset.thumbHigh || item.dataset.high)) return true;
-      return false;
-    });
+    // attach handlers
+    closeBtn.addEventListener('click', hideLightbox);
+    lightbox.addEventListener('click', (e) => { if (e.target === lightbox) hideLightbox(); });
+    document.addEventListener('keydown', onKeyDown);
   }
 
   // Utility: clear the lightbox content and stop/pause any playing video
@@ -125,7 +143,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (video) {
       try {
         video.pause();
-        // remove sources to stop download/playing on some browsers
         video.removeAttribute('src');
         while (video.firstChild) video.removeChild(video.firstChild);
       } catch (e) { /* ignore */ }
@@ -133,27 +150,89 @@ document.addEventListener("DOMContentLoaded", () => {
     lightboxContent.innerHTML = '';
   }
 
-  // Show the lightbox for a given media index
-  function showLightboxByIndex(index) {
-    if (!lightbox || !lightboxContent) return;
-    if (index < 0 || index >= mediaItems.length) return;
-    currentIndex = index;
-    clearLightboxContent();
+  // Collect media items (images or videos)
+  let mediaItems = []; // will hold elements
+  function collectMediaItems() {
+    mediaItems = Array.from(grid.querySelectorAll('.grid-item')).filter(item => {
+      if (item.querySelector('img')) return true;
+      if (item.dataset && (item.dataset.video || item.dataset.videoHigh || item.dataset.thumbLow || item.dataset.thumbHigh || item.dataset.high)) return true;
+      return false;
+    });
+    // helpful debug
+    // console.log('collectMediaItems -> found', mediaItems.length, 'media items');
+  }
 
-    const item = mediaItems[index];
-    // prefer explicit dataset flags
+  // helpers to resolve media for a tile element
+  function resolveMediaForItem(item) {
     const data = item.dataset || {};
-
-    // helper to pick high-res fallback:
-    // possible attributes: data-video-high, data-video, data-thumb-high, data-high, <img data-high>, <img.src>
     const imgEl = item.querySelector('img');
 
     const isVideo = !!(data.video || data.videoHigh);
     if (isVideo) {
-      // prefer data-video-high for playback in lightbox, fallback to data-video
-      const srcHigh = data.videoHigh || data.video;
-      // poster can be data-thumb-high or data-thumb-low or imgEl.dataset.high or imgEl.src
-      const poster = data.thumbHigh || data.thumbLow || (imgEl && (imgEl.dataset && imgEl.dataset.high)) || (imgEl && imgEl.src) || '';
+      const srcHigh = data.videoHigh || data.video || '';
+      const poster = data.thumbHigh || data.thumbLow || (imgEl && imgEl.dataset && imgEl.dataset.high) || (imgEl && imgEl.src) || '';
+      return { type: 'video', src: srcHigh, poster };
+    } else {
+      // image: prefer data-thumb-high / data-high / img[data-high] / img.src
+      const hi = data.thumbHigh || data.high || (imgEl && imgEl.dataset && imgEl.dataset.high) || (imgEl && imgEl.src) || '';
+      const low = data.thumbLow || (imgEl && imgEl.src) || '';
+      return { type: 'image', srcHigh: hi, srcLow: low };
+    }
+  }
+
+  // Show the lightbox for a given media index
+  let currentIndex = 0;
+  function showLightboxByIndex(index) {
+    createLightboxIfMissing();
+    if (!lightbox || !lightboxContent) {
+      console.warn('Lightbox not available to show content.');
+      return;
+    }
+    collectMediaItems();
+    if (mediaItems.length === 0) {
+      console.warn('No media items found in grid.');
+      return;
+    }
+    if (index < 0 || index >= mediaItems.length) {
+      console.warn('Requested index out of range', index);
+      return;
+    }
+    currentIndex = index;
+    clearLightboxContent();
+
+    const item = mediaItems[index];
+    const media = resolveMediaForItem(item);
+
+    if (!media || !media.type) {
+      const p = document.createElement('div');
+      p.style.color = '#fff';
+      p.textContent = 'No preview available';
+      lightboxContent.appendChild(p);
+      lightbox.style.display = 'flex';
+      return;
+    }
+
+    if (media.type === 'video') {
+      if (!media.src) {
+        // fallback: if video missing, try to show high-res poster as image
+        if (media.poster) {
+          const img = document.createElement('img');
+          img.src = media.poster;
+          img.alt = item.getAttribute('aria-label') || '';
+          img.style.maxWidth = '90vw';
+          img.style.maxHeight = '80vh';
+          lightboxContent.appendChild(img);
+          lightbox.style.display = 'flex';
+          return;
+        }
+        console.warn('video tile has no data-video or data-video-high source', item);
+        const p = document.createElement('div');
+        p.style.color = '#fff';
+        p.textContent = 'Video not available';
+        lightboxContent.appendChild(p);
+        lightbox.style.display = 'flex';
+        return;
+      }
 
       const video = document.createElement('video');
       video.controls = true;
@@ -164,40 +243,41 @@ document.addEventListener("DOMContentLoaded", () => {
       video.style.maxHeight = '80vh';
       video.style.width = 'auto';
       video.style.height = 'auto';
-      if (poster) video.setAttribute('poster', poster);
+      if (media.poster) video.setAttribute('poster', media.poster);
 
-      // create source element
       const source = document.createElement('source');
-      source.src = srcHigh;
-      // try to infer type from extension (optional)
-      const ext = (srcHigh.split('?')[0].split('.').pop() || '').toLowerCase();
+      source.src = media.src;
+      const ext = (media.src.split('?')[0].split('.').pop() || '').toLowerCase();
       if (ext === 'mp4') source.type = 'video/mp4';
       else if (ext === 'webm') source.type = 'video/webm';
-
       video.appendChild(source);
+
       lightboxContent.appendChild(video);
+      // attempt to play (may be blocked)
+      video.play().catch(() => { /* autoplay blocked; user can press play */ });
 
-      // attempt to play (some browsers require user gesture; autoplay may be blocked)
-      video.play().catch(() => {
-        // autoplay failed (likely blocked). User can hit play.
-      });
-
-    } else {
-      // image path resolution: prefer data-thumb-high or data-high or the img[data-high] or img.src
-      const hi = data.thumbHigh || data.high || (imgEl && (imgEl.dataset && imgEl.dataset.high)) || (imgEl && imgEl.src) || '';
+    } else { // image
+      const hi = media.srcHigh;
+      const low = media.srcLow;
       const img = document.createElement('img');
+      img.alt = item.getAttribute('aria-label') || '';
       img.style.maxWidth = '90vw';
       img.style.maxHeight = '80vh';
       img.style.width = 'auto';
       img.style.height = 'auto';
-      img.alt = item.getAttribute('aria-label') || '';
-
-      // If we have a hi-res, use it; otherwise fall back to the low-res thumb if present
-      img.src = hi || data.thumbLow || (imgEl && imgEl.src) || '';
+      img.src = hi || low || '';
+      if (!img.src) {
+        console.warn('image tile has no src to show', item);
+        const p = document.createElement('div');
+        p.style.color = '#fff';
+        p.textContent = 'Image not available';
+        lightboxContent.appendChild(p);
+        lightbox.style.display = 'flex';
+        return;
+      }
       lightboxContent.appendChild(img);
     }
 
-    // show lightbox
     lightbox.style.display = "flex";
   }
 
@@ -215,51 +295,45 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
     if (e.key === "ArrowRight") {
+      collectMediaItems();
+      if (mediaItems.length === 0) return;
       currentIndex = (currentIndex + 1) % mediaItems.length;
       showLightboxByIndex(currentIndex);
     }
     if (e.key === "ArrowLeft") {
+      collectMediaItems();
+      if (mediaItems.length === 0) return;
       currentIndex = (currentIndex - 1 + mediaItems.length) % mediaItems.length;
       showLightboxByIndex(currentIndex);
     }
   }
 
-  // Attach lightbox event handlers
-  if (lightbox) {
-    if (closeBtn) closeBtn.addEventListener('click', hideLightbox);
-    lightbox.addEventListener('click', e => { if (e.target === lightbox) hideLightbox(); });
-    document.addEventListener('keydown', onKeyDown);
-  }
+  // Delegated click handler on the grid: handles clicks for current and future items
+  grid.addEventListener('click', (evt) => {
+    const tile = evt.target.closest && evt.target.closest('.grid-item');
+    if (!tile || !grid.contains(tile)) return;
+    // if click on a link let it through
+    if (evt.target.closest && evt.target.closest('a')) return;
 
-  // Build clickable media list and attach click handlers to grid items
-  function bindGridClickHandlers() {
     collectMediaItems();
-    mediaItems.forEach((item, i) => {
-      // ensure cursor indicates clickability
-      item.style.cursor = 'pointer';
-
-      // If an inner <a> should handle navigation, you might want to skip default behavior.
-      item.addEventListener('click', (evt) => {
-        // If click landed on a link inside the tile, let it through
-        const isLink = evt.target.closest && evt.target.closest('a');
-        if (isLink) return;
-
-        // Open the high-res media (image or video) in the lightbox
-        showLightboxByIndex(i);
-      });
-    });
-  }
-
-  // Initialize media handlers once initial layout & images are loaded
-  imagesLoaded(grid, () => {
-    layoutGrid();
-    requestAnimationFrame(() => {
-      layoutGrid();
-      bindGridClickHandlers();
-    });
+    const index = mediaItems.indexOf(tile);
+    if (index === -1) {
+      // clicked tile not considered a media tile: optionally ignore
+      return;
+    }
+    showLightboxByIndex(index);
   });
 
-  // also re-bind handlers on relayout in case DOM changes
+  // Re-apply layout after images load (ensures heights are correct)
+  imagesLoaded(grid, () => {
+    layoutGrid();
+    // A second layout tick in case fonts/images/async content changed sizes
+    requestAnimationFrame(() => layoutGrid());
+    // ensure media list is collected for keyboard nav and initial open
+    collectMediaItems();
+  });
+
+  // Relayout on resize (debounced)
   window.addEventListener('resize', debounce(() => {
     layoutGrid();
     collectMediaItems();
