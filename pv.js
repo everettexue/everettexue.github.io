@@ -1,5 +1,14 @@
-// pv.js — improved container-width detection to avoid 1-column collapse
-// Includes masonry grid, preloader, and lightbox (as before) but with robust width detection.
+/*
+pv.js — Masonry grid + Lightbox + Preloader (PATCH)
+Fixes: forces the grid to be a real CSS grid and prevents items from forcing full-row
+(why: some page CSS can set .grid or .grid-item rules that collapse layout to 1 column).
+What I changed:
+- Force grid.style.display = 'grid' and grid.style.gridAutoFlow = 'row dense'
+- Force each .grid-item to width:auto and box-sizing:border-box so inline styles
+  override problematic stylesheet rules.
+- Add optional DEBUG logs to inspect computed grid/item values.
+- Keep preloader + lightbox logic from prior version. Uses robust width detection.
+*/
 
 (function () {
   // ---------- Config ----------
@@ -7,7 +16,7 @@
   const minColumnWidth = 220;  // px
   const maxColumns = 5;
   const rowHeight = 8;         // px
-  const DEBUG = true; // set true to see console diagnostics
+  const DEBUG = false; // set true to see extra logs
 
   // ---------- Utility ----------
   function debounce(fn, wait) {
@@ -36,14 +45,35 @@
   let skipBtn = null;
   let skipShown = false;
 
-  // ---------- Helpers to robustly compute container width ----------
+  // ---------- Enforce grid CSS to prevent 1-column collapse ----------
+  function enforceGridStyles() {
+    try {
+      // Ensure the container uses CSS Grid and define auto-flow/dense packing
+      grid.style.display = 'grid';
+      grid.style.gridAutoFlow = 'row dense';
+      // Ensure there's a gap/gutter set (JS uses --gutter later but set gap as well)
+      grid.style.gap = `${gutter}px`;
+      // If CSS sets width constraints on children, override with inline styles per-item
+      Array.from(grid.querySelectorAll('.grid-item')).forEach(item => {
+        // prefer not to remove classes or attributes; use inline styles to override CSS
+        item.style.width = item.style.width || 'auto';
+        item.style.boxSizing = item.style.boxSizing || 'border-box';
+        // Remove any inline "display:block;width:100%" applied by other JS previously
+        // (setting width:auto overrides most stylesheet width declarations)
+        item.style.removeProperty('min-width');
+        item.style.removeProperty('max-width');
+      });
+    } catch (e) {
+      if (DEBUG) console.warn('pv.js: enforceGridStyles error', e);
+    }
+  }
+
+  // ---------- Robust width detection ----------
   function isVisible(el) {
     if (!el) return false;
     const cs = getComputedStyle(el);
     return cs.display !== 'none' && cs.visibility !== 'hidden' && cs.opacity !== '0';
   }
-
-  // Find the first ancestor with a measurable width (>= minWidthThreshold)
   function findAncestorWithWidth(el, minWidthThreshold = 50) {
     let a = el.parentElement;
     while (a) {
@@ -52,15 +82,11 @@
         if (rect && rect.width >= minWidthThreshold && isVisible(a)) {
           return { el: a, width: rect.width };
         }
-      } catch (e) {
-        // some cross-origin frames or stylesheets may throw, ignore
-      }
+      } catch (e) {}
       a = a.parentElement;
     }
     return null;
   }
-
-  // Use multiple fallbacks to return a reliable container width
   function getEffectiveContainerWidth() {
     try {
       const rect = grid.getBoundingClientRect();
@@ -69,15 +95,13 @@
         if (DEBUG) console.log('pv.js: grid.getBoundingClientRect().width =', gw);
         return gw;
       }
-      // try ancestors
       const anc = findAncestorWithWidth(grid, 50);
       if (anc) {
-        if (DEBUG) console.log('pv.js: falling back to ancestor width', anc.width, anc.el);
+        if (DEBUG) console.log('pv.js: fallback to ancestor width', anc.width, anc.el);
         return Math.round(anc.width);
       }
-      // fallback to viewport-based width minus typical body margins/padding
       const vp = Math.round(window.innerWidth * 0.95);
-      if (DEBUG) console.warn('pv.js: grid width small or zero; falling back to viewport width', vp);
+      if (DEBUG) console.warn('pv.js: grid width small; fallback to viewport', vp);
       return vp;
     } catch (e) {
       const fallback = Math.round(window.innerWidth * 0.95);
@@ -86,13 +110,14 @@
     }
   }
 
-  // ---------- Lightbox (unchanged core, but kept here) ----------
+  // ---------- Lightbox creation ----------
   function removeExistingLightbox() {
     const existing = document.getElementById('lightbox');
     if (existing) {
       try { existing.parentNode && existing.parentNode.removeChild(existing); } catch (e) {}
     }
   }
+
   function createLightbox() {
     removeExistingLightbox();
 
@@ -241,7 +266,7 @@
     }
   });
 
-  // ---------- Preloader (unchanged core) ----------
+  // ---------- Preloader (kept concise) ----------
   function createPreloader() {
     const existing = document.getElementById('pv-preloader');
     if (existing) existing.remove();
@@ -264,12 +289,8 @@
     if (pctSpan) pctSpan.textContent = `${pct}%`;
   }
 
-  function showSkipAfterDelay(delayMs = 5000) {
-    setTimeout(() => { if (!preloader || skipShown) return; if (preloader.style.display !== 'none') skipBtn.style.display = 'inline-block'; }, delayMs);
-  }
-
+  function showSkipAfterDelay(delayMs = 5000) { setTimeout(() => { if (!preloader || skipShown) return; if (preloader.style.display !== 'none') skipBtn.style.display = 'inline-block'; }, delayMs); }
   function hidePreloaderImmediate() { if (!preloader) return; try { preloader.parentNode && preloader.parentNode.removeChild(preloader); } catch (e) {} preloader = null; setTimeout(() => { layoutGrid(); requestAnimationFrame(layoutGrid); window.dispatchEvent(new Event('resize')); }, 40); }
-
   function hidePreloader() { if (!preloader) return; preloader.style.opacity = '0'; setTimeout(() => { try { preloader.parentNode && preloader.parentNode.removeChild(preloader); } catch (e) {} preloader = null; setTimeout(() => { layoutGrid(); requestAnimationFrame(layoutGrid); window.dispatchEvent(new Event('resize')); }, 40); }, 220); }
 
   function preloadGridMedia() {
@@ -338,7 +359,7 @@
     });
   }
 
-  // ---------- Masonry/grid layout (uses getEffectiveContainerWidth) ----------
+  // ---------- Masonry/grid layout ----------
   function computeColumns(containerWidth) {
     const cols = Math.floor((containerWidth + gutter) / (minColumnWidth + gutter));
     return Math.max(1, Math.min(cols, maxColumns));
@@ -360,6 +381,9 @@
   }
 
   function layoutGrid() {
+    // enforce grid styles first (will set display:grid and per-item width)
+    enforceGridStyles();
+
     // robust width detection
     const containerWidth = getEffectiveContainerWidth();
     const cols = computeColumns(containerWidth);
@@ -367,18 +391,17 @@
 
     if (DEBUG) console.log('pv.js: layoutGrid -> containerWidth=', containerWidth, 'cols=', cols, 'colWidth=', colWidth);
 
-    // If we detect a single column but viewport is wide, log a warning to help debugging
-    if (cols === 1 && window.innerWidth > minColumnWidth + 200) {
-      console.warn('pv.js: computed 1 column (cols=1). This can happen when the grid is temporarily measured as small; using fallback viewport width if needed.');
-    }
-
     grid.style.gridTemplateColumns = `repeat(${cols}, ${colWidth}px)`;
     grid.style.gridAutoRows = `${rowHeight}px`;
     grid.style.setProperty('--gutter', `${gutter}px`);
     grid.style.setProperty('--row-height', `${rowHeight}px`);
 
     const items = Array.from(grid.querySelectorAll('.grid-item'));
-    items.forEach(item => {
+    items.forEach((item, i) => {
+      // ensure item inline styles don't force full width
+      item.style.width = 'auto';
+      item.style.boxSizing = 'border-box';
+      // determine span (same logic as before)
       let span = 1;
       const dataCol = parseInt(item.getAttribute('data-col'), 10);
       if (Number.isFinite(dataCol) && dataCol > 0) span = dataCol;
@@ -386,9 +409,15 @@
       if (item.classList.contains('grid-item--w3')) span = 3;
       if (item.classList.contains('grid-item--w2')) span = 2;
       span = Math.max(1, Math.min(span, cols));
+      // apply span
       item.style.gridColumn = `span ${span}`;
+      // compute rows
       const rowSpan = computeRowSpan(item, rowHeight, gutter);
       item.style.gridRowEnd = `span ${rowSpan}`;
+
+      if (DEBUG && i < 8) {
+        console.log(`pv.js: item[${i}] span=${span} gridColumn(inline)=`, item.style.gridColumn, 'computed grid-column:', getComputedStyle(item)['grid-column']);
+      }
     });
   }
 
@@ -404,6 +433,9 @@
   // ---------- Initialize and wiring ----------
   function init() {
     createLightbox();
+    // initial enforce of grid styles
+    enforceGridStyles();
+
     preloadGridMedia().then(() => {
       setTimeout(() => {
         layoutGrid();
@@ -446,5 +478,6 @@
     init();
   }
 
+  // expose some helpers for debugging
   window._pv = { layoutGrid, showLightboxByIndex, hideLightbox, collectMediaItems, getEffectiveContainerWidth };
 })();
