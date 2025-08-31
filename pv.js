@@ -7,7 +7,7 @@
   const minColumnWidth = 220;  // px
   const maxColumns = 5;
   const rowHeight = 8;         // px
-  const DEBUG = false; // set true to see console diagnostics
+  const DEBUG = true; // set true to see console diagnostics
 
   // ---------- Utility ----------
   function debounce(fn, wait) {
