@@ -1,3 +1,6 @@
+// Updated pv.js — fixes lightbox close button by adding a delegated close handler,
+// ensuring keydown handler is attached only once, and making created close button
+// a proper <button type="button"> so clicks reliably work.
 document.addEventListener("DOMContentLoaded", () => {
   const grid = document.querySelector('.grid');
   const gutter = 12;           // px — keep in sync with CSS --gutter
@@ -83,7 +86,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let lightbox = document.getElementById("lightbox");
   let lightboxContent = lightbox ? lightbox.querySelector('.lightbox-content') : null;
-  const CLOSE_BTN_HTML = '<button class="close" aria-label="Close" title="Close">×</button>';
+  let keydownAttached = false;
 
   function createLightboxIfMissing() {
     if (lightbox && lightboxContent) return; // already present
@@ -111,9 +114,11 @@ document.addEventListener("DOMContentLoaded", () => {
     lightboxContent.style.display = 'flex';
     lightboxContent.style.alignItems = 'center';
     lightboxContent.style.justifyContent = 'center';
-    // close button
+    lightboxContent.style.position = 'relative';
+    // close button (explicit type and accessible attributes)
     const closeBtn = document.createElement('button');
     closeBtn.className = 'close';
+    closeBtn.type = 'button';
     closeBtn.innerHTML = '×';
     closeBtn.style.position = 'absolute';
     closeBtn.style.top = '18px';
@@ -129,10 +134,21 @@ document.addEventListener("DOMContentLoaded", () => {
     lightbox.appendChild(lightboxContent);
     document.body.appendChild(lightbox);
 
-    // attach handlers
-    closeBtn.addEventListener('click', hideLightbox);
+    // attach handlers for this specific close button (defensive)
+    closeBtn.addEventListener('click', (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      hideLightbox();
+    });
+
+    // click on overlay to close
     lightbox.addEventListener('click', (e) => { if (e.target === lightbox) hideLightbox(); });
-    document.addEventListener('keydown', onKeyDown);
+
+    // attach keydown handler only once globally
+    if (!keydownAttached) {
+      document.addEventListener('keydown', onKeyDown);
+      keydownAttached = true;
+    }
   }
 
   // Utility: clear the lightbox content and stop/pause any playing video
@@ -158,8 +174,6 @@ document.addEventListener("DOMContentLoaded", () => {
       if (item.dataset && (item.dataset.video || item.dataset.videoHigh || item.dataset.thumbLow || item.dataset.thumbHigh || item.dataset.high)) return true;
       return false;
     });
-    // helpful debug
-    // console.log('collectMediaItems -> found', mediaItems.length, 'media items');
   }
 
   // helpers to resolve media for a tile element
@@ -322,6 +336,16 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
     showLightboxByIndex(index);
+  });
+
+  // Delegated global click handler for any .lightbox .close (covers existing and dynamically created close buttons)
+  document.addEventListener('click', (e) => {
+    const closeEl = e.target.closest && e.target.closest('.lightbox .close');
+    if (closeEl) {
+      e.preventDefault();
+      e.stopPropagation();
+      hideLightbox();
+    }
   });
 
   // Re-apply layout after images load (ensures heights are correct)
