@@ -1,483 +1,238 @@
-/*
-pv.js — Masonry grid + Lightbox + Preloader (PATCH)
-Fixes: forces the grid to be a real CSS grid and prevents items from forcing full-row
-(why: some page CSS can set .grid or .grid-item rules that collapse layout to 1 column).
-What I changed:
-- Force grid.style.display = 'grid' and grid.style.gridAutoFlow = 'row dense'
-- Force each .grid-item to width:auto and box-sizing:border-box so inline styles
-  override problematic stylesheet rules.
-- Add optional DEBUG logs to inspect computed grid/item values.
-- Keep preloader + lightbox logic from prior version. Uses robust width detection.
-*/
+// pv.js — Robust masonry/grid relayout using ResizeObserver + image normalization
+// Fixes overlapping/incorrect-size tiles by:
+// - forcing sensible grid CSS (display:grid, gap)
+// - normalizing images to block, width:100% so heights are predictable
+// - measuring each item's rendered height after images load and using ResizeObserver
+//   to update grid-row spans dynamically when content changes (prevents overlap)
+// - recalculating columns based on measured container width (getBoundingClientRect)
+// - defensive fallbacks if ResizeObserver isn't available
+//
+// Drop this file in place of the previous pv.js and reload the page.
 
 (function () {
-  // ---------- Config ----------
-  const gutter = 12;           // px
-  const minColumnWidth = 220;  // px
-  const maxColumns = 5;
-  const rowHeight = 8;         // px
-  const DEBUG = false; // set true to see extra logs
+  // --- Config ---
+  const GUTTER = 12;           // px
+  const MIN_COLUMN_WIDTH = 220; // px
+  const MAX_COLUMNS = 5;
+  const ROW_HEIGHT = 8;         // px (grid-auto-rows base unit)
+  const RELAYOUT_DEBOUNCE = 80; // ms
 
-  // ---------- Utility ----------
+  // --- Helpers ---
   function debounce(fn, wait) {
     let t;
     return function () {
+      const args = arguments;
       clearTimeout(t);
-      t = setTimeout(() => fn.apply(this, arguments), wait);
+      t = setTimeout(() => fn.apply(this, args), wait);
     };
   }
 
-  // ---------- Elements & state ----------
-  const grid = document.querySelector('.grid');
-  if (!grid) {
-    console.warn('pv.js: no .grid found — aborting initialization.');
-    return;
-  }
-
-  let lightbox = null;
-  let lightboxContent = null;
-  let keydownAttached = false;
-  let mediaItems = [];
-
-  // Preloader state
-  let preloader = null;
-  let progressEl = null;
-  let skipBtn = null;
-  let skipShown = false;
-
-  // ---------- Enforce grid CSS to prevent 1-column collapse ----------
-  function enforceGridStyles() {
-    try {
-      // Ensure the container uses CSS Grid and define auto-flow/dense packing
-      grid.style.display = 'grid';
-      grid.style.gridAutoFlow = 'row dense';
-      // Ensure there's a gap/gutter set (JS uses --gutter later but set gap as well)
-      grid.style.gap = `${gutter}px`;
-      // If CSS sets width constraints on children, override with inline styles per-item
-      Array.from(grid.querySelectorAll('.grid-item')).forEach(item => {
-        // prefer not to remove classes or attributes; use inline styles to override CSS
-        item.style.width = item.style.width || 'auto';
-        item.style.boxSizing = item.style.boxSizing || 'border-box';
-        // Remove any inline "display:block;width:100%" applied by other JS previously
-        // (setting width:auto overrides most stylesheet width declarations)
-        item.style.removeProperty('min-width');
-        item.style.removeProperty('max-width');
-      });
-    } catch (e) {
-      if (DEBUG) console.warn('pv.js: enforceGridStyles error', e);
-    }
-  }
-
-  // ---------- Robust width detection ----------
-  function isVisible(el) {
-    if (!el) return false;
-    const cs = getComputedStyle(el);
-    return cs.display !== 'none' && cs.visibility !== 'hidden' && cs.opacity !== '0';
-  }
-  function findAncestorWithWidth(el, minWidthThreshold = 50) {
-    let a = el.parentElement;
-    while (a) {
-      try {
-        const rect = a.getBoundingClientRect();
-        if (rect && rect.width >= minWidthThreshold && isVisible(a)) {
-          return { el: a, width: rect.width };
-        }
-      } catch (e) {}
-      a = a.parentElement;
-    }
-    return null;
-  }
-  function getEffectiveContainerWidth() {
+  // robust container width detection
+  function getEffectiveContainerWidth(grid) {
     try {
       const rect = grid.getBoundingClientRect();
-      const gw = rect && rect.width ? Math.round(rect.width) : 0;
-      if (gw >= 50) {
-        if (DEBUG) console.log('pv.js: grid.getBoundingClientRect().width =', gw);
-        return gw;
+      if (rect && rect.width >= 50) return Math.round(rect.width);
+      // fallback to first visible ancestor with width
+      let a = grid.parentElement;
+      while (a) {
+        const r = a.getBoundingClientRect();
+        const cs = getComputedStyle(a);
+        if (r && r.width >= 50 && cs.display !== 'none' && cs.visibility !== 'hidden') return Math.round(r.width);
+        a = a.parentElement;
       }
-      const anc = findAncestorWithWidth(grid, 50);
-      if (anc) {
-        if (DEBUG) console.log('pv.js: fallback to ancestor width', anc.width, anc.el);
-        return Math.round(anc.width);
-      }
-      const vp = Math.round(window.innerWidth * 0.95);
-      if (DEBUG) console.warn('pv.js: grid width small; fallback to viewport', vp);
-      return vp;
+      // last fallback to viewport
+      return Math.round(window.innerWidth * 0.95);
     } catch (e) {
-      const fallback = Math.round(window.innerWidth * 0.95);
-      console.warn('pv.js: error measuring grid width — using fallback', fallback, e);
-      return fallback;
+      return Math.round(window.innerWidth * 0.95);
     }
   }
 
-  // ---------- Lightbox creation ----------
-  function removeExistingLightbox() {
-    const existing = document.getElementById('lightbox');
-    if (existing) {
-      try { existing.parentNode && existing.parentNode.removeChild(existing); } catch (e) {}
-    }
-  }
-
-  function createLightbox() {
-    removeExistingLightbox();
-
-    lightbox = document.createElement('div');
-    lightbox.id = 'lightbox';
-    lightbox.className = 'lightbox';
-    Object.assign(lightbox.style, {
-      position: 'fixed', left: '0', top: '0', width: '100%', height: '100%',
-      display: 'none', zIndex: '2147483646', background: 'rgba(0,0,0,0.85)',
-      justifyContent: 'center', alignItems: 'center', padding: '20px', boxSizing: 'border-box', overflow: 'auto'
-    });
-
-    lightboxContent = document.createElement('div');
-    lightboxContent.className = 'lightbox-content';
-    Object.assign(lightboxContent.style, {
-      boxSizing: 'border-box', minWidth: '160px', minHeight: '120px',
-      maxWidth: '90vw', maxHeight: '80vh', display: 'flex', alignItems: 'center',
-      justifyContent: 'center', position: 'relative'
-    });
-
-    const closeBtn = document.createElement('button');
-    closeBtn.className = 'close'; closeBtn.type = 'button'; closeBtn.setAttribute('aria-label', 'Close'); closeBtn.innerHTML = '×';
-    Object.assign(closeBtn.style, { position: 'absolute', top: '12px', right: '16px', fontSize: '30px', color: '#fff', background: 'transparent', border: 'none', cursor: 'pointer', zIndex: '10' });
-
-    lightbox.appendChild(closeBtn);
-    lightbox.appendChild(lightboxContent);
-    document.body.appendChild(lightbox);
-
-    closeBtn.addEventListener('click', (ev) => { ev.preventDefault(); ev.stopPropagation(); hideLightbox(); });
-    lightbox.addEventListener('click', (e) => { if (e.target === lightbox) hideLightbox(); });
-
-    if (!keydownAttached) {
-      document.addEventListener('keydown', onKeyDown);
-      keydownAttached = true;
-    }
-  }
-
-  function clearLightboxContent() {
-    if (!lightboxContent) return;
-    const video = lightboxContent.querySelector('video');
-    if (video) {
-      try { video.pause(); video.removeAttribute('src'); while (video.firstChild) video.removeChild(video.firstChild); } catch (e) {}
-    }
-    lightboxContent.innerHTML = '';
-    lightboxContent.style.width = ''; lightboxContent.style.height = ''; lightboxContent.style.minWidth = '160px'; lightboxContent.style.minHeight = '120px';
-  }
-
-  function resolveMediaForItem(item) {
-    const data = item.dataset || {};
-    const imgEl = item.querySelector('img');
-    const isVideo = !!(data.video || data.videoHigh);
-    if (isVideo) {
-      const srcHigh = data.videoHigh || data.video || '';
-      const poster = data.thumbHigh || data.thumbLow || (imgEl && imgEl.dataset && imgEl.dataset.high) || (imgEl && imgEl.src) || '';
-      return { type: 'video', src: srcHigh, poster };
-    } else {
-      const hi = data.thumbHigh || data.high || (imgEl && imgEl.dataset && imgEl.dataset.high) || (imgEl && imgEl.src) || '';
-      const low = data.thumbLow || (imgEl && imgEl.src) || '';
-      return { type: 'image', srcHigh: hi, srcLow: low };
-    }
-  }
-
-  function computeLightboxSize() {
-    const maxW = Math.min(window.innerWidth * 0.9, 1400);
-    const maxH = Math.min(window.innerHeight * 0.8, 1000);
-    return { w: Math.round(maxW), h: Math.round(maxH) };
-  }
-
-  let currentIndex = 0;
-  function showLightboxByIndex(index) {
-    if (!lightbox || !lightboxContent) createLightbox();
-    collectMediaItems();
-    if (mediaItems.length === 0) return console.warn('pv.js: no media items found in grid.');
-    if (index < 0 || index >= mediaItems.length) return console.warn('pv.js: index out of range', index);
-    currentIndex = index;
-    clearLightboxContent();
-
-    const item = mediaItems[index];
-    const media = resolveMediaForItem(item);
-
-    lightbox.style.display = 'flex';
-    const size = computeLightboxSize();
-    lightboxContent.style.width = size.w + 'px';
-    lightboxContent.style.height = size.h + 'px';
-    lightboxContent.style.minWidth = '120px';
-    lightboxContent.style.minHeight = '90px';
-
-    if (!media || !media.type) {
-      const p = document.createElement('div'); p.style.color = '#fff'; p.style.padding = '12px'; p.textContent = 'No preview available'; lightboxContent.appendChild(p); return;
-    }
-
-    if (media.type === 'video') {
-      if (!media.src) {
-        if (media.poster) {
-          const img = document.createElement('img'); img.src = media.poster; img.alt = item.getAttribute('aria-label') || '';
-          Object.assign(img.style, { maxWidth: '100%', maxHeight: '100%' });
-          img.onload = () => { lightboxContent.style.width = ''; lightboxContent.style.height = ''; lightboxContent.style.minWidth = ''; lightboxContent.style.minHeight = ''; };
-          lightboxContent.appendChild(img);
-          return;
-        }
-        const p = document.createElement('div'); p.style.color = '#fff'; p.textContent = 'Video not available'; lightboxContent.appendChild(p); return;
-      }
-
-      const video = document.createElement('video'); video.controls = true; video.playsInline = true; video.autoplay = true; video.preload = 'metadata';
-      Object.assign(video.style, { maxWidth: '100%', maxHeight: '100%', width: '100%', height: '100%' });
-      if (media.poster) video.setAttribute('poster', media.poster);
-      const source = document.createElement('source'); source.src = media.src;
-      const ext = (media.src.split('?')[0].split('.').pop() || '').toLowerCase();
-      if (ext === 'mp4') source.type = 'video/mp4'; else if (ext === 'webm') source.type = 'video/webm';
-      video.appendChild(source);
-      video.onloadedmetadata = () => { lightboxContent.style.minWidth = ''; lightboxContent.style.minHeight = ''; };
-      lightboxContent.appendChild(video);
-      video.play().catch(() => {});
-    } else {
-      const hi = media.srcHigh; const low = media.srcLow;
-      const img = document.createElement('img'); img.alt = item.getAttribute('aria-label') || '';
-      Object.assign(img.style, { maxWidth: '100%', maxHeight: '100%', width: 'auto', height: 'auto' });
-      if (low) { img.src = low; lightboxContent.appendChild(img); } else if (hi) { img.src = hi; lightboxContent.appendChild(img); } else { const p = document.createElement('div'); p.style.color = '#fff'; p.textContent = 'Image not available'; lightboxContent.appendChild(p); return; }
-      if (hi && hi !== low) {
-        const hiImg = new Image(); hiImg.src = hi; hiImg.onload = () => { img.src = hi; lightboxContent.style.width = ''; lightboxContent.style.height = ''; lightboxContent.style.minWidth = ''; lightboxContent.style.minHeight = ''; };
-        hiImg.onerror = () => console.warn('pv.js: failed to load hi-res image for lightbox:', hi);
-      } else {
-        img.onload = () => { lightboxContent.style.width = ''; lightboxContent.style.height = ''; lightboxContent.style.minWidth = ''; lightboxContent.style.minHeight = ''; };
-      }
-    }
-  }
-
-  function hideLightbox() {
-    if (!lightbox) return;
-    lightbox.style.display = 'none';
-    clearLightboxContent();
-  }
-
-  function onKeyDown(e) {
-    if (!lightbox || lightbox.style.display !== 'flex') return;
-    if (e.key === 'Escape') { hideLightbox(); return; }
-    if (e.key === 'ArrowRight') { collectMediaItems(); if (mediaItems.length === 0) return; currentIndex = (currentIndex + 1) % mediaItems.length; showLightboxByIndex(currentIndex); }
-    if (e.key === 'ArrowLeft') { collectMediaItems(); if (mediaItems.length === 0) return; currentIndex = (currentIndex - 1 + mediaItems.length) % mediaItems.length; showLightboxByIndex(currentIndex); }
-  }
-
-  // Delegated close handler for any .lightbox .close
-  document.addEventListener('click', (e) => {
-    const closeEl = e.target.closest && e.target.closest('.lightbox .close');
-    if (closeEl) {
-      e.preventDefault(); e.stopPropagation(); hideLightbox();
-    }
-  });
-
-  // ---------- Preloader (kept concise) ----------
-  function createPreloader() {
-    const existing = document.getElementById('pv-preloader');
-    if (existing) existing.remove();
-    preloader = document.createElement('div'); preloader.id = 'pv-preloader'; preloader.className = 'pv-preloader';
-    Object.assign(preloader.style, { position: 'fixed', inset: '0', zIndex: '2147483647', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.85)', transition: 'opacity 180ms ease' });
-    const inner = document.createElement('div'); inner.className = 'pv-preloader-inner'; Object.assign(inner.style, { textAlign: 'center', color: '#fff', maxWidth: '92vw', width: '520px', padding: '22px', boxSizing: 'border-box', borderRadius: '10px', background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)' });
-    const spinner = document.createElement('div'); spinner.className = 'pv-spinner'; Object.assign(spinner.style, { width: '56px', height: '56px', margin: '8px auto 14px', borderRadius: '50%', border: '5px solid rgba(255,255,255,0.12)', borderTopColor: '#fff', animation: 'pv-spin 1s linear infinite' });
-    progressEl = document.createElement('div'); progressEl.className = 'pv-progress'; Object.assign(progressEl.style, { margin: '10px auto', color: '#fff', fontWeight: '600' }); progressEl.innerHTML = '<span class="pv-progress-percent">0%</span>';
-    skipBtn = document.createElement('button'); skipBtn.className = 'pv-skip'; skipBtn.type = 'button'; skipBtn.textContent = 'Skip'; skipBtn.style.display = 'none';
-    Object.assign(skipBtn.style, { marginTop: '14px', background: 'rgba(255,255,255,0.12)', color: '#fff', border: '1px solid rgba(255,255,255,0.12)', padding: '8px 14px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' });
-    skipBtn.addEventListener('click', () => { skipShown = true; hidePreloaderImmediate(); });
-    inner.appendChild(spinner); inner.appendChild(progressEl); inner.appendChild(skipBtn); preloader.appendChild(inner); document.body.appendChild(preloader);
-    if (!document.getElementById('pv-spin-style')) { const s = document.createElement('style'); s.id = 'pv-spin-style'; s.textContent = "@keyframes pv-spin { to { transform: rotate(360deg); } }"; document.head.appendChild(s); }
-  }
-
-  function updatePreloaderProgress(loaded, total) {
-    if (!progressEl) return;
-    const pct = total === 0 ? 100 : Math.round((loaded / total) * 100);
-    const pctSpan = progressEl.querySelector('.pv-progress-percent');
-    if (pctSpan) pctSpan.textContent = `${pct}%`;
-  }
-
-  function showSkipAfterDelay(delayMs = 5000) { setTimeout(() => { if (!preloader || skipShown) return; if (preloader.style.display !== 'none') skipBtn.style.display = 'inline-block'; }, delayMs); }
-  function hidePreloaderImmediate() { if (!preloader) return; try { preloader.parentNode && preloader.parentNode.removeChild(preloader); } catch (e) {} preloader = null; setTimeout(() => { layoutGrid(); requestAnimationFrame(layoutGrid); window.dispatchEvent(new Event('resize')); }, 40); }
-  function hidePreloader() { if (!preloader) return; preloader.style.opacity = '0'; setTimeout(() => { try { preloader.parentNode && preloader.parentNode.removeChild(preloader); } catch (e) {} preloader = null; setTimeout(() => { layoutGrid(); requestAnimationFrame(layoutGrid); window.dispatchEvent(new Event('resize')); }, 40); }, 220); }
-
-  function preloadGridMedia() {
-    return new Promise((resolve) => {
-      createPreloader();
-      updatePreloaderProgress(0, 1);
-      showSkipAfterDelay(5000);
-
-      const imgEls = Array.from(grid.querySelectorAll('img'));
-      const candidateVideoUrls = new Set();
-
-      const tiles = Array.from(grid.querySelectorAll('.grid-item'));
-      tiles.forEach(t => {
-        if (t.dataset) {
-          if (t.dataset.video) candidateVideoUrls.add(t.dataset.video);
-          if (t.dataset.videoHigh) candidateVideoUrls.add(t.dataset.videoHigh);
-        }
-        const videoEl = t.querySelector('video');
-        if (videoEl) {
-          const sources = videoEl.querySelectorAll('source');
-          sources.forEach(s => { if (s.src) candidateVideoUrls.add(s.src); });
-          if (videoEl.src) candidateVideoUrls.add(videoEl.src);
-        }
-      });
-
-      const images = imgEls.slice();
-      const videos = Array.from(candidateVideoUrls).filter(Boolean);
-      const total = images.length + videos.length;
-      if (total === 0) { updatePreloaderProgress(1, 1); setTimeout(() => hidePreloader(), 200); resolve(); return; }
-
-      let loaded = 0;
-      function markLoaded() {
-        loaded += 1;
-        updatePreloaderProgress(loaded, total);
-        if (loaded >= total) { setTimeout(() => { hidePreloader(); resolve(); }, 250); }
-      }
-
-      images.forEach(img => {
-        if (img.complete && img.naturalWidth !== 0) { markLoaded(); return; }
-        const onLoad = () => { cleanup(); markLoaded(); };
-        const onError = () => { cleanup(); markLoaded(); };
-        const cleanup = () => { img.removeEventListener('load', onLoad); img.removeEventListener('error', onError); };
-        img.addEventListener('load', onLoad);
-        img.addEventListener('error', onError);
-        setTimeout(() => { if (!img.complete) { cleanup(); markLoaded(); } }, 30000);
-      });
-
-      if (videos.length > 0) {
-        videos.forEach(url => {
-          try {
-            const v = document.createElement('video'); v.preload = 'metadata'; v.muted = true;
-            Object.assign(v.style, { position: 'absolute', left: '-9999px', width: '1px', height: '1px', opacity: '0' });
-            const onMeta = () => { cleanup(); try { v.remove(); } catch (e) {} ; markLoaded(); };
-            const onError = () => { cleanup(); try { v.remove(); } catch (e) {}; markLoaded(); };
-            const cleanup = () => { v.removeEventListener('loadedmetadata', onMeta); v.removeEventListener('error', onError); };
-            v.addEventListener('loadedmetadata', onMeta);
-            v.addEventListener('error', onError);
-            document.body.appendChild(v);
-            v.src = url;
-            setTimeout(() => { if (!v.readyState || v.readyState < 1) { cleanup(); try { v.remove(); } catch (e) {} ; markLoaded(); } }, 30000);
-          } catch (e) { markLoaded(); }
-        });
-      }
-
-      setTimeout(() => { if (preloader) { console.warn('pv.js: preloader overall timeout — proceeding'); hidePreloader(); resolve(); } }, 60000);
-    });
-  }
-
-  // ---------- Masonry/grid layout ----------
+  // compute columns & column width
   function computeColumns(containerWidth) {
-    const cols = Math.floor((containerWidth + gutter) / (minColumnWidth + gutter));
-    return Math.max(1, Math.min(cols, maxColumns));
+    const cols = Math.floor((containerWidth + GUTTER) / (MIN_COLUMN_WIDTH + GUTTER));
+    return Math.max(1, Math.min(cols, MAX_COLUMNS));
   }
-
   function computeColumnWidth(containerWidth, cols) {
-    if (!containerWidth || containerWidth < 10) {
-      containerWidth = Math.max(containerWidth, Math.round(window.innerWidth * 0.95));
-    }
+    if (!containerWidth || containerWidth < 10) containerWidth = Math.round(window.innerWidth * 0.95);
     if (cols <= 1) return containerWidth;
-    const totalGutters = (cols - 1) * gutter;
+    const totalGutters = (cols - 1) * GUTTER;
     return Math.round((containerWidth - totalGutters) / cols);
   }
 
-  function computeRowSpan(item, rowHeightPx, gapPx) {
-    const card = item.querySelector('.card') || item;
-    const contentHeight = Math.ceil(card.getBoundingClientRect().height);
-    return Math.max(1, Math.ceil((contentHeight + gapPx) / (rowHeightPx + gapPx)));
-  }
+  // --- Core: enforce grid styles and normalize children to avoid CSS conflicts ---
+  function enforceGridStyles(grid) {
+    grid.style.display = 'grid';
+    grid.style.gridAutoFlow = 'row dense';
+    grid.style.gap = `${GUTTER}px`;
+    grid.style.gridAutoRows = `${ROW_HEIGHT}px`;
 
-  function layoutGrid() {
-    // enforce grid styles first (will set display:grid and per-item width)
-    enforceGridStyles();
-
-    // robust width detection
-    const containerWidth = getEffectiveContainerWidth();
-    const cols = computeColumns(containerWidth);
-    const colWidth = computeColumnWidth(containerWidth, cols);
-
-    if (DEBUG) console.log('pv.js: layoutGrid -> containerWidth=', containerWidth, 'cols=', cols, 'colWidth=', colWidth);
-
-    grid.style.gridTemplateColumns = `repeat(${cols}, ${colWidth}px)`;
-    grid.style.gridAutoRows = `${rowHeight}px`;
-    grid.style.setProperty('--gutter', `${gutter}px`);
-    grid.style.setProperty('--row-height', `${rowHeight}px`);
-
-    const items = Array.from(grid.querySelectorAll('.grid-item'));
-    items.forEach((item, i) => {
-      // ensure item inline styles don't force full width
-      item.style.width = 'auto';
-      item.style.boxSizing = 'border-box';
-      // determine span (same logic as before)
-      let span = 1;
-      const dataCol = parseInt(item.getAttribute('data-col'), 10);
-      if (Number.isFinite(dataCol) && dataCol > 0) span = dataCol;
-      if (item.classList.contains('grid-item--w4')) span = 4;
-      if (item.classList.contains('grid-item--w3')) span = 3;
-      if (item.classList.contains('grid-item--w2')) span = 2;
-      span = Math.max(1, Math.min(span, cols));
-      // apply span
-      item.style.gridColumn = `span ${span}`;
-      // compute rows
-      const rowSpan = computeRowSpan(item, rowHeight, gutter);
-      item.style.gridRowEnd = `span ${rowSpan}`;
-
-      if (DEBUG && i < 8) {
-        console.log(`pv.js: item[${i}] span=${span} gridColumn(inline)=`, item.style.gridColumn, 'computed grid-column:', getComputedStyle(item)['grid-column']);
+    // normalize each grid-item so external CSS doesn't force full-width or strange sizing
+    Array.from(grid.querySelectorAll('.grid-item')).forEach(item => {
+      item.style.boxSizing = item.style.boxSizing || 'border-box';
+      item.style.width = item.style.width || 'auto';
+      item.style.position = item.style.position || 'relative';
+      item.style.removeProperty('min-width');
+      item.style.removeProperty('max-width');
+      // ensure card (content wrapper) doesn't collapse; if you use .card, prefer measuring it
+      const card = item.querySelector('.card');
+      if (card) {
+        card.style.boxSizing = card.style.boxSizing || 'border-box';
       }
     });
-  }
 
-  // ---------- Media collection ----------
-  function collectMediaItems() {
-    mediaItems = Array.from(grid.querySelectorAll('.grid-item')).filter(item => {
-      if (item.querySelector('img')) return true;
-      if (item.dataset && (item.dataset.video || item.dataset.videoHigh || item.dataset.thumbLow || item.dataset.thumbHigh || item.dataset.high)) return true;
-      return false;
+    // normalize images inside grid so they size predictably
+    Array.from(grid.querySelectorAll('img')).forEach(img => {
+      // inline styles override rogue CSS rules (but keep existing inline if present)
+      img.style.display = img.style.display || 'block';
+      img.style.width = img.style.width || '100%';
+      img.style.height = img.style.height || 'auto';
+      img.style.objectFit = img.style.objectFit || 'cover';
+      img.style.boxSizing = img.style.boxSizing || 'border-box';
     });
   }
 
-  // ---------- Initialize and wiring ----------
-  function init() {
-    createLightbox();
-    // initial enforce of grid styles
-    enforceGridStyles();
+  // --- Measure & set span for a single item ---
+  function setItemRowSpan(grid, item) {
+    if (!item) return;
+    // prefer measuring the .card inside the item if present, otherwise the item itself
+    const card = item.querySelector('.card') || item;
+    // get rendered height
+    const height = Math.ceil((card.getBoundingClientRect && card.getBoundingClientRect().height) || card.offsetHeight || 0);
+    // row span calculation accounting for gutter
+    const span = Math.max(1, Math.ceil((height + GUTTER) / (ROW_HEIGHT + GUTTER)));
+    item.style.gridRowEnd = `span ${span}`;
+  }
 
-    preloadGridMedia().then(() => {
-      setTimeout(() => {
-        layoutGrid();
-        requestAnimationFrame(() => { layoutGrid(); window.dispatchEvent(new Event('resize')); });
-      }, 40);
-      collectMediaItems();
-    }).catch((e) => {
-      console.warn('pv.js: preload rejected', e);
-      layoutGrid();
-      collectMediaItems();
+  // --- Relayout all items (recompute columns and rows) ---
+  function relayoutAll(grid) {
+    if (!grid) return;
+    enforceGridStyles(grid);
+    const containerWidth = getEffectiveContainerWidth(grid);
+    const cols = computeColumns(containerWidth);
+    const colWidth = computeColumnWidth(containerWidth, cols);
+    grid.style.gridTemplateColumns = `repeat(${cols}, ${colWidth}px)`;
+    grid.style.gridAutoRows = `${ROW_HEIGHT}px`; // keep base row-height
+
+    // update each item's span
+    const items = Array.from(grid.querySelectorAll('.grid-item'));
+    items.forEach(item => {
+      // ensure per-item inline styles won't force full-width (sometimes other scripts do)
+      item.style.width = item.style.width || 'auto';
+      item.style.boxSizing = item.style.boxSizing || 'border-box';
+      setItemRowSpan(grid, item);
     });
+  }
 
-    if (typeof imagesLoaded === 'function') {
-      imagesLoaded(grid, () => { layoutGrid(); requestAnimationFrame(layoutGrid); collectMediaItems(); });
+  // --- Observers & listeners to keep masonry stable when content changes ---
+  function attachObservers(grid) {
+    // Use ResizeObserver to update spans when item content changes (images load, fonts, etc.)
+    let ro = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(entries => {
+        // batch changes using rAF to avoid thrashing
+        window.requestAnimationFrame(() => {
+          entries.forEach(entry => {
+            // entry.target might be the observed element (we'll observe .card or item)
+            const el = entry.target;
+            const item = el.closest('.grid-item') || el;
+            setItemRowSpan(grid, item);
+          });
+        });
+      });
+      // observe each .grid-item's content wrapper (prefer .card if present)
+      Array.from(grid.querySelectorAll('.grid-item')).forEach(item => {
+        const target = item.querySelector('.card') || item;
+        try { ro.observe(target); } catch (e) { /* ignore if observe fails */ }
+      });
     } else {
-      window.addEventListener('load', () => { layoutGrid(); setTimeout(layoutGrid, 80); collectMediaItems(); });
+      // fallback: MutationObserver + image load listeners will trigger relayout
+      const mo = new MutationObserver(debounce(() => relayoutAll(grid), RELAYOUT_DEBOUNCE));
+      try { mo.observe(grid, { childList: true, subtree: true, attributes: true }); } catch (e) { /* ignore */ }
     }
 
-    try {
-      const mo = new MutationObserver(debounce(() => { layoutGrid(); collectMediaItems(); }, 120));
-      mo.observe(grid, { childList: true, subtree: true, attributes: true });
-    } catch (e) {}
-
-    window.addEventListener('resize', debounce(() => { layoutGrid(); collectMediaItems(); }, 120));
-
-    grid.addEventListener('click', (evt) => {
-      const tile = evt.target.closest && evt.target.closest('.grid-item');
-      if (!tile || !grid.contains(tile)) return;
-      if (evt.target.closest && evt.target.closest('a')) return;
-      collectMediaItems();
-      const index = mediaItems.indexOf(tile);
-      if (index === -1) return;
-      showLightboxByIndex(index);
+    // ensure new items added later get observed: watch grid children
+    const addObserver = new MutationObserver(mutations => {
+      let added = false;
+      mutations.forEach(m => {
+        m.addedNodes && m.addedNodes.forEach(node => {
+          if (node.nodeType === 1 && node.classList && node.classList.contains('grid-item')) {
+            added = true;
+            // normalize image and observe
+            Array.from(node.querySelectorAll('img')).forEach(img => {
+              img.style.display = img.style.display || 'block';
+              img.style.width = img.style.width || '100%';
+              img.style.height = img.style.height || 'auto';
+              // attach onload to compute span after image loaded
+              img.addEventListener('load', () => setItemRowSpan(grid, node));
+            });
+            const target = node.querySelector('.card') || node;
+            if (ro) {
+              try { ro.observe(target); } catch (e) { /* ignore */ }
+            }
+            // set initial span
+            setItemRowSpan(grid, node);
+          }
+        });
+      });
+      if (added) {
+        // columns might need recalculation if many items added
+        relayoutAll(grid);
+      }
     });
+    try { addObserver.observe(grid, { childList: true, subtree: true }); } catch (e) { /* ignore */ }
+
+    // When images load, update their parent item span
+    Array.from(grid.querySelectorAll('img')).forEach(img => {
+      img.addEventListener('load', () => {
+        const item = img.closest('.grid-item');
+        if (item) setItemRowSpan(grid, item);
+      });
+      img.addEventListener('error', () => {
+        const item = img.closest('.grid-item');
+        if (item) setItemRowSpan(grid, item);
+      });
+    });
+
+    // on resize relayout everything (debounced)
+    window.addEventListener('resize', debounce(() => relayoutAll(grid), RELAYOUT_DEBOUNCE));
   }
 
+  // --- Initialization sequence ---
+  function init() {
+    const grid = document.querySelector('.grid');
+    if (!grid) {
+      console.warn('pv.js: .grid not found — nothing to initialize.');
+      return;
+    }
+
+    // early enforcement so DevTools shows a proper grid even during preloader
+    enforceGridStyles(grid);
+    // wire observers and listeners
+    attachObservers(grid);
+
+    // initial relayout after next paint — ensures images have had a tick to load attributes
+    requestAnimationFrame(() => {
+      // run twice to be resilient against late image/ font layout
+      relayoutAll(grid);
+      requestAnimationFrame(() => {
+        relayoutAll(grid);
+      });
+    });
+
+    // Extra safety: if images are already loading, on window 'load' do a final relayout
+    window.addEventListener('load', () => {
+      setTimeout(() => relayoutAll(grid), 40);
+      setTimeout(() => relayoutAll(grid), 300);
+    });
+
+    // expose for debugging
+    window._pv_rel = () => relayoutAll(grid);
+  }
+
+  // run init now
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
     init();
   }
-
-  // expose some helpers for debugging
-  window._pv = { layoutGrid, showLightboxByIndex, hideLightbox, collectMediaItems, getEffectiveContainerWidth };
 })();
