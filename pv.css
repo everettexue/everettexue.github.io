@@ -1,3 +1,80 @@
+/* Add these styles to your pv.css (or replace existing preloader/lightbox blocks) */
+
+/* Preloader overlay */
+.pv-preloader {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, rgba(0,0,0,0.75), rgba(0,0,0,0.85));
+  transition: opacity 180ms ease;
+}
+.pv-preloader-inner {
+  text-align: center;
+  color: #fff;
+  max-width: 92vw;
+  width: 520px;
+  padding: 22px;
+  box-sizing: border-box;
+  border-radius: 10px;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+}
+.pv-spinner {
+  width: 56px;
+  height: 56px;
+  margin: 8px auto 14px;
+  border-radius: 50%;
+  border: 5px solid rgba(255,255,255,0.12);
+  border-top-color: #fff;
+  animation: pv-spin 1s linear infinite;
+}
+@keyframes pv-spin { to { transform: rotate(360deg); } }
+
+.pv-progress {
+  margin: 10px auto;
+  color: #fff;
+  font-weight: 600;
+}
+.pv-progress-percent {
+  font-size: 18px;
+  display: inline-block;
+  min-width: 50px;
+}
+
+/* Skip button */
+.pv-skip {
+  margin-top: 14px;
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.12);
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.pv-skip:hover { background: rgba(255,255,255,0.18); }
+
+/* Ensure lightbox-content remains flexible (existing styles remain) */
+.lightbox-content {
+  box-sizing: border-box;
+  max-width: 90vw;
+  max-height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* small responsive tweak */
+@media (max-width: 480px) {
+  .pv-preloader-inner { width: 92vw; padding: 14px; }
+  .pv-spinner { width: 44px; height: 44px; border-width: 4px; }
+}
+
+
 /* pv.css - Adds rounded corners + hover effects for grid, lightbox, preloader */
 
 /* Grid items: rounded corners, clipping, smooth lift on hover */
