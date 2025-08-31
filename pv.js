@@ -1,14 +1,8 @@
-// pv.js — robust lightbox + CSS-grid tiler
-// Key change: if any existing #lightbox exists we REMOVE it and always create a fresh, known-good lightbox
-// element appended to document.body. This avoids conflicts with pages that already have a different
-// lightbox markup (e.g. an <img id="lightbox-img">) which caused 0x0 and non-functional UI.
+// pv.js — adds a page preloader that waits for grid images and videos to load,
+// shows progress, and reveals a "Skip" button after 5 seconds to dismiss the loader.
+// Integrates with the existing grid tiler + lightbox code.
 //
-// Behavior:
-// - CSS Grid tiler (same as before) computes column/row spans.
-// - Lightbox always created fresh (or recreated) on init; delegated click on .grid opens items.
-// - Supports image tiles (img with data-high) and video tiles (data-video / data-video-high + data-thumb-*).
-// - Ensures overlay is visible before loading hi-res media and gives sensible sizing so DevTools won't show 0x0.
-// - Close button, overlay click, Escape key, and left/right arrows work reliably.
+// Drop this file in place of your existing pv.js
 document.addEventListener("DOMContentLoaded", () => {
   const grid = document.querySelector('.grid');
   const gutter = 12;           // px — keep in sync with CSS --gutter
@@ -21,6 +15,231 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
+  // ----------------------------
+  // Preloader overlay
+  // ----------------------------
+  let preloader = null;
+  let progressEl = null;
+  let skipBtn = null;
+  let skipShown = false;
+  let preloadPromiseResolve = null;
+  let preloadPromiseReject = null;
+  let aborted = false;
+
+  function createPreloader() {
+    // If present already, remove to create a clean one
+    const existing = document.getElementById('pv-preloader');
+    if (existing) existing.remove();
+
+    preloader = document.createElement('div');
+    preloader.id = 'pv-preloader';
+    preloader.className = 'pv-preloader';
+    preloader.setAttribute('role', 'dialog');
+    preloader.setAttribute('aria-label', 'Loading gallery');
+
+    const inner = document.createElement('div');
+    inner.className = 'pv-preloader-inner';
+
+    const spinner = document.createElement('div');
+    spinner.className = 'pv-spinner';
+    spinner.setAttribute('aria-hidden', 'true');
+
+    progressEl = document.createElement('div');
+    progressEl.className = 'pv-progress';
+    progressEl.innerHTML = '<span class="pv-progress-percent">0%</span>';
+
+    skipBtn = document.createElement('button');
+    skipBtn.className = 'pv-skip';
+    skipBtn.type = 'button';
+    skipBtn.textContent = 'Skip';
+    skipBtn.style.display = 'none';
+    skipBtn.addEventListener('click', () => {
+      skipShown = true;
+      hidePreloader();
+    });
+
+    inner.appendChild(spinner);
+    inner.appendChild(progressEl);
+    inner.appendChild(skipBtn);
+    preloader.appendChild(inner);
+    document.body.appendChild(preloader);
+  }
+
+  function updatePreloaderProgress(loaded, total) {
+    if (!progressEl) return;
+    const pct = total === 0 ? 100 : Math.round((loaded / total) * 100);
+    const pctSpan = progressEl.querySelector('.pv-progress-percent');
+    if (pctSpan) pctSpan.textContent = `${pct}%`;
+    progressEl.style.setProperty('--pv-progress-pct', `${pct}%`);
+  }
+
+  function showSkipAfterDelay(delayMs = 5000) {
+    setTimeout(() => {
+      if (!preloader || skipShown) return;
+      // Only show if still visible (i.e., loading not finished)
+      if (preloader.style.display !== 'none') {
+        skipBtn.style.display = 'inline-block';
+      }
+    }, delayMs);
+  }
+
+  function hidePreloader() {
+    // hide overlay; resolve preload promise so rest of init continues
+    if (!preloader) return;
+    preloader.style.opacity = '0';
+    // small timeout to allow CSS transition
+    setTimeout(() => {
+      if (preloader && preloader.parentNode) preloader.parentNode.removeChild(preloader);
+      preloader = null;
+      if (preloadPromiseResolve) {
+        preloadPromiseResolve();
+        preloadPromiseResolve = null;
+        preloadPromiseReject = null;
+      }
+    }, 220);
+  }
+
+  // Preload grid images and referenced videos (metadata only)
+  function preloadGridMedia() {
+    return new Promise((resolve, reject) => {
+      preloadPromiseResolve = resolve;
+      preloadPromiseReject = reject;
+      createPreloader();
+      updatePreloaderProgress(0, 1); // initial small visible progress
+      showSkipAfterDelay(5000);
+
+      // collect images (<img>) inside grid and any video URLs from data attributes
+      const imgEls = Array.from(grid.querySelectorAll('img'));
+      const candidateVideoUrls = new Set();
+
+      // look for data-video / data-video-high attributes on grid-item elements
+      const tiles = Array.from(grid.querySelectorAll('.grid-item'));
+      tiles.forEach(t => {
+        if (t.dataset) {
+          if (t.dataset.video) candidateVideoUrls.add(t.dataset.video);
+          if (t.dataset.videoHigh) candidateVideoUrls.add(t.dataset.videoHigh);
+        }
+        // also check for <video> elements inside tiles (rare)
+        const videoEl = t.querySelector('video');
+        if (videoEl) {
+          const sources = videoEl.querySelectorAll('source');
+          sources.forEach(s => { if (s.src) candidateVideoUrls.add(s.src); });
+          if (videoEl.src) candidateVideoUrls.add(videoEl.src);
+        }
+      });
+
+      // unify lists
+      const images = imgEls.slice(); // array of <img>
+      const videos = Array.from(candidateVideoUrls).filter(Boolean);
+
+      const total = images.length + videos.length;
+      if (total === 0) {
+        // no media to load — hide and resolve quickly
+        updatePreloaderProgress(1, 1);
+        setTimeout(() => hidePreloader(), 200);
+        resolve();
+        return;
+      }
+
+      let loaded = 0;
+      function markLoaded() {
+        loaded += 1;
+        updatePreloaderProgress(loaded, total);
+        if (loaded >= total) {
+          // small delay to ensure user sees 100%
+          setTimeout(() => { if (!skipShown) hidePreloader(); else hidePreloader(); }, 250);
+        }
+      }
+
+      // Image loading
+      images.forEach(img => {
+        // If image is already loaded (cached), consider it done
+        if (img.complete && img.naturalWidth !== 0) {
+          markLoaded();
+          return;
+        }
+        // Otherwise attach listeners
+        const onLoad = () => { cleanup(); markLoaded(); };
+        const onError = () => { cleanup(); markLoaded(); };
+        const cleanup = () => { img.removeEventListener('load', onLoad); img.removeEventListener('error', onError); };
+        img.addEventListener('load', onLoad);
+        img.addEventListener('error', onError);
+        // as an extra safeguard, if image doesn't load within 30s, treat as loaded
+        setTimeout(() => { if (!img.complete) { cleanup(); markLoaded(); } }, 30000);
+      });
+
+      // Video metadata loading (use hidden Video elements to load metadata only)
+      if (videos.length === 0) {
+        // if only images, resolve by checking images completion (above)
+        // Wait until loaded === total then resolve
+      } else {
+        videos.forEach(url => {
+          try {
+            const v = document.createElement('video');
+            v.preload = 'metadata';
+            v.muted = true;
+            v.style.position = 'absolute';
+            v.style.left = '-9999px';
+            v.style.width = '1px';
+            v.style.height = '1px';
+            v.style.opacity = '0';
+            // attach events
+            const onMeta = () => { cleanup(); markLoaded(); v.remove(); };
+            const onError = () => { cleanup(); markLoaded(); v.remove(); };
+            const cleanup = () => { v.removeEventListener('loadedmetadata', onMeta); v.removeEventListener('error', onError); };
+            v.addEventListener('loadedmetadata', onMeta);
+            v.addEventListener('error', onError);
+            // append to body temporarily so loading works in some browsers
+            document.body.appendChild(v);
+            v.src = url;
+            // fallback timeout
+            setTimeout(() => {
+              if (!v.readyState || v.readyState < 1) {
+                cleanup();
+                try { v.remove(); } catch (e) {}
+                markLoaded();
+              }
+            }, 30000);
+          } catch (e) {
+            // if creating/using video fails, just mark as loaded
+            markLoaded();
+          }
+        });
+      }
+
+      // Poll for completion: when loaded reaches total, resolve.
+      const poll = setInterval(() => {
+        if (loaded >= total) {
+          clearInterval(poll);
+          // extra short delay for UX
+          setTimeout(() => {
+            if (!skipShown) {
+              // hide preloader (and resolve)
+              hidePreloader();
+            } else {
+              hidePreloader();
+            }
+            resolve();
+          }, 250);
+        }
+      }, 120);
+
+      // If the user clicks Skip we want to immediately resolve (hide overlay)
+      // skip button handler already calls hidePreloader which resolves the promise
+      // But in case of any error/timeouts, ensure we don't hang: set an overall max timeout (e.g., 60s)
+      setTimeout(() => {
+        if (loaded < total) {
+          console.warn('Preloader: overall timeout reached — proceeding anyway.');
+          hidePreloader();
+          resolve();
+        }
+      }, 60000);
+    });
+  }
+
+  // ----------------------------
+  // Grid tiler (unchanged)
+  // ----------------------------
   // debounce helper
   function debounce(fn, wait) {
     let t;
@@ -30,7 +249,6 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
-  // Compute columns/widths
   function computeColumns(containerWidth) {
     const cols = Math.floor((containerWidth + gutter) / (minColumnWidth + gutter));
     return Math.max(1, Math.min(cols, maxColumns));
@@ -40,8 +258,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const totalGutters = (cols - 1) * gutter;
     return Math.floor((containerWidth - totalGutters) / cols);
   }
-
-  // Column span requested by tile
   function getRequestedColSpan(item) {
     const dataCol = parseInt(item.getAttribute('data-col'), 10);
     if (Number.isFinite(dataCol) && dataCol > 0) return dataCol;
@@ -50,14 +266,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (item.classList.contains('grid-item--w2')) return 2;
     return 1;
   }
-
-  // Row span measurement
   function computeRowSpan(item, rowHeightPx, gapPx) {
     const card = item.querySelector('.card') || item;
     const contentHeight = Math.ceil(card.getBoundingClientRect().height);
     return Math.max(1, Math.ceil((contentHeight + gapPx) / (rowHeightPx + gapPx)));
   }
-
   function layoutGrid() {
     const containerWidth = grid.clientWidth;
     const cols = computeColumns(containerWidth);
@@ -66,7 +279,6 @@ document.addEventListener("DOMContentLoaded", () => {
     grid.style.gridAutoRows = `${rowHeight}px`;
     grid.style.setProperty('--gutter', `${gutter}px`);
     grid.style.setProperty('--row-height', `${rowHeight}px`);
-
     const items = Array.from(grid.querySelectorAll('.grid-item'));
     items.forEach(item => {
       let span = getRequestedColSpan(item);
@@ -77,30 +289,23 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ---------------------------
-  // Robust Lightbox creation
-  // ---------------------------
+  // ----------------------------
+  // Lightbox (reused from prior robust implementation)
+  // ----------------------------
   let lightbox = null;
   let lightboxContent = null;
   let keydownAttached = false;
   let mediaItems = [];
 
-  // If any existing #lightbox exists in the page, remove it - avoids conflicts.
   function removeExistingLightbox() {
     const existing = document.getElementById('lightbox');
-    if (existing) {
-      try { existing.parentNode && existing.parentNode.removeChild(existing); } catch (e) { /* ignore */ }
-    }
+    if (existing) existing.remove();
   }
-
   function createLightbox() {
-    // Remove any previous instance to ensure a known-good structure
     removeExistingLightbox();
-
     lightbox = document.createElement('div');
     lightbox.id = 'lightbox';
     lightbox.className = 'lightbox';
-    // minimal inline styles — CSS file may augment these
     lightbox.style.position = 'fixed';
     lightbox.style.left = '0';
     lightbox.style.top = '0';
@@ -115,11 +320,9 @@ document.addEventListener("DOMContentLoaded", () => {
     lightbox.style.boxSizing = 'border-box';
     lightbox.style.overflow = 'auto';
 
-    // content container that will hold <img> or <video>
     lightboxContent = document.createElement('div');
     lightboxContent.className = 'lightbox-content';
     lightboxContent.style.boxSizing = 'border-box';
-    // set defaults; script modifies these on open
     lightboxContent.style.minWidth = '160px';
     lightboxContent.style.minHeight = '120px';
     lightboxContent.style.maxWidth = '90vw';
@@ -145,12 +348,10 @@ document.addEventListener("DOMContentLoaded", () => {
     closeBtn.style.cursor = 'pointer';
     closeBtn.style.zIndex = '10';
 
-    // compose
     lightbox.appendChild(closeBtn);
     lightbox.appendChild(lightboxContent);
     document.body.appendChild(lightbox);
 
-    // handlers
     closeBtn.addEventListener('click', (ev) => { ev.preventDefault(); ev.stopPropagation(); hideLightbox(); });
     lightbox.addEventListener('click', (e) => { if (e.target === lightbox) hideLightbox(); });
 
@@ -177,7 +378,6 @@ document.addEventListener("DOMContentLoaded", () => {
     lightboxContent.style.minHeight = '120px';
   }
 
-  // Collect media tiles
   function collectMediaItems() {
     mediaItems = Array.from(grid.querySelectorAll('.grid-item')).filter(item => {
       if (item.querySelector('img')) return true;
@@ -207,26 +407,19 @@ document.addEventListener("DOMContentLoaded", () => {
     return { w: Math.round(maxW), h: Math.round(maxH) };
   }
 
-  // Show item in lightbox by index (safe and robust)
   let currentIndex = 0;
   function showLightboxByIndex(index) {
     if (!lightbox || !lightboxContent) createLightbox();
     collectMediaItems();
     if (mediaItems.length === 0) return console.warn('No media items found in grid.');
-
-    if (index < 0 || index >= mediaItems.length) {
-      console.warn('index out of range', index);
-      return;
-    }
+    if (index < 0 || index >= mediaItems.length) return console.warn('index out of range', index);
     currentIndex = index;
     clearLightboxContent();
 
     const item = mediaItems[index];
     const media = resolveMediaForItem(item);
 
-    // Make overlay visible immediately so measurements work
     lightbox.style.display = 'flex';
-    // force a visible size to avoid 0x0 (we remove later when media loaded)
     const size = computeLightboxSize();
     lightboxContent.style.width = size.w + 'px';
     lightboxContent.style.height = size.h + 'px';
@@ -284,7 +477,6 @@ document.addEventListener("DOMContentLoaded", () => {
         lightboxContent.style.minHeight = '';
       };
       lightboxContent.appendChild(video);
-      // try to play; may be blocked
       video.play().catch(()=>{});
     } else {
       const hi = media.srcHigh;
@@ -338,7 +530,6 @@ document.addEventListener("DOMContentLoaded", () => {
     clearLightboxContent();
   }
 
-  // keyboard nav
   function onKeyDown(e) {
     if (!lightbox || lightbox.style.display !== 'flex') return;
     if (e.key === 'Escape') { hideLightbox(); return; }
@@ -356,7 +547,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Delegated click on grid items
   grid.addEventListener('click', (evt) => {
     const tile = evt.target.closest && evt.target.closest('.grid-item');
     if (!tile || !grid.contains(tile)) return;
@@ -367,7 +557,6 @@ document.addEventListener("DOMContentLoaded", () => {
     showLightboxByIndex(index);
   });
 
-  // Ensure any .lightbox .close is handled (covers older markup if present)
   document.addEventListener('click', (e) => {
     const closeEl = e.target.closest && e.target.closest('.lightbox .close');
     if (closeEl) {
@@ -377,13 +566,21 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Initialize: create known-good lightbox and layout
+  // Initialize: preloader -> layout -> bindings
   createLightbox();
-  // If imagesLoaded is available use it; otherwise do a safe tick after load
-  if (typeof imagesLoaded === 'function') {
-    imagesLoaded(grid, () => { layoutGrid(); requestAnimationFrame(layoutGrid); collectMediaItems(); });
-  } else {
-    window.addEventListener('load', () => { layoutGrid(); setTimeout(layoutGrid, 80); collectMediaItems(); });
-  }
+  preloadGridMedia().then(() => {
+    // Once preloader promise resolves (either loads finished or skipped/timed out), run layout
+    layoutGrid();
+    requestAnimationFrame(layoutGrid);
+    collectMediaItems();
+  }).catch((err) => {
+    console.warn('Preloader promise rejected:', err);
+    // still continue
+    layoutGrid();
+    requestAnimationFrame(layoutGrid);
+    collectMediaItems();
+  });
+
+  // window resize relayout
   window.addEventListener('resize', debounce(() => { layoutGrid(); collectMediaItems(); }, 120));
 });
