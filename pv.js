@@ -35,6 +35,32 @@
   }
 
   function enforceGridStyles(g) {
+
+      (function () {
+      const grid = document.querySelector('.grid');
+      if (!grid) return;
+      Array.from(grid.querySelectorAll('.grid-item')).forEach(item => {
+        // inline styles to ensure the radius/clipping can't be overridden by other CSS
+        item.style.borderRadius = item.style.borderRadius || '12px';
+        item.style.overflow = item.style.overflow || 'hidden';
+        item.style.boxSizing = item.style.boxSizing || 'border-box';
+        // ensure the content wrapper (if any) inherits radius & clipping
+        const card = item.querySelector('.card');
+        if (card) {
+          card.style.borderRadius = card.style.borderRadius || '12px';
+          card.style.overflow = card.style.overflow || 'hidden';
+          card.style.boxSizing = card.style.boxSizing || 'border-box';
+        }
+      });
+    
+      // ensure the lightbox content also gets radius/clip inline if present
+      const lb = document.querySelector('.lightbox-content');
+      if (lb) {
+        lb.style.borderRadius = lb.style.borderRadius || '10px';
+        lb.style.overflow = lb.style.overflow || 'hidden';
+      }
+    })();
+        
     // Ensure container is CSS grid and set safe defaults
     g.style.display = 'grid';
     g.style.gridAutoFlow = 'row dense';
