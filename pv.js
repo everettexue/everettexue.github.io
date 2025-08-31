@@ -1,5 +1,6 @@
-// pv.js — updated: ensure lightbox content isn't 0x0 by showing overlay early,
-// using a temporary min size and listening for image/video load events.
+// pv.js — updated: ensures lightbox-content is given a visible size on open
+// and removes inline sizing when media finishes loading or when closed.
+// Keeps CSS Grid tiler and video/image lightbox support.
 document.addEventListener("DOMContentLoaded", () => {
   const grid = document.querySelector('.grid');
   const gutter = 12;           // px — keep in sync with CSS --gutter
@@ -81,6 +82,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ---------------------------------------------------------------------------
   // Lightbox: create if missing, safe clear, show by index, delegated click handler
+  // Key fix: give lightbox-content an explicit visible size on open so it's never 0x0.
   // ---------------------------------------------------------------------------
 
   let lightbox = document.getElementById("lightbox");
@@ -89,6 +91,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function createLightboxIfMissing() {
     if (lightbox && lightboxContent) return; // already present
+
     // create overlay
     lightbox = document.createElement('div');
     lightbox.id = 'lightbox';
@@ -105,19 +108,21 @@ document.addEventListener("DOMContentLoaded", () => {
     lightbox.style.background = 'rgba(0,0,0,0.85)';
     lightbox.style.padding = '24px';
     lightbox.style.boxSizing = 'border-box';
+
     // content container
     lightboxContent = document.createElement('div');
     lightboxContent.className = 'lightbox-content';
-    // important: allow the container to size to children, but give a small fallback min size
-    lightboxContent.style.maxWidth = '90%';
-    lightboxContent.style.maxHeight = '80%';
+
+    // on open we'll set an explicit size; give a small fallback so it isn't 0x0
+    lightboxContent.style.minWidth = '160px';
+    lightboxContent.style.minHeight = '120px';
     lightboxContent.style.display = 'flex';
     lightboxContent.style.alignItems = 'center';
     lightboxContent.style.justifyContent = 'center';
     lightboxContent.style.position = 'relative';
-    // give a tiny min to avoid 0x0 while the media loads
-    lightboxContent.style.minWidth = '160px';
-    lightboxContent.style.minHeight = '120px';
+    lightboxContent.style.boxSizing = 'border-box';
+    lightboxContent.style.maxWidth = '90vw';
+    lightboxContent.style.maxHeight = '80vh';
 
     // close button (explicit type and accessible attributes)
     const closeBtn = document.createElement('button');
@@ -168,7 +173,9 @@ document.addEventListener("DOMContentLoaded", () => {
       } catch (e) { /* ignore */ }
     }
     lightboxContent.innerHTML = '';
-    // restore a small min-size so the container isn't 0x0 if reopened quickly
+    // remove explicit sizing so next open is clean; keep tiny fallback min to avoid 0x0
+    lightboxContent.style.width = '';
+    lightboxContent.style.height = '';
     lightboxContent.style.minWidth = '160px';
     lightboxContent.style.minHeight = '120px';
   }
@@ -201,6 +208,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // compute a reasonable explicit size for the lightbox content to avoid 0x0
+  function computeLightboxSize() {
+    const maxW = Math.min(window.innerWidth * 0.9, 1400); // cap width for huge screens
+    const maxH = Math.min(window.innerHeight * 0.8, 1000);
+    // return sizes that respect aspect of viewport but keep some padding
+    return { w: Math.round(maxW), h: Math.round(maxH) };
+  }
+
   // Show the lightbox for a given media index
   let currentIndex = 0;
   function showLightboxByIndex(index) {
@@ -224,12 +239,21 @@ document.addEventListener("DOMContentLoaded", () => {
     const item = mediaItems[index];
     const media = resolveMediaForItem(item);
 
-    // show the overlay early so percent/viewport-based max sizes can compute correctly
+    // ensure overlay visible early so CSS percent rules compute
     lightbox.style.display = 'flex';
+
+    // set an explicit size to avoid 0x0
+    const size = computeLightboxSize();
+    lightboxContent.style.width = size.w + 'px';
+    lightboxContent.style.height = size.h + 'px';
+    // make sure there's a small fallback min while media loads
+    lightboxContent.style.minWidth = '120px';
+    lightboxContent.style.minHeight = '90px';
 
     if (!media || !media.type) {
       const p = document.createElement('div');
       p.style.color = '#fff';
+      p.style.padding = '12px';
       p.textContent = 'No preview available';
       lightboxContent.appendChild(p);
       return;
@@ -242,12 +266,14 @@ document.addEventListener("DOMContentLoaded", () => {
           const img = document.createElement('img');
           img.src = media.poster;
           img.alt = item.getAttribute('aria-label') || '';
-          img.style.maxWidth = '90vw';
-          img.style.maxHeight = '80vh';
+          img.style.maxWidth = '100%';
+          img.style.maxHeight = '100%';
           img.style.width = 'auto';
           img.style.height = 'auto';
-          // when poster image loads remove temporary min size
           img.onload = () => {
+            // remove the explicit forced height/width so the container can shrink to content if desired
+            lightboxContent.style.width = '';
+            lightboxContent.style.height = '';
             lightboxContent.style.minWidth = '';
             lightboxContent.style.minHeight = '';
           };
@@ -267,10 +293,10 @@ document.addEventListener("DOMContentLoaded", () => {
       video.playsInline = true;
       video.autoplay = true;
       video.preload = 'metadata';
-      video.style.maxWidth = '90vw';
-      video.style.maxHeight = '80vh';
-      video.style.width = 'auto';
-      video.style.height = 'auto';
+      video.style.maxWidth = '100%';
+      video.style.maxHeight = '100%';
+      video.style.width = '100%';
+      video.style.height = '100%';
       if (media.poster) video.setAttribute('poster', media.poster);
 
       const source = document.createElement('source');
@@ -280,41 +306,36 @@ document.addEventListener("DOMContentLoaded", () => {
       else if (ext === 'webm') source.type = 'video/webm';
       video.appendChild(source);
 
-      // When metadata is loaded we can remove the temporary min size and try play
+      // When metadata is loaded we can remove the explicit size constraints if we want
       video.onloadedmetadata = () => {
+        // allow natural sizing if content smaller than our max; otherwise keep max constraints
         lightboxContent.style.minWidth = '';
         lightboxContent.style.minHeight = '';
-        // try to play if browser allows it
-        video.play().catch(() => { /* autoplay blocked; user will press play */ });
+        // do not forcibly remove width/height unless you'd like the container to shrink
       };
 
-      // Some browsers won't fire onloadedmetadata until appended
       lightboxContent.appendChild(video);
-
-      // If poster exists and video playback doesn't immediately provide size,
-      // try to remove min size when poster image would be displayed:
-      if (media.poster) {
-        const posterImg = new Image();
-        posterImg.src = media.poster;
-        posterImg.onload = () => {
-          lightboxContent.style.minWidth = '';
-          lightboxContent.style.minHeight = '';
-        };
-      }
 
     } else { // image
       const hi = media.srcHigh;
       const low = media.srcLow;
       const img = document.createElement('img');
       img.alt = item.getAttribute('aria-label') || '';
-      img.style.maxWidth = '90vw';
-      img.style.maxHeight = '80vh';
+      img.style.maxWidth = '100%';
+      img.style.maxHeight = '100%';
       img.style.width = 'auto';
       img.style.height = 'auto';
 
-      // choose hi if available else low
-      img.src = hi || low || '';
-      if (!img.src) {
+      // If a low-res is available, append it immediately so the container receives a size.
+      // Then, if a hi-res is available, swap it in and wait for its load event.
+      if (low) {
+        img.src = low;
+        // append immediately to give it a size
+        lightboxContent.appendChild(img);
+      } else if (hi) {
+        img.src = hi; // no low-res available
+        lightboxContent.appendChild(img);
+      } else {
         console.warn('image tile has no src to show', item);
         const p = document.createElement('div');
         p.style.color = '#fff';
@@ -323,14 +344,32 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // remove temporary min size when image loads
-      img.onload = () => {
-        lightboxContent.style.minWidth = '';
-        lightboxContent.style.minHeight = '';
-      };
-
-      // ensure we append after setting onload
-      lightboxContent.appendChild(img);
+      // If hi-res exists and differs from low, load it and swap src once loaded.
+      if (hi && hi !== low) {
+        const hiImg = new Image();
+        hiImg.src = hi;
+        hiImg.onload = () => {
+          // swap into the displayed img to avoid layout shift from srcset weirdness
+          img.src = hi;
+          // allow content to free-size if desired
+          lightboxContent.style.width = '';
+          lightboxContent.style.height = '';
+          lightboxContent.style.minWidth = '';
+          lightboxContent.style.minHeight = '';
+        };
+        hiImg.onerror = () => {
+          // if hi-res fails, keep low-res
+          console.warn('failed to load hi-res image for lightbox:', hi);
+        };
+      } else {
+        // low==hi or only one source — remove fallbacks on load
+        img.onload = () => {
+          lightboxContent.style.width = '';
+          lightboxContent.style.height = '';
+          lightboxContent.style.minWidth = '';
+          lightboxContent.style.minHeight = '';
+        };
+      }
     }
   }
 
