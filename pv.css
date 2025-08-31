@@ -1,101 +1,66 @@
-*{box-sizing:border-box;}
-html,body{margin:0;font-family:system-ui,Arial,sans-serif;width:100%;}
+/* Add these styles to your pv.css (or replace existing preloader/lightbox blocks) */
 
-/* Tune these vars to match the JS gutter and rowHeight */
-:root{
-  --gutter: 12px;
-  --row-height: 8px; /* base unit used for grid-auto-rows; JS uses same value */
+/* Preloader overlay */
+.pv-preloader {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, rgba(0,0,0,0.75), rgba(0,0,0,0.85));
+  transition: opacity 180ms ease;
 }
-
-/* CSS Grid based "tiler" that uses dense packing to avoid row holes.
-   JS sets grid-template-columns and grid-auto-rows (pixel values) at runtime,
-   and computes grid-row spans for each item so there are no empty spaces. */
-.grid{
-  width:100%;
-  margin:0 auto;
-  display: grid;
-  grid-auto-flow: dense;        /* important: lets grid backfill holes */
-  grid-auto-rows: var(--row-height);
-  gap: var(--gutter);
-  position: relative;           /* safe for absolutely positioned children if any */
-  align-items: start;
-  /* grid-template-columns will be set by JS to: repeat(cols, <px>) */
-}
-
-/* sizer element is optional now; kept for compatibility. It's not necessary
-   for the CSS-Grid tiler but harmless if present. */
-.grid-sizer{
-  display:none;
-}
-
-/* Items use grid-placement. JS will set gridColumn and gridRowEnd inline.
-   You can still use helper classes or data-col to request spans. */
-.grid-item{
+.pv-preloader-inner {
+  text-align: center;
+  color: #fff;
+  max-width: 92vw;
+  width: 520px;
+  padding: 22px;
   box-sizing: border-box;
-  padding: 6px;
-  width: auto; /* width is determined by grid-column span */
+  border-radius: 10px;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.6);
 }
-
-/* Card / tile appearance */
-.grid-item .card{
-  background:#fff;
-  border-radius:8px;
-  overflow:hidden;
-  box-shadow:0 6px 18px rgba(0,0,0,0.08);
-  transition: transform 200ms ease;
-  display:block;
-  width:100%;
-}
-
-/* Thumbnail images inside cards should fill and keep aspect (cover) */
-.grid-item .card img{
-  width:100%;
-  height:100%;
-  display:block;
-  object-fit:cover;
-}
-
-/* If you want a play badge for video tiles */
-.grid-item[data-video], .grid-item[data-video-high] {
-  position: relative;
-}
-.grid-item[data-video] .play-badge,
-.grid-item[data-video-high] .play-badge {
-  position: absolute;
-  left: 10px;
-  top: 10px;
-  width: 44px;
-  height: 44px;
+.pv-spinner {
+  width: 56px;
+  height: 56px;
+  margin: 8px auto 14px;
   border-radius: 50%;
-  background: rgba(0,0,0,0.5);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:#fff;
-  font-size:18px;
-  pointer-events: none;
+  border: 5px solid rgba(255,255,255,0.12);
+  border-top-color: #fff;
+  animation: pv-spin 1s linear infinite;
+}
+@keyframes pv-spin { to { transform: rotate(360deg); } }
+
+.pv-progress {
+  margin: 10px auto;
+  color: #fff;
+  font-weight: 600;
+}
+.pv-progress-percent {
+  font-size: 18px;
+  display: inline-block;
+  min-width: 50px;
 }
 
-/* Lightbox styles: flexible to hold images or videos */
-.lightbox{
-  display:none;
-  position:fixed;
-  z-index:999;
-  left:0;
-  top:0;
-  width:100%;
-  height:100%;
-  background: rgba(0,0,0,0.85);
-  justify-content:center;
-  align-items:center;
-  padding: 24px;
-  box-sizing: border-box;
+/* Skip button */
+.pv-skip {
+  margin-top: 14px;
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.12);
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
 }
-/* Small lightbox tweak: ensure .lightbox-content can hold media at the pixel sizes we set */
+.pv-skip:hover { background: rgba(255,255,255,0.18); }
+
+/* Ensure lightbox-content remains flexible (existing styles remain) */
 .lightbox-content {
   box-sizing: border-box;
-  /* The JS supplies inline width/height (90vw/80vh clamped) so allow those to apply.
-     Keep max constraints in CSS as a safety net. */
   max-width: 90vw;
   max-height: 80vh;
   display: flex;
@@ -103,28 +68,8 @@ html,body{margin:0;font-family:system-ui,Arial,sans-serif;width:100%;}
   justify-content: center;
 }
 
-/* Ensure images and videos in the lightbox scale to fit */
-.lightbox-content img,
-.lightbox-content video {
-  max-width: 100%;
-  max-height: 100%;
-  border-radius: 8px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-}
-
-/* Close button */
-.lightbox .close{
-  position:absolute;
-  top:20px;
-  right:30px;
-  font-size:40px;
-  color:#fff;
-  cursor:pointer;
-}
-
-/* Small viewport tweaks */
-@media (max-width:480px){
-  :root { --gutter: 8px; --row-height: 6px; }
-  .grid-item{ padding:4px; }
-  .lightbox { padding: 12px; }
+/* small responsive tweak */
+@media (max-width: 480px) {
+  .pv-preloader-inner { width: 92vw; padding: 14px; }
+  .pv-spinner { width: 44px; height: 44px; border-width: 4px; }
 }
