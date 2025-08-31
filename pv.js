@@ -1,6 +1,14 @@
-// pv.js — updated: ensures lightbox-content is given a visible size on open
-// and removes inline sizing when media finishes loading or when closed.
-// Keeps CSS Grid tiler and video/image lightbox support.
+// pv.js — robust lightbox + CSS-grid tiler
+// Key change: if any existing #lightbox exists we REMOVE it and always create a fresh, known-good lightbox
+// element appended to document.body. This avoids conflicts with pages that already have a different
+// lightbox markup (e.g. an <img id="lightbox-img">) which caused 0x0 and non-functional UI.
+//
+// Behavior:
+// - CSS Grid tiler (same as before) computes column/row spans.
+// - Lightbox always created fresh (or recreated) on init; delegated click on .grid opens items.
+// - Supports image tiles (img with data-high) and video tiles (data-video / data-video-high + data-thumb-*).
+// - Ensures overlay is visible before loading hi-res media and gives sensible sizing so DevTools won't show 0x0.
+// - Close button, overlay click, Escape key, and left/right arrows work reliably.
 document.addEventListener("DOMContentLoaded", () => {
   const grid = document.querySelector('.grid');
   const gutter = 12;           // px — keep in sync with CSS --gutter
@@ -22,20 +30,18 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
-  // Compute how many columns fit the container width
+  // Compute columns/widths
   function computeColumns(containerWidth) {
     const cols = Math.floor((containerWidth + gutter) / (minColumnWidth + gutter));
     return Math.max(1, Math.min(cols, maxColumns));
   }
-
-  // Compute pixel width for each column (accounting for gutters)
   function computeColumnWidth(containerWidth, cols) {
     if (cols <= 1) return containerWidth;
     const totalGutters = (cols - 1) * gutter;
     return Math.floor((containerWidth - totalGutters) / cols);
   }
 
-  // Determine desired column-span for an item (from data attribute or classes)
+  // Column span requested by tile
   function getRequestedColSpan(item) {
     const dataCol = parseInt(item.getAttribute('data-col'), 10);
     if (Number.isFinite(dataCol) && dataCol > 0) return dataCol;
@@ -45,143 +51,133 @@ document.addEventListener("DOMContentLoaded", () => {
     return 1;
   }
 
-  // Measure card height and compute rowSpan
+  // Row span measurement
   function computeRowSpan(item, rowHeightPx, gapPx) {
     const card = item.querySelector('.card') || item;
-    // Use getBoundingClientRect for sub-pixel accuracy
     const contentHeight = Math.ceil(card.getBoundingClientRect().height);
-    // row span formula: ceil( (height + gap) / (rowHeight + gap) )
     return Math.max(1, Math.ceil((contentHeight + gapPx) / (rowHeightPx + gapPx)));
   }
 
-  // Main layout function: sets grid columns, auto-rows and computes spans for items
   function layoutGrid() {
     const containerWidth = grid.clientWidth;
     const cols = computeColumns(containerWidth);
     const colWidth = computeColumnWidth(containerWidth, cols);
-
-    // apply grid template columns and auto-rows (pixel-controlled)
     grid.style.gridTemplateColumns = `repeat(${cols}, ${colWidth}px)`;
     grid.style.gridAutoRows = `${rowHeight}px`;
     grid.style.setProperty('--gutter', `${gutter}px`);
     grid.style.setProperty('--row-height', `${rowHeight}px`);
 
-    // place items: set grid-column span and grid-row span
     const items = Array.from(grid.querySelectorAll('.grid-item'));
     items.forEach(item => {
-      // requested column span (clamped)
       let span = getRequestedColSpan(item);
       span = Math.max(1, Math.min(span, cols));
       item.style.gridColumn = `span ${span}`;
-
-      // compute and apply row span based on item content height
       const rowSpan = computeRowSpan(item, rowHeight, gutter);
       item.style.gridRowEnd = `span ${rowSpan}`;
     });
   }
 
-  // ---------------------------------------------------------------------------
-  // Lightbox: create if missing, safe clear, show by index, delegated click handler
-  // Key fix: give lightbox-content an explicit visible size on open so it's never 0x0.
-  // ---------------------------------------------------------------------------
-
-  let lightbox = document.getElementById("lightbox");
-  let lightboxContent = lightbox ? lightbox.querySelector('.lightbox-content') : null;
+  // ---------------------------
+  // Robust Lightbox creation
+  // ---------------------------
+  let lightbox = null;
+  let lightboxContent = null;
   let keydownAttached = false;
+  let mediaItems = [];
 
-  function createLightboxIfMissing() {
-    if (lightbox && lightboxContent) return; // already present
+  // If any existing #lightbox exists in the page, remove it - avoids conflicts.
+  function removeExistingLightbox() {
+    const existing = document.getElementById('lightbox');
+    if (existing) {
+      try { existing.parentNode && existing.parentNode.removeChild(existing); } catch (e) { /* ignore */ }
+    }
+  }
 
-    // create overlay
+  function createLightbox() {
+    // Remove any previous instance to ensure a known-good structure
+    removeExistingLightbox();
+
     lightbox = document.createElement('div');
     lightbox.id = 'lightbox';
     lightbox.className = 'lightbox';
-    lightbox.style.display = 'none';
-    lightbox.style.justifyContent = 'center';
-    lightbox.style.alignItems = 'center';
+    // minimal inline styles — CSS file may augment these
     lightbox.style.position = 'fixed';
     lightbox.style.left = '0';
     lightbox.style.top = '0';
     lightbox.style.width = '100%';
     lightbox.style.height = '100%';
-    lightbox.style.zIndex = '999';
+    lightbox.style.display = 'none';
+    lightbox.style.zIndex = '2147483646';
     lightbox.style.background = 'rgba(0,0,0,0.85)';
-    lightbox.style.padding = '24px';
+    lightbox.style.justifyContent = 'center';
+    lightbox.style.alignItems = 'center';
+    lightbox.style.padding = '20px';
     lightbox.style.boxSizing = 'border-box';
+    lightbox.style.overflow = 'auto';
 
-    // content container
+    // content container that will hold <img> or <video>
     lightboxContent = document.createElement('div');
     lightboxContent.className = 'lightbox-content';
-
-    // on open we'll set an explicit size; give a small fallback so it isn't 0x0
+    lightboxContent.style.boxSizing = 'border-box';
+    // set defaults; script modifies these on open
     lightboxContent.style.minWidth = '160px';
     lightboxContent.style.minHeight = '120px';
+    lightboxContent.style.maxWidth = '90vw';
+    lightboxContent.style.maxHeight = '80vh';
     lightboxContent.style.display = 'flex';
     lightboxContent.style.alignItems = 'center';
     lightboxContent.style.justifyContent = 'center';
     lightboxContent.style.position = 'relative';
-    lightboxContent.style.boxSizing = 'border-box';
-    lightboxContent.style.maxWidth = '90vw';
-    lightboxContent.style.maxHeight = '80vh';
+    lightboxContent.style.background = 'transparent';
 
-    // close button (explicit type and accessible attributes)
     const closeBtn = document.createElement('button');
     closeBtn.className = 'close';
     closeBtn.type = 'button';
+    closeBtn.setAttribute('aria-label', 'Close');
     closeBtn.innerHTML = '×';
     closeBtn.style.position = 'absolute';
-    closeBtn.style.top = '18px';
-    closeBtn.style.right = '22px';
-    closeBtn.style.fontSize = '34px';
+    closeBtn.style.top = '12px';
+    closeBtn.style.right = '16px';
+    closeBtn.style.fontSize = '30px';
     closeBtn.style.color = '#fff';
     closeBtn.style.background = 'transparent';
     closeBtn.style.border = 'none';
     closeBtn.style.cursor = 'pointer';
-    closeBtn.setAttribute('aria-label', 'Close');
+    closeBtn.style.zIndex = '10';
 
+    // compose
     lightbox.appendChild(closeBtn);
     lightbox.appendChild(lightboxContent);
     document.body.appendChild(lightbox);
 
-    // attach handlers for this specific close button (defensive)
-    closeBtn.addEventListener('click', (ev) => {
-      ev.preventDefault();
-      ev.stopPropagation();
-      hideLightbox();
-    });
-
-    // click on overlay to close
+    // handlers
+    closeBtn.addEventListener('click', (ev) => { ev.preventDefault(); ev.stopPropagation(); hideLightbox(); });
     lightbox.addEventListener('click', (e) => { if (e.target === lightbox) hideLightbox(); });
 
-    // attach keydown handler only once globally
     if (!keydownAttached) {
       document.addEventListener('keydown', onKeyDown);
       keydownAttached = true;
     }
   }
 
-  // Utility: clear the lightbox content and stop/pause any playing video
   function clearLightboxContent() {
     if (!lightboxContent) return;
-    // stop any existing video playback and remove nodes
     const video = lightboxContent.querySelector('video');
     if (video) {
       try {
         video.pause();
         video.removeAttribute('src');
         while (video.firstChild) video.removeChild(video.firstChild);
-      } catch (e) { /* ignore */ }
+      } catch (e) {}
     }
     lightboxContent.innerHTML = '';
-    // remove explicit sizing so next open is clean; keep tiny fallback min to avoid 0x0
     lightboxContent.style.width = '';
     lightboxContent.style.height = '';
     lightboxContent.style.minWidth = '160px';
     lightboxContent.style.minHeight = '120px';
   }
 
-  // Collect media items (images or videos)
-  let mediaItems = []; // will hold elements
+  // Collect media tiles
   function collectMediaItems() {
     mediaItems = Array.from(grid.querySelectorAll('.grid-item')).filter(item => {
       if (item.querySelector('img')) return true;
@@ -190,47 +186,36 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // helpers to resolve media for a tile element
   function resolveMediaForItem(item) {
     const data = item.dataset || {};
     const imgEl = item.querySelector('img');
-
     const isVideo = !!(data.video || data.videoHigh);
     if (isVideo) {
       const srcHigh = data.videoHigh || data.video || '';
       const poster = data.thumbHigh || data.thumbLow || (imgEl && imgEl.dataset && imgEl.dataset.high) || (imgEl && imgEl.src) || '';
       return { type: 'video', src: srcHigh, poster };
     } else {
-      // image: prefer data-thumb-high / data-high / img[data-high] / img.src
       const hi = data.thumbHigh || data.high || (imgEl && imgEl.dataset && imgEl.dataset.high) || (imgEl && imgEl.src) || '';
       const low = data.thumbLow || (imgEl && imgEl.src) || '';
       return { type: 'image', srcHigh: hi, srcLow: low };
     }
   }
 
-  // compute a reasonable explicit size for the lightbox content to avoid 0x0
   function computeLightboxSize() {
-    const maxW = Math.min(window.innerWidth * 0.9, 1400); // cap width for huge screens
+    const maxW = Math.min(window.innerWidth * 0.9, 1400);
     const maxH = Math.min(window.innerHeight * 0.8, 1000);
-    // return sizes that respect aspect of viewport but keep some padding
     return { w: Math.round(maxW), h: Math.round(maxH) };
   }
 
-  // Show the lightbox for a given media index
+  // Show item in lightbox by index (safe and robust)
   let currentIndex = 0;
   function showLightboxByIndex(index) {
-    createLightboxIfMissing();
-    if (!lightbox || !lightboxContent) {
-      console.warn('Lightbox not available to show content.');
-      return;
-    }
+    if (!lightbox || !lightboxContent) createLightbox();
     collectMediaItems();
-    if (mediaItems.length === 0) {
-      console.warn('No media items found in grid.');
-      return;
-    }
+    if (mediaItems.length === 0) return console.warn('No media items found in grid.');
+
     if (index < 0 || index >= mediaItems.length) {
-      console.warn('Requested index out of range', index);
+      console.warn('index out of range', index);
       return;
     }
     currentIndex = index;
@@ -239,14 +224,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const item = mediaItems[index];
     const media = resolveMediaForItem(item);
 
-    // ensure overlay visible early so CSS percent rules compute
+    // Make overlay visible immediately so measurements work
     lightbox.style.display = 'flex';
-
-    // set an explicit size to avoid 0x0
+    // force a visible size to avoid 0x0 (we remove later when media loaded)
     const size = computeLightboxSize();
     lightboxContent.style.width = size.w + 'px';
     lightboxContent.style.height = size.h + 'px';
-    // make sure there's a small fallback min while media loads
     lightboxContent.style.minWidth = '120px';
     lightboxContent.style.minHeight = '90px';
 
@@ -261,26 +244,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (media.type === 'video') {
       if (!media.src) {
-        // fallback: show poster image if present
         if (media.poster) {
           const img = document.createElement('img');
           img.src = media.poster;
           img.alt = item.getAttribute('aria-label') || '';
           img.style.maxWidth = '100%';
           img.style.maxHeight = '100%';
-          img.style.width = 'auto';
-          img.style.height = 'auto';
-          img.onload = () => {
-            // remove the explicit forced height/width so the container can shrink to content if desired
-            lightboxContent.style.width = '';
-            lightboxContent.style.height = '';
-            lightboxContent.style.minWidth = '';
-            lightboxContent.style.minHeight = '';
-          };
+          img.onload = () => { lightboxContent.style.width = ''; lightboxContent.style.height = ''; lightboxContent.style.minWidth = ''; lightboxContent.style.minHeight = ''; };
           lightboxContent.appendChild(img);
           return;
         }
-        console.warn('video tile has no data-video or data-video-high source', item);
         const p = document.createElement('div');
         p.style.color = '#fff';
         p.textContent = 'Video not available';
@@ -306,17 +279,14 @@ document.addEventListener("DOMContentLoaded", () => {
       else if (ext === 'webm') source.type = 'video/webm';
       video.appendChild(source);
 
-      // When metadata is loaded we can remove the explicit size constraints if we want
       video.onloadedmetadata = () => {
-        // allow natural sizing if content smaller than our max; otherwise keep max constraints
         lightboxContent.style.minWidth = '';
         lightboxContent.style.minHeight = '';
-        // do not forcibly remove width/height unless you'd like the container to shrink
       };
-
       lightboxContent.appendChild(video);
-
-    } else { // image
+      // try to play; may be blocked
+      video.play().catch(()=>{});
+    } else {
       const hi = media.srcHigh;
       const low = media.srcLow;
       const img = document.createElement('img');
@@ -326,17 +296,13 @@ document.addEventListener("DOMContentLoaded", () => {
       img.style.width = 'auto';
       img.style.height = 'auto';
 
-      // If a low-res is available, append it immediately so the container receives a size.
-      // Then, if a hi-res is available, swap it in and wait for its load event.
       if (low) {
         img.src = low;
-        // append immediately to give it a size
         lightboxContent.appendChild(img);
       } else if (hi) {
-        img.src = hi; // no low-res available
+        img.src = hi;
         lightboxContent.appendChild(img);
       } else {
-        console.warn('image tile has no src to show', item);
         const p = document.createElement('div');
         p.style.color = '#fff';
         p.textContent = 'Image not available';
@@ -344,25 +310,18 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // If hi-res exists and differs from low, load it and swap src once loaded.
       if (hi && hi !== low) {
         const hiImg = new Image();
         hiImg.src = hi;
         hiImg.onload = () => {
-          // swap into the displayed img to avoid layout shift from srcset weirdness
           img.src = hi;
-          // allow content to free-size if desired
           lightboxContent.style.width = '';
           lightboxContent.style.height = '';
           lightboxContent.style.minWidth = '';
           lightboxContent.style.minHeight = '';
         };
-        hiImg.onerror = () => {
-          // if hi-res fails, keep low-res
-          console.warn('failed to load hi-res image for lightbox:', hi);
-        };
+        hiImg.onerror = () => console.warn('failed to load hi-res image for lightbox:', hi);
       } else {
-        // low==hi or only one source — remove fallbacks on load
         img.onload = () => {
           lightboxContent.style.width = '';
           lightboxContent.style.height = '';
@@ -375,24 +334,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function hideLightbox() {
     if (!lightbox) return;
-    lightbox.style.display = "none";
+    lightbox.style.display = 'none';
     clearLightboxContent();
   }
 
-  // keyboard navigation and close handling
+  // keyboard nav
   function onKeyDown(e) {
-    if (!lightbox || lightbox.style.display !== "flex") return;
-    if (e.key === "Escape") {
-      hideLightbox();
-      return;
-    }
-    if (e.key === "ArrowRight") {
+    if (!lightbox || lightbox.style.display !== 'flex') return;
+    if (e.key === 'Escape') { hideLightbox(); return; }
+    if (e.key === 'ArrowRight') {
       collectMediaItems();
       if (mediaItems.length === 0) return;
       currentIndex = (currentIndex + 1) % mediaItems.length;
       showLightboxByIndex(currentIndex);
     }
-    if (e.key === "ArrowLeft") {
+    if (e.key === 'ArrowLeft') {
       collectMediaItems();
       if (mediaItems.length === 0) return;
       currentIndex = (currentIndex - 1 + mediaItems.length) % mediaItems.length;
@@ -400,23 +356,18 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Delegated click handler on the grid: handles clicks for current and future items
+  // Delegated click on grid items
   grid.addEventListener('click', (evt) => {
     const tile = evt.target.closest && evt.target.closest('.grid-item');
     if (!tile || !grid.contains(tile)) return;
-    // if click on a link let it through
     if (evt.target.closest && evt.target.closest('a')) return;
-
     collectMediaItems();
     const index = mediaItems.indexOf(tile);
-    if (index === -1) {
-      // clicked tile not considered a media tile: optionally ignore
-      return;
-    }
+    if (index === -1) return;
     showLightboxByIndex(index);
   });
 
-  // Delegated global click handler for any .lightbox .close (covers existing and dynamically created close buttons)
+  // Ensure any .lightbox .close is handled (covers older markup if present)
   document.addEventListener('click', (e) => {
     const closeEl = e.target.closest && e.target.closest('.lightbox .close');
     if (closeEl) {
@@ -426,18 +377,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Re-apply layout after images load (ensures heights are correct)
-  imagesLoaded(grid, () => {
-    layoutGrid();
-    // A second layout tick in case fonts/images/async content changed sizes
-    requestAnimationFrame(() => layoutGrid());
-    // ensure media list is collected for keyboard nav and initial open
-    collectMediaItems();
-  });
-
-  // Relayout on resize (debounced)
-  window.addEventListener('resize', debounce(() => {
-    layoutGrid();
-    collectMediaItems();
-  }, 120));
+  // Initialize: create known-good lightbox and layout
+  createLightbox();
+  // If imagesLoaded is available use it; otherwise do a safe tick after load
+  if (typeof imagesLoaded === 'function') {
+    imagesLoaded(grid, () => { layoutGrid(); requestAnimationFrame(layoutGrid); collectMediaItems(); });
+  } else {
+    window.addEventListener('load', () => { layoutGrid(); setTimeout(layoutGrid, 80); collectMediaItems(); });
+  }
+  window.addEventListener('resize', debounce(() => { layoutGrid(); collectMediaItems(); }, 120));
 });
