@@ -1,18 +1,20 @@
-// pv.js — Masonry grid + Preloader + Lightbox (all integrated)
-// - Robust masonry using ResizeObserver / MutationObserver
-// - Preloader overlay that waits for <img> and video metadata, shows percent, displays Skip after 5s
-// - Lightbox for images and videos (removes existing #lightbox and creates a known-good one)
-// - Defensive inline styles so other page CSS won't break things
+// pv.js — Masonry grid + Preloader + Lightbox (integrated, robust)
+// - Uses ResizeObserver and measured heights to compute grid-row spans (prevents overlap)
+// - Preloader shows progress, shows "Skip" after 5s, overall timeout fallback
+// - Lightbox always created fresh and prefers hi-res images; uses contain scaling
+// - Enforces inline styles to avoid external CSS interfering
+// - Exposes window._pv helpers for debug: relayoutAll(), showLightboxByIndex(), hideLightbox(), collectMediaItems()
+
 (function () {
   // ---------- Configuration ----------
-  const GUTTER = 12;           // px
-  const MIN_COLUMN_WIDTH = 220; // px
+  const GUTTER = 12;
+  const MIN_COLUMN_WIDTH = 220;
   const MAX_COLUMNS = 5;
-  const ROW_HEIGHT = 8;         // px
-  const RELAYOUT_DEBOUNCE = 80; // ms
+  const ROW_HEIGHT = 8;
+  const RELAYOUT_DEBOUNCE = 80;
   const SKIP_DELAY_MS = 5000;
   const PRELOAD_TIMEOUT_MS = 60000;
-  const DEBUG = false; // set true to log debug info
+  const DEBUG = false;
 
   // ---------- Utilities ----------
   function debounce(fn, wait) {
@@ -23,73 +25,60 @@
       t = setTimeout(() => fn.apply(this, args), wait);
     };
   }
-
-  function qs(sel, ctx = document) { return ctx.querySelector(sel); }
+  function qs(sel, ctx = document) { return (ctx || document).querySelector(sel); }
   function qsa(sel, ctx = document) { return Array.from((ctx || document).querySelectorAll(sel)); }
 
-  // ---------- Grid / Masonry Logic ----------
+  // ---------- Find grid ----------
   const grid = qs('.grid');
   if (!grid) {
-    console.warn('pv.js: .grid not found — aborting initialization.');
+    console.warn('pv.js: .grid not found — aborting.');
     return;
   }
 
+  // ---------- Styling / Normalization ----------
   function enforceGridStyles(g) {
+    if (!g) return;
+    g.style.display = g.style.display || 'grid';
+    g.style.gridAutoFlow = g.style.gridAutoFlow || 'row dense';
+    g.style.gap = g.style.gap || `${GUTTER}px`;
+    g.style.gridAutoRows = g.style.gridAutoRows || `${ROW_HEIGHT}px`;
 
-      (function () {
-      const grid = document.querySelector('.grid');
-      if (!grid) return;
-      Array.from(grid.querySelectorAll('.grid-item')).forEach(item => {
-        // inline styles to ensure the radius/clipping can't be overridden by other CSS
-        item.style.borderRadius = item.style.borderRadius || '12px';
-        item.style.overflow = item.style.overflow || 'hidden';
-        item.style.boxSizing = item.style.boxSizing || 'border-box';
-        // ensure the content wrapper (if any) inherits radius & clipping
-        const card = item.querySelector('.card');
-        if (card) {
-          card.style.borderRadius = card.style.borderRadius || '12px';
-          card.style.overflow = card.style.overflow || 'hidden';
-          card.style.boxSizing = card.style.boxSizing || 'border-box';
-        }
-      });
-    
-      // ensure the lightbox content also gets radius/clip inline if present
-      const lb = document.querySelector('.lightbox-content');
-      if (lb) {
-        lb.style.borderRadius = lb.style.borderRadius || '10px';
-        lb.style.overflow = lb.style.overflow || 'hidden';
-      }
-    })();
-        
-    // Ensure container is CSS grid and set safe defaults
-    g.style.display = 'grid';
-    g.style.gridAutoFlow = 'row dense';
-    g.style.gap = `${GUTTER}px`;
-    g.style.gridAutoRows = `${ROW_HEIGHT}px`;
-    // Normalize children and images
     qsa('.grid-item', g).forEach(item => {
       item.style.boxSizing = item.style.boxSizing || 'border-box';
       item.style.width = item.style.width || 'auto';
       item.style.position = item.style.position || 'relative';
       item.style.removeProperty('min-width');
       item.style.removeProperty('max-width');
+
+      // clamp content and prevent white strip on hover
+      item.style.overflow = item.style.overflow || 'hidden';
+      item.style.background = item.style.background || 'transparent';
+      // border radius intent is handled in CSS; inline if you need stronger priority uncomment:
+      // item.style.borderRadius = item.style.borderRadius || '12px';
+
       const card = qs('.card', item);
       if (card) card.style.boxSizing = card.style.boxSizing || 'border-box';
     });
+
     qsa('img', g).forEach(img => {
       img.style.display = img.style.display || 'block';
       img.style.width = img.style.width || '100%';
       img.style.height = img.style.height || 'auto';
-      img.style.objectFit = img.style.objectFit || 'cover';
+      img.style.objectFit = img.style.objectFit || 'cover'; // tiles keep cover
       img.style.boxSizing = img.style.boxSizing || 'border-box';
+      img.style.margin = img.style.margin || '0';
+      img.style.verticalAlign = img.style.verticalAlign || 'middle';
+      if (!img.decoding) try { img.decoding = 'async'; } catch (e) {}
     });
   }
 
+  // ---------- Width detection & column math ----------
   function getEffectiveContainerWidth(g) {
     try {
       const rect = g.getBoundingClientRect();
-      if (rect && rect.width >= 50) return Math.round(rect.width);
-      // fallback to ancestor width
+      const gw = rect && rect.width ? Math.round(rect.width) : 0;
+      if (gw >= 50) return gw;
+      // search ancestors
       let a = g.parentElement;
       while (a) {
         const r = a.getBoundingClientRect();
@@ -97,7 +86,6 @@
         if (r && r.width >= 50 && cs.display !== 'none' && cs.visibility !== 'hidden') return Math.round(r.width);
         a = a.parentElement;
       }
-      // final fallback to viewport
       return Math.round(window.innerWidth * 0.95);
     } catch (e) {
       return Math.round(window.innerWidth * 0.95);
@@ -115,6 +103,7 @@
     return Math.round((containerWidth - totalGutters) / cols);
   }
 
+  // ---------- Row-span measurement ----------
   function setItemRowSpan(g, item) {
     if (!item) return;
     const card = qs('.card', item) || item;
@@ -132,10 +121,10 @@
     if (DEBUG) console.log('pv.js relayout', { containerWidth, cols, colWidth });
     g.style.gridTemplateColumns = `repeat(${cols}, ${colWidth}px)`;
     g.style.gridAutoRows = `${ROW_HEIGHT}px`;
+
     qsa('.grid-item', g).forEach(item => {
       item.style.width = item.style.width || 'auto';
       item.style.boxSizing = item.style.boxSizing || 'border-box';
-      // set column span based on data-col or classes
       let span = 1;
       const dataCol = parseInt(item.getAttribute('data-col'), 10);
       if (Number.isFinite(dataCol) && dataCol > 0) span = dataCol;
@@ -150,10 +139,10 @@
 
   // ---------- Observers ----------
   function attachObservers(g) {
-    // ResizeObserver for content changes
-    let ro;
-    try {
-      if (typeof ResizeObserver !== 'undefined') {
+    // ResizeObserver for content resize
+    let ro = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      try {
         ro = new ResizeObserver(entries => {
           window.requestAnimationFrame(() => {
             entries.forEach(entry => {
@@ -165,14 +154,14 @@
         });
         qsa('.grid-item', g).forEach(item => {
           const target = qs('.card', item) || item;
-          try { ro.observe(target); } catch (e) { /* ignore */ }
+          try { ro.observe(target); } catch (e) {}
         });
+      } catch (e) {
+        ro = null;
       }
-    } catch (e) {
-      ro = null;
     }
 
-    // MutationObserver to observe new items added
+    // MutationObserver for added items
     try {
       const mo = new MutationObserver(muts => {
         let added = false;
@@ -180,7 +169,6 @@
           (m.addedNodes || []).forEach(node => {
             if (node.nodeType === 1 && node.classList && node.classList.contains('grid-item')) {
               added = true;
-              // normalize images inside new node
               qsa('img', node).forEach(img => {
                 img.style.display = img.style.display || 'block';
                 img.style.width = img.style.width || '100%';
@@ -197,9 +185,11 @@
         if (added) relayoutAll(g);
       });
       mo.observe(g, { childList: true, subtree: true, attributes: false });
-    } catch (e) { /* ignore */ }
+    } catch (e) {
+      // ignore
+    }
 
-    // Ensure existing images update their item spans on load
+    // images load listeners
     qsa('img', g).forEach(img => {
       img.addEventListener('load', () => {
         const itm = img.closest('.grid-item');
@@ -211,33 +201,34 @@
       });
     });
 
-    // Relayout on window resize
     window.addEventListener('resize', debounce(() => relayoutAll(g), RELAYOUT_DEBOUNCE));
   }
 
-  // ---------- Preloader (progress + Skip) ----------
+  // ---------- Preloader ----------
   let preloaderEl = null;
   let progressEl = null;
   let skipBtn = null;
   let preloaderActive = false;
-
   function createPreloader() {
     const existing = document.getElementById('pv-preloader');
     if (existing) existing.remove();
     const pre = document.createElement('div');
     pre.id = 'pv-preloader';
+    pre.className = 'pv-preloader';
     Object.assign(pre.style, {
       position: 'fixed', inset: '0', zIndex: 2147483647, display: 'flex',
       alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.85)',
       transition: 'opacity 180ms ease'
     });
     const inner = document.createElement('div');
+    inner.className = 'pv-preloader-inner';
     Object.assign(inner.style, {
       textAlign: 'center', color: '#fff', maxWidth: '92vw', width: '520px',
-      padding: '22px', boxSizing: 'border-box', borderRadius: '10px',
+      padding: '22px', boxSizing: 'border-box', borderRadius: '12px',
       background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)'
     });
     const spinner = document.createElement('div');
+    spinner.className = 'pv-spinner';
     Object.assign(spinner.style, {
       width: '56px', height: '56px', margin: '8px auto 14px', borderRadius: '50%',
       border: '5px solid rgba(255,255,255,0.12)', borderTopColor: '#fff',
@@ -250,33 +241,32 @@
       document.head.appendChild(s);
     }
     progressEl = document.createElement('div');
+    progressEl.className = 'pv-progress';
     progressEl.style.margin = '10px auto';
     progressEl.style.color = '#fff';
     progressEl.style.fontWeight = '600';
     progressEl.innerHTML = '<span class="pv-progress-percent">0%</span>';
+
     skipBtn = document.createElement('button');
+    skipBtn.className = 'pv-skip';
     skipBtn.type = 'button';
     skipBtn.textContent = 'Skip';
     skipBtn.style.display = 'none';
     Object.assign(skipBtn.style, {
       marginTop: '14px', background: 'rgba(255,255,255,0.12)', color: '#fff',
-      border: '1px solid rgba(255,255,255,0.12)', padding: '8px 14px', borderRadius: '6px', cursor: 'pointer',
+      border: '1px solid rgba(255,255,255,0.12)', padding: '8px 14px', borderRadius: '8px', cursor: 'pointer',
       fontWeight: '600'
     });
-    skipBtn.addEventListener('click', () => {
-      hidePreloaderImmediate();
-    });
+    skipBtn.addEventListener('click', () => hidePreloaderImmediate());
 
     inner.appendChild(spinner);
     inner.appendChild(progressEl);
     inner.appendChild(skipBtn);
     pre.appendChild(inner);
     document.body.appendChild(pre);
-
     preloaderEl = pre;
     preloaderActive = true;
 
-    // show skip after delay
     setTimeout(() => {
       if (preloaderEl && preloaderActive) skipBtn.style.display = 'inline-block';
     }, SKIP_DELAY_MS);
@@ -294,7 +284,6 @@
     try { preloaderEl.remove(); } catch (e) {}
     preloaderEl = null;
     preloaderActive = false;
-    // relayout after preloader is removed
     setTimeout(() => { relayoutAll(grid); requestAnimationFrame(() => relayoutAll(grid)); }, 40);
   }
   function hidePreloaderSmooth() {
@@ -310,18 +299,15 @@
 
   function preloadGridMedia() {
     return new Promise(resolve => {
-      // create overlay
       createPreloader();
       updatePreloader(0, 1);
 
-      // collect images and video urls
       const images = qsa('img', grid);
       const videoUrls = new Set();
       qsa('.grid-item', grid).forEach(item => {
         const ds = item.dataset || {};
         if (ds.video) videoUrls.add(ds.video);
         if (ds.videoHigh) videoUrls.add(ds.videoHigh);
-        // inline <video> in tile
         qsa('video source', item).forEach(s => s.src && videoUrls.add(s.src));
         const v = qs('video', item);
         if (v && v.src) videoUrls.add(v.src);
@@ -376,7 +362,6 @@
         });
       }
 
-      // overall failsafe
       setTimeout(() => {
         if (preloaderEl) {
           console.warn('pv.js: preloader timeout reached; proceeding.');
@@ -390,8 +375,8 @@
   // ---------- Lightbox ----------
   let lightbox = null;
   let lightboxContent = null;
-  let currentIndex = 0;
   let mediaItems = [];
+  let currentIndex = 0;
 
   function removeExistingLightbox() {
     const existing = document.getElementById('lightbox');
@@ -414,7 +399,7 @@
     Object.assign(lightboxContent.style, {
       boxSizing: 'border-box', minWidth: '160px', minHeight: '120px',
       maxWidth: '90vw', maxHeight: '80vh', display: 'flex', alignItems: 'center',
-      justifyContent: 'center', position: 'relative'
+      justifyContent: 'center', position: 'relative', background: '#000'
     });
 
     const closeBtn = document.createElement('button');
@@ -422,7 +407,7 @@
     closeBtn.type = 'button';
     closeBtn.setAttribute('aria-label', 'Close');
     closeBtn.innerHTML = '×';
-    Object.assign(closeBtn.style, { position: 'absolute', top: '12px', right: '16px', fontSize: '30px', color: '#fff', background: 'transparent', border: 'none', cursor: 'pointer', zIndex: '10' });
+    Object.assign(closeBtn.style, { position: 'absolute', top: '12px', right: '16px', fontSize: '30px', color: '#fff', background: 'rgba(0,0,0,0.25)', borderRadius: '999px', width: '44px', height: '44px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer', zIndex: '12' });
 
     lightbox.appendChild(closeBtn);
     lightbox.appendChild(lightboxContent);
@@ -434,8 +419,8 @@
     document.addEventListener('keydown', (e) => {
       if (!lightbox || lightbox.style.display !== 'flex') return;
       if (e.key === 'Escape') { hideLightbox(); return; }
-      if (e.key === 'ArrowRight') { navigateLightbox(1); }
-      if (e.key === 'ArrowLeft') { navigateLightbox(-1); }
+      if (e.key === 'ArrowRight') navigateLightbox(1);
+      if (e.key === 'ArrowLeft') navigateLightbox(-1);
     });
   }
 
@@ -480,12 +465,13 @@
 
     const item = mediaItems[currentIndex];
     const media = resolveMediaForItem(item);
-    // force a visible container size while media loads
+
     const size = computeLightboxSize();
     lightboxContent.style.width = size.w + 'px';
     lightboxContent.style.height = size.h + 'px';
     lightboxContent.style.minWidth = '120px';
     lightboxContent.style.minHeight = '90px';
+    lightboxContent.style.background = lightboxContent.style.background || '#000';
 
     if (!media || !media.type) {
       const p = document.createElement('div'); p.style.color = '#fff'; p.style.padding = '12px'; p.textContent = 'No preview available'; lightboxContent.appendChild(p); return;
@@ -494,15 +480,17 @@
     if (media.type === 'video') {
       if (!media.src) {
         if (media.poster) {
-          const img = document.createElement('img'); img.src = media.poster; img.alt = item.getAttribute('aria-label') || ''; Object.assign(img.style, { maxWidth: '100%', maxHeight: '100%' });
+          const img = document.createElement('img'); img.src = media.poster; img.alt = item.getAttribute('aria-label') || '';
+          Object.assign(img.style, { maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block', margin: '0 auto' });
           img.onload = () => { lightboxContent.style.width = ''; lightboxContent.style.height = ''; lightboxContent.style.minWidth = ''; lightboxContent.style.minHeight = ''; };
-          lightboxContent.appendChild(img); return;
+          lightboxContent.appendChild(img);
+          return;
         }
         const p = document.createElement('div'); p.style.color = '#fff'; p.textContent = 'Video not available'; lightboxContent.appendChild(p); return;
       }
       const video = document.createElement('video');
       video.controls = true; video.playsInline = true; video.autoplay = true; video.preload = 'metadata';
-      Object.assign(video.style, { maxWidth: '100%', maxHeight: '100%', width: '100%', height: '100%' });
+      Object.assign(video.style, { maxWidth: '100%', maxHeight: '100%', width: '100%', height: '100%', objectFit: 'contain' });
       if (media.poster) video.setAttribute('poster', media.poster);
       const source = document.createElement('source'); source.src = media.src;
       const ext = (media.src.split('?')[0].split('.').pop() || '').toLowerCase();
@@ -511,21 +499,39 @@
       video.onloadedmetadata = () => { lightboxContent.style.minWidth = ''; lightboxContent.style.minHeight = ''; };
       lightboxContent.appendChild(video);
       video.play().catch(()=>{});
-    } else {
-      const hi = media.srcHigh;
-      const low = media.srcLow;
-      const img = document.createElement('img');
-      img.alt = item.getAttribute('aria-label') || '';
-      Object.assign(img.style, { maxWidth: '100%', maxHeight: '100%', width: 'auto', height: 'auto' });
-      if (low) { img.src = low; lightboxContent.appendChild(img); } else if (hi) { img.src = hi; lightboxContent.appendChild(img); } else { const p = document.createElement('div'); p.style.color = '#fff'; p.textContent = 'Image not available'; lightboxContent.appendChild(p); return; }
-      if (hi && hi !== low) {
-        const hiImg = new Image(); hiImg.src = hi;
-        hiImg.onload = () => { img.src = hi; lightboxContent.style.width = ''; lightboxContent.style.height = ''; lightboxContent.style.minWidth = ''; lightboxContent.style.minHeight = ''; };
-        hiImg.onerror = () => console.warn('pv.js: failed to load hi-res image:', hi);
-      } else {
-        img.onload = () => { lightboxContent.style.width = ''; lightboxContent.style.height = ''; lightboxContent.style.minWidth = ''; lightboxContent.style.minHeight = ''; };
-      }
+      return;
     }
+
+    // Image handling: prefer hi-res
+    const hi = media.srcHigh;
+    const low = media.srcLow;
+    const img = document.createElement('img');
+    img.alt = item.getAttribute('aria-label') || '';
+    Object.assign(img.style, { display: 'block', maxWidth: '100%', maxHeight: '100%', width: 'auto', height: 'auto', objectFit: 'contain', margin: '0 auto' });
+    img.decoding = 'async';
+
+    if (hi) {
+      img.src = hi;
+      lightboxContent.appendChild(img);
+      const hiLoader = new Image();
+      hiLoader.src = hi;
+      hiLoader.onload = () => {
+        lightboxContent.style.width = '';
+        lightboxContent.style.height = '';
+        lightboxContent.style.minWidth = '';
+        lightboxContent.style.minHeight = '';
+      };
+      hiLoader.onerror = () => { if (low) img.src = low; };
+    } else if (low) {
+      img.src = low;
+      lightboxContent.appendChild(img);
+      img.onload = () => { lightboxContent.style.width = ''; lightboxContent.style.height = ''; lightboxContent.style.minWidth = ''; lightboxContent.style.minHeight = ''; };
+    } else {
+      const p = document.createElement('div'); p.style.color = '#fff'; p.textContent = 'Image not available'; lightboxContent.appendChild(p); return;
+    }
+
+    // ensure appended
+    // already appended above
   }
 
   function navigateLightbox(delta) {
@@ -541,7 +547,7 @@
     if (lightboxContent) lightboxContent.innerHTML = '';
   }
 
-  // Delegated click to open lightbox
+  // delegated click to open lightbox
   grid.addEventListener('click', (evt) => {
     const tile = evt.target.closest && evt.target.closest('.grid-item');
     if (!tile || !grid.contains(tile)) return;
@@ -552,32 +558,26 @@
     showLightboxByIndex(idx);
   });
 
-  // ensure any .lightbox .close works (covers preexisting markup)
+  // fallback delegated close for preexisting lightbox markup
   document.addEventListener('click', (e) => {
     const closeEl = e.target.closest && e.target.closest('.lightbox .close');
     if (closeEl) { e.preventDefault(); e.stopPropagation(); hideLightbox(); }
   });
 
-  // ---------- Initialization sequence ----------
+  // ---------- Initialization ----------
   function init() {
-    // create lightbox early so it's present and predictable
     createLightbox();
-    // ensure grid normalized immediately
     enforceGridStyles(grid);
     attachObservers(grid);
 
-    // Preload media (shows preloader). After preload finishes, run robust relayout ticks.
     preloadGridMedia().then(() => {
-      // wait a tick for preloader removal and browser to settle
       setTimeout(() => {
         relayoutAll(grid);
         requestAnimationFrame(() => {
           relayoutAll(grid);
-          // dispatch a resize so other listeners sync up
           window.dispatchEvent(new Event('resize'));
         });
       }, 40);
-      // collect media items for lightbox navigation
       collectMediaItems();
     }).catch((err) => {
       console.warn('pv.js: preload error', err);
@@ -585,7 +585,6 @@
       collectMediaItems();
     });
 
-    // imagesLoaded fallback behavior: when images settle, recompute
     if (typeof imagesLoaded === 'function') {
       imagesLoaded(grid, () => { relayoutAll(grid); requestAnimationFrame(() => relayoutAll(grid)); collectMediaItems(); });
     } else {
@@ -595,7 +594,7 @@
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 
-  // expose helpers for debugging
+  // ---------- Expose debug helpers ----------
   window._pv = {
     relayoutAll: () => relayoutAll(grid),
     showLightboxByIndex,
