@@ -4,16 +4,30 @@
 	padding: 0;
 	box-sizing: border-box;
 }
+:root{
+	--bg-1: #190f2c;
+	--bg-2: #200b30;
+	--accent: #7ee7ff;
+	--btn-bg: rgba(255,255,255,0.06);
+	--btn-hover: rgba(255,255,255,0.12);
+	--glass: rgba(255,255,255,0.04);
+	--shadow: 0 10px 30px rgba(0,0,0,0.5);
+	--ease: cubic-bezier(.2,.9,.3,1);
+}
 html,
 body {
-	background: linear-gradient(45deg, #190f2c, #200b30);
+	background: linear-gradient(45deg, var(--bg-1), var(--bg-2));
 	padding: 15px;
+	font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+	color: #fff;
 }
 img {
 	max-width: 100%;
 	height: auto;
 	vertical-align: middle;
 	display: inline-block;
+	-webkit-user-drag: none;
+	user-select: none;
 }
 
 /* Main CSS */
@@ -21,14 +35,61 @@ img {
 	display: flex;
 	justify-content: center;
 	align-items: center;
+	position: relative;
+	overflow: hidden;
+	border-radius: 6px;
+	background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02));
+	transition: transform 320ms var(--ease), box-shadow 320ms var(--ease);
+	will-change: transform;
+	cursor: pointer;
 }
+
+/* Hover animations for tiles */
+.grid-wrapper > div:hover {
+	transform: translateY(-8px) scale(1.02);
+	box-shadow: 0 18px 40px rgba(0,0,0,0.55);
+}
+.grid-wrapper > div:active {
+	transform: translateY(-4px) scale(0.995);
+}
+
+/* subtle image reveal on hover */
 .grid-wrapper > div > img {
 	width: 100%;
 	height: 100%;
 	object-fit: cover;
 	border-radius: 5px;
+	transform-origin: center;
+	transition: transform 420ms var(--ease), filter 420ms var(--ease);
+}
+.grid-wrapper > div:hover > img {
+	transform: scale(1.05) rotate(-0.5deg);
+	filter: saturate(1.05) contrast(1.03);
 }
 
+/* overlay icon that appears on hover */
+.grid-wrapper > div::after {
+	content: "🔍";
+	position: absolute;
+	inset: auto;
+	top: 10px;
+	right: 10px;
+	font-size: 18px;
+	padding: 8px;
+	border-radius: 8px;
+	background: transparent;
+	opacity: 0;
+	transform: translateY(-6px) scale(.95);
+	transition: opacity 240ms var(--ease), transform 240ms var(--ease), background 240ms var(--ease);
+	backdrop-filter: blur(2px);
+}
+.grid-wrapper > div:hover::after {
+	opacity: 0.95;
+	transform: translateY(0) scale(1);
+	background: var(--btn-bg);
+}
+
+/* grid layout (kept from original) */
 .grid-wrapper {
 	display: grid;
 	grid-gap: 10px;
@@ -45,4 +106,174 @@ img {
 .grid-wrapper .big {
 	grid-column: span 2;
 	grid-row: span 2;
+}
+
+/* ---- Lightbox styles ---- */
+.lb-overlay {
+	position: fixed;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: radial-gradient(ellipse at center, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.85) 60%), rgba(8,8,12,0.9);
+	z-index: 9999;
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 280ms var(--ease);
+}
+
+/* toggle class .open to show */
+.lb-overlay.open {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+/* lightbox content container */
+.lb-content {
+	position: relative;
+	max-width: min(1100px, 95vw);
+	max-height: 90vh;
+	width: min(95vw, 1100px);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 18px;
+}
+
+/* the displayed image */
+.lb-image {
+	max-width: 100%;
+	max-height: 80vh;
+	border-radius: 8px;
+	box-shadow: var(--shadow);
+	transition: transform 360ms var(--ease), opacity 260ms var(--ease);
+	transform: translateY(6px) scale(.995);
+	opacity: 0;
+	object-fit: contain;
+	background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02));
+}
+
+/* when overlay is open, animate image in */
+.lb-overlay.open .lb-image {
+	transform: translateY(0) scale(1);
+	opacity: 1;
+}
+
+/* Controls: prev / next / close / download */
+.lb-btn {
+	position: absolute;
+	display: inline-grid;
+	place-items: center;
+	width: 48px;
+	height: 48px;
+	background: var(--btn-bg);
+	color: #fff;
+	border-radius: 999px;
+	border: 1px solid rgba(255,255,255,0.06);
+	box-shadow: 0 8px 20px rgba(0,0,0,0.45);
+	transition: transform 200ms var(--ease), background 160ms, box-shadow 200ms;
+	cursor: pointer;
+	user-select: none;
+}
+
+/* hover/focus states for buttons */
+.lb-btn:hover,
+.lb-btn:focus {
+	transform: translateY(-3px);
+	background: var(--btn-hover);
+	box-shadow: 0 14px 30px rgba(0,0,0,0.55);
+	outline: none;
+}
+
+/* prev / next positions */
+.lb-prev {
+	left: 12px;
+	top: 50%;
+	transform: translateY(-50%);
+}
+.lb-next {
+	right: 12px;
+	top: 50%;
+	transform: translateY(-50%);
+}
+
+/* close / download positions (corner) */
+.lb-close {
+	right: 12px;
+	top: 12px;
+	width: 40px;
+	height: 40px;
+}
+.lb-download {
+	right: 12px;
+	bottom: 12px;
+	width: 48px;
+	height: 48px;
+}
+
+/* disabled state for prev/next */
+.lb-btn.disabled {
+	opacity: 0.45;
+	pointer-events: none;
+	transform: none;
+}
+
+/* caption area (optional) */
+.lb-caption {
+	position: absolute;
+	left: 24px;
+	bottom: 20px;
+	right: 24px;
+	color: rgba(255,255,255,0.85);
+	font-size: 14px;
+	text-align: center;
+	pointer-events: none;
+	opacity: 0.95;
+}
+
+/* small helper (keyboard hint) */
+.lb-hint {
+	position: absolute;
+	left: 50%;
+	transform: translateX(-50%);
+	bottom: -36px;
+	font-size: 12px;
+	color: rgba(255,255,255,0.55);
+}
+
+/* responsive adjustments */
+@media (max-width: 640px) {
+	.lb-prev, .lb-next {
+		display: none; /* rely on swipe/tap on mobile or the download/close controls */
+	}
+	.lb-content {
+		padding: 8px;
+	}
+	.lb-download {
+		right: 8px;
+		bottom: 8px;
+	}
+}
+
+/* accessibility focus ring for keyboard users */
+.lb-btn:focus-visible {
+	box-shadow: 0 0 0 3px rgba(126,231,255,0.12), 0 12px 30px rgba(0,0,0,0.6);
+}
+
+/* small fade for overlay background when toggling */
+@keyframes lb-fade {
+	from { opacity: 0; transform: scale(.995); }
+	to { opacity: 1; transform: scale(1); }
+}
+.lb-overlay.open .lb-content {
+	animation: lb-fade 240ms var(--ease) both;
+}
+
+/* Utility: visually hidden (for screen reader text in buttons) */
+.sr-only {
+	position: absolute !important;
+	width: 1px; height: 1px;
+	padding: 0; margin: -1px;
+	overflow: hidden; clip: rect(0,0,0,0);
+	white-space: nowrap; border: 0;
 }
