@@ -1,6 +1,8 @@
-/* pv.css - Masonry, preloader, lightbox visuals, hover effects, rounded corners */
+/* pv.css - Lightbox fix so portrait/vertical images are not cropped
+   Includes rounded corners, hover effects, preloader styles (keep these if you used them)
+*/
 
-/* --- Basic grid defaults (you can override display/gap in page CSS but these are safe) --- */
+/* --- Grid basics (keep existing rules) --- */
 .grid {
   display: grid;
   grid-auto-flow: row dense;
@@ -9,31 +11,27 @@
   box-sizing: border-box;
 }
 
-/* Grid item / tile visuals */
+/* Tile visuals */
 .grid-item {
   border-radius: 12px;
-  overflow: hidden;               /* clip children to the radius */
+  overflow: hidden;
   box-sizing: border-box;
   transition: transform 280ms cubic-bezier(.2,.9,.2,1), box-shadow 280ms ease;
   will-change: transform;
   position: relative;
   background: transparent;
 }
-
-/* Slight elevation and scale on hover or keyboard focus */
 .grid-item:hover,
 .grid-item:focus-within {
   transform: translateY(-6px) scale(1.02);
   box-shadow: 0 14px 36px rgba(12, 24, 40, 0.24), 0 4px 12px rgba(12,24,40,0.12);
   z-index: 3;
 }
-
-/* Ensure images fit and are clipped; object-fit keeps composition nice */
 .grid-item img {
   display: block;
   width: 100%;
   height: auto;
-  object-fit: cover; /* mosaic look in tiles */
+  object-fit: cover;
   vertical-align: middle;
   border-radius: inherit;
   margin: 0;
@@ -41,15 +39,7 @@
   -webkit-user-drag: none;
 }
 
-/* If you use a .card wrapper for tile content, ensure radius + overflow are there */
-.grid-item .card {
-  border-radius: 12px;
-  overflow: hidden;
-  background-clip: padding-box;
-  box-sizing: border-box;
-}
-
-/* --- Lightbox visuals --- */
+/* --- Lightbox --- */
 .lightbox {
   position: fixed;
   inset: 0;
@@ -63,33 +53,43 @@
   overflow: auto;
 }
 
+/* outer content container (rounded pane) */
 .lightbox-content {
   box-sizing: border-box;
-  min-width: 160px;
-  min-height: 120px;
-  max-width: 90vw;
-  max-height: 80vh;
+  position: relative;
+  border-radius: 10px;
+  overflow: visible; /* allow inner to scroll; avoid forcing clipping that crops media */
   display: flex;
   align-items: center;
   justify-content: center;
-  position: relative;
-  background: #000;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 18px 60px rgba(0,0,0,0.6);
+  padding: 8px; /* small padding so media doesn't butt up against radius */
 }
 
-/* Lightbox media: no cropping, scale to fit */
-.lightbox-content img,
-.lightbox-content video {
-  display: block;
-  max-width: 100%;
-  max-height: 100%;
+/* inner wrapper that actually constrains media size and scrolls if needed */
+.lightbox-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 90vw;   /* will be set by JS to computed lightbox size (maxWidth) */
+  max-height: 80vh;  /* will be set by JS to computed lightbox size (maxHeight) */
   width: auto;
   height: auto;
-  object-fit: contain;
-  margin: 0 auto;
-  transition: opacity 240ms ease;
+  box-sizing: border-box;
+  overflow: auto;    /* allow scrolling when media larger than viewport (mobile pinch/scroll) */
+  background: #000;
+  border-radius: 10px;
+}
+
+/* lightbox media: NEVER force both width and height to 100% — use contain */
+.lightbox-inner img,
+.lightbox-inner video {
+  display: block !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  width: auto !important;
+  height: auto !important;
+  object-fit: contain !important;
+  margin: 0 auto !important;
 }
 
 /* Close button */
@@ -108,7 +108,7 @@
   justify-content: center;
   border: none;
   cursor: pointer;
-  z-index: 12;
+  z-index: 14;
   transition: background 140ms ease, transform 140ms ease;
 }
 .lightbox .close:hover,
@@ -117,10 +117,7 @@
   transform: scale(1.05);
 }
 
-/* Ensure close sits above the content radius */
-.lightbox .close { z-index: 13; }
-
-/* --- Preloader overlay --- */
+/* Preloader and other styles (keep from previous file) */
 .pv-preloader {
   position: fixed;
   inset: 0;
@@ -131,7 +128,6 @@
   background: rgba(0,0,0,0.85);
   transition: opacity 180ms ease;
 }
-
 .pv-preloader-inner {
   text-align: center;
   color: #fff;
@@ -144,51 +140,14 @@
   backdrop-filter: blur(6px);
   box-shadow: 0 10px 40px rgba(0,0,0,0.6);
 }
-
-.pv-spinner {
-  width: 56px;
-  height: 56px;
-  margin: 8px auto 14px;
-  border-radius: 50%;
-  border: 5px solid rgba(255,255,255,0.12);
-  border-top-color: #fff;
-  animation: pv-spin 1s linear infinite;
-}
-
+.pv-spinner { width: 56px; height: 56px; margin: 8px auto 14px; border-radius: 50%; border: 5px solid rgba(255,255,255,0.12); border-top-color: #fff; animation: pv-spin 1s linear infinite; }
 @keyframes pv-spin { to { transform: rotate(360deg); } }
-
-.pv-progress {
-  margin: 10px auto;
-  color: #fff;
-  font-weight: 600;
-}
-.pv-progress-percent {
-  font-size: 18px;
-  display: inline-block;
-  min-width: 50px;
-}
-
-/* Skip button */
-.pv-skip {
-  margin-top: 14px;
-  background: rgba(255,255,255,0.12);
-  color: #fff;
-  border: 1px solid rgba(255,255,255,0.12);
-  padding: 8px 14px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-}
+.pv-progress { margin: 10px auto; color: #fff; font-weight: 600; }
+.pv-progress-percent { font-size: 18px; display: inline-block; min-width: 50px; }
+.pv-skip { margin-top: 14px; background: rgba(255,255,255,0.12); color: #fff; border: 1px solid rgba(255,255,255,0.12); padding: 8px 14px; border-radius: 8px; cursor: pointer; font-weight: 600; }
 .pv-skip:hover { background: rgba(255,255,255,0.18); }
 
-/* Accessibility focus */
-.grid-item:focus-within,
-.grid-item:focus {
-  outline: 3px solid rgba(66,153,225,0.18);
-  outline-offset: 4px;
-}
-
-/* Small screens */
+/* small screens */
 @media (max-width: 480px) {
   .pv-preloader-inner { width: 92vw; padding: 14px; }
   .pv-spinner { width: 44px; height: 44px; border-width: 4px; }
