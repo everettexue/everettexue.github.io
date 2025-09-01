@@ -1,156 +1,48 @@
-/* pv.css - Lightbox fix so portrait/vertical images are not cropped
-   Includes rounded corners, hover effects, preloader styles (keep these if you used them)
-*/
-
-/* --- Grid basics (keep existing rules) --- */
-.grid {
-  display: grid;
-  grid-auto-flow: row dense;
-  gap: 12px;
-  align-items: start;
-  box-sizing: border-box;
+/* Reset CSS */
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+html,
+body {
+	background: linear-gradient(45deg, #190f2c, #200b30);
+	padding: 15px;
+}
+img {
+	max-width: 100%;
+	height: auto;
+	vertical-align: middle;
+	display: inline-block;
 }
 
-/* Tile visuals */
-.grid-item {
-  border-radius: 12px;
-  overflow: hidden;
-  box-sizing: border-box;
-  transition: transform 280ms cubic-bezier(.2,.9,.2,1), box-shadow 280ms ease;
-  will-change: transform;
-  position: relative;
-  background: transparent;
+/* Main CSS */
+.grid-wrapper > div {
+	display: flex;
+	justify-content: center;
+	align-items: center;
 }
-.grid-item:hover,
-.grid-item:focus-within {
-  transform: translateY(-6px) scale(1.02);
-  box-shadow: 0 14px 36px rgba(12, 24, 40, 0.24), 0 4px 12px rgba(12,24,40,0.12);
-  z-index: 3;
-}
-.grid-item img {
-  display: block;
-  width: 100%;
-  height: auto;
-  object-fit: cover;
-  vertical-align: middle;
-  border-radius: inherit;
-  margin: 0;
-  box-sizing: border-box;
-  -webkit-user-drag: none;
+.grid-wrapper > div > img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	border-radius: 5px;
 }
 
-/* --- Lightbox --- */
-.lightbox {
-  position: fixed;
-  inset: 0;
-  display: none;
-  z-index: 2147483646;
-  background: rgba(0,0,0,0.85);
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-  box-sizing: border-box;
-  overflow: auto;
+.grid-wrapper {
+	display: grid;
+	grid-gap: 10px;
+	grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+	grid-auto-rows: 200px;
+	grid-auto-flow: dense;
 }
-
-/* outer content container (rounded pane) */
-.lightbox-content {
-  box-sizing: border-box;
-  position: relative;
-  border-radius: 10px;
-  overflow: visible; /* allow inner to scroll; avoid forcing clipping that crops media */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px; /* small padding so media doesn't butt up against radius */
+.grid-wrapper .wide {
+	grid-column: span 2;
 }
-
-/* inner wrapper that actually constrains media size and scrolls if needed */
-.lightbox-inner {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  max-width: 90vw;   /* will be set by JS to computed lightbox size (maxWidth) */
-  max-height: 80vh;  /* will be set by JS to computed lightbox size (maxHeight) */
-  width: auto;
-  height: auto;
-  box-sizing: border-box;
-  overflow: auto;    /* allow scrolling when media larger than viewport (mobile pinch/scroll) */
-  background: #000;
-  border-radius: 10px;
+.grid-wrapper .tall {
+	grid-row: span 2;
 }
-
-/* lightbox media: NEVER force both width and height to 100% — use contain */
-.lightbox-inner img,
-.lightbox-inner video {
-  display: block !important;
-  max-width: 100% !important;
-  max-height: 100% !important;
-  width: auto !important;
-  height: auto !important;
-  object-fit: contain !important;
-  margin: 0 auto !important;
-}
-
-/* Close button */
-.lightbox .close {
-  position: absolute;
-  top: 12px;
-  right: 16px;
-  font-size: 30px;
-  color: #fff;
-  background: rgba(0,0,0,0.25);
-  border-radius: 999px;
-  width: 44px;
-  height: 44px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  cursor: pointer;
-  z-index: 14;
-  transition: background 140ms ease, transform 140ms ease;
-}
-.lightbox .close:hover,
-.lightbox .close:focus {
-  background: rgba(255,255,255,0.09);
-  transform: scale(1.05);
-}
-
-/* Preloader and other styles (keep from previous file) */
-.pv-preloader {
-  position: fixed;
-  inset: 0;
-  z-index: 2147483647;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0,0,0,0.85);
-  transition: opacity 180ms ease;
-}
-.pv-preloader-inner {
-  text-align: center;
-  color: #fff;
-  max-width: 92vw;
-  width: 520px;
-  padding: 22px;
-  box-sizing: border-box;
-  border-radius: 12px;
-  background: rgba(0,0,0,0.45);
-  backdrop-filter: blur(6px);
-  box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-}
-.pv-spinner { width: 56px; height: 56px; margin: 8px auto 14px; border-radius: 50%; border: 5px solid rgba(255,255,255,0.12); border-top-color: #fff; animation: pv-spin 1s linear infinite; }
-@keyframes pv-spin { to { transform: rotate(360deg); } }
-.pv-progress { margin: 10px auto; color: #fff; font-weight: 600; }
-.pv-progress-percent { font-size: 18px; display: inline-block; min-width: 50px; }
-.pv-skip { margin-top: 14px; background: rgba(255,255,255,0.12); color: #fff; border: 1px solid rgba(255,255,255,0.12); padding: 8px 14px; border-radius: 8px; cursor: pointer; font-weight: 600; }
-.pv-skip:hover { background: rgba(255,255,255,0.18); }
-
-/* small screens */
-@media (max-width: 480px) {
-  .pv-preloader-inner { width: 92vw; padding: 14px; }
-  .pv-spinner { width: 44px; height: 44px; border-width: 4px; }
-  .lightbox .close { width: 40px; height: 40px; font-size: 26px; }
-  .grid-item { border-radius: 10px; }
+.grid-wrapper .big {
+	grid-column: span 2;
+	grid-row: span 2;
 }
