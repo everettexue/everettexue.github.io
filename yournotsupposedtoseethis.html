@@ -30,78 +30,86 @@
 
   <style>
     * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
-    .parallax, .parallax1 {
-      height: 100vh;
-      background-size: cover;
-      background-position: center;
-      background-attachment: fixed;
-    }
+.video {
+  position: fixed;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+}
 
-    .parallax {
-      background-image: url('images/without.JPG');
-    }
 
-    .parallax1 {
-      background-image: url('images/with.JPG');
-    }
 
-    .video-section {
-      position: relative;
-      height: 100vh;
-      overflow: hidden;
-      background: #000;
-    }
-
-    .video {
-      position: fixed;
-      width: 100vw;
-      height: 100vh;
-      object-fit: cover;
-    }
   </style>
 </head>
 
 <body>
-  <div class="parallax"></div>
+<!-- code from Rachelle Wise on Codepen https://codepen.io/wisearts/pen/ExZGrbZ -->
 
-  <section class="video-section">
-    <video class="video" playsinline webkit-playsinline preload="auto" muted>
-      <source src="https://www.dropbox.com/scl/fi/v2g4lfx3kv63vojs7ut2f/output3.mp4?rlkey=0bo4q86youw201quxeklg6ys2&st=jxzb3lql&raw=1" type="video/mp4" />
-    </video>
-  </section>
+<div id="smooth-wrapper">
+  <div id="smooth-content">
 
-  <div class="parallax1"></div>
+    <div class="parallax"></div>
+    <div class="parallax1"></div>
+
+    <!-- The video section -->
+    <section class="video-section">
+      <video class="video" playsinline webkit-playsinline preload="auto" muted>
+        <source src="https://www.dropbox.com/scl/fi/v2g4lfx3kv63vojs7ut2f/output3.mp4?rlkey=0bo4q86youw201quxeklg6ys2&st=jxzb3lql&raw=1" type="video/mp4" />
+      </video>
+    </section>
+  </div>
+</div>
+
 
   <script>
-    gsap.registerPlugin(ScrollTrigger);
+/* Encoding is important!!!
+//--------------------------------
+// ffmpeg settings used:
+//--------------------------------
 
-    const coolVideo = document.querySelector("video");
+ffmpeg -i input.mp4 -vf scale=960:-1 -movflags faststart -vcodec libx264 -crf 20 -g 1 -pix_fmt yuv420p output.mp4
 
-    let tl = gsap.timeline({
-      scrollTrigger: {
-        trigger: ".video-section",
-        start: "top top",
-        end: "bottom+=1800% bottom",
-        scrub: true
-      }
-    });
+// scale filtergraph optional
+// ffmpeg docs: http://ffmpeg.org/ffmpeg.html
 
-    coolVideo.onloadedmetadata = function () {
-      tl.to(coolVideo, { currentTime: coolVideo.duration });
-    };
+*/
+gsap.registerPlugin(ScrollTrigger);
 
-    function isTouchDevice() {
-      return ("ontouchstart" in window || navigator.maxTouchPoints > 0);
-    }
-    if (isTouchDevice()) {
-      coolVideo.play();
-      coolVideo.pause();
-    }
+const coolVideo = document.querySelector("video");
+
+let tl = gsap.timeline({
+  scrollTrigger: {
+    trigger: "video",
+    start: "top top",
+    end: "bottom+=1800% bottom",
+    scrub: true,
+    markers: true
+  }
+});
+
+// wait until video metadata is loaded, so we can grab the proper duration before adding the onscroll animation. Might need to add a loader for loonng videos
+coolVideo.onloadedmetadata = function () {
+  tl.to(coolVideo, { currentTime: coolVideo.duration });
+};
+
+// Dealing with devices
+function isTouchDevice() {
+  return (
+    "ontouchstart" in window ||
+    navigator.maxTouchPoints > 0 ||
+    navigator.msMaxTouchPoints > 0
+  );
+}
+if (isTouchDevice()) {
+  coolVideo.play();
+  coolVideo.pause();
+}
+
   </script>
 </body>
 </html>
