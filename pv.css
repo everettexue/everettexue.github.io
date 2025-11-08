@@ -194,7 +194,6 @@ img {
 /* hover/focus states for buttons */
 .lb-btn:hover,
 .lb-btn:focus {
-	transform: translateY(-3px);
 	background: var(--btn-hover);
 	box-shadow: 0 14px 30px rgba(0,0,0,0.55);
 	outline: none;
