@@ -41,6 +41,62 @@
     const captionEl = overlay.querySelector('.lb-caption');
 
     let currentIndex = -1;
+    let currentThumbs = [];
+    const imageCache = new Map();
+
+    function resolveSrcFromThumb(thumb) {
+      if (!thumb) return '';
+      const anchor = thumb.closest('a');
+      return thumb.dataset.full || (anchor && anchor.getAttribute('href')) || thumb.src || '';
+    }
+
+    function getOrCreateImage(src) {
+      if (!src) return null;
+      let cached = imageCache.get(src);
+      if (!cached) {
+        cached = new Image();
+        cached.src = src;
+        imageCache.set(src, cached);
+      }
+      return cached;
+    }
+
+    function displayImage(src) {
+      const cached = getOrCreateImage(src);
+      if (!cached) {
+        imgEl.removeAttribute('src');
+        return;
+      }
+
+      imgEl.dataset.activeSrc = src;
+
+      if (cached.complete) {
+        imgEl.src = cached.currentSrc || cached.src;
+      } else {
+        cached.addEventListener('load', () => {
+          if (imgEl.dataset.activeSrc === src) {
+            imgEl.src = cached.currentSrc || cached.src;
+          }
+        }, { once: true });
+        // ensure load kicks off even if we captured late
+        imgEl.src = cached.src;
+      }
+    }
+
+    function warmNeighbors(index) {
+      const lookahead = 2;
+      for (let offset = -lookahead; offset <= lookahead; offset += 1) {
+        if (offset === 0) continue;
+        const neighbor = currentThumbs[index + offset];
+        if (!neighbor) continue;
+        const neighborSrc = resolveSrcFromThumb(neighbor);
+        const neighborImg = getOrCreateImage(neighborSrc);
+        if (neighborImg && !neighborImg.complete) {
+          // attach a no-op load listener so the request stays warm
+          neighborImg.addEventListener('load', () => {}, { once: true });
+        }
+      }
+    }
 
     function deriveFileName(url) {
       try {
@@ -52,32 +108,34 @@
       }
     }
 
-    function setStateForIndex(index, thumbs) {
+    function setStateForIndex(index) {
+      if (!currentThumbs.length) {
+        currentThumbs = collectThumbs();
+      }
       currentIndex = index;
-      const thumb = thumbs[currentIndex];
+      const thumb = currentThumbs[currentIndex];
       if (!thumb) return;
-      // prefer data-full, then enclosing anchor href, then img.src
-      const anchor = thumb.closest('a');
-      const src = thumb.dataset.full || (anchor && anchor.getAttribute('href')) || thumb.src || '';
+      const src = resolveSrcFromThumb(thumb);
       const alt = thumb.getAttribute('alt') || '';
-      imgEl.src = src;
+      displayImage(src);
       imgEl.alt = alt;
       captionEl.textContent = alt;
       downloadBtn.href = src;
       downloadBtn.setAttribute('download', deriveFileName(src));
       prevBtn.classList.toggle('disabled', currentIndex <= 0);
-      nextBtn.classList.toggle('disabled', currentIndex >= thumbs.length - 1);
+      nextBtn.classList.toggle('disabled', currentIndex >= currentThumbs.length - 1);
+      warmNeighbors(currentIndex);
     }
 
     function openAt(index) {
-      const thumbs = collectThumbs();
-      if (!thumbs.length) {
+      currentThumbs = collectThumbs();
+      if (!currentThumbs.length) {
         console.warn('pv-lightbox: no thumbnails found.');
         return;
       }
       if (index < 0) index = 0;
-      if (index >= thumbs.length) index = thumbs.length - 1;
-      setStateForIndex(index, thumbs);
+      if (index >= currentThumbs.length) index = currentThumbs.length - 1;
+      setStateForIndex(index);
       overlay.classList.add('open');
       // small accessibility: announce with aria-hidden toggles if needed (simple approach)
       // focus management: focus the close button
@@ -90,16 +148,19 @@
       overlay.classList.remove('open');
       document.body.style.overflow = '';
       // clear src after animation for memory
-      setTimeout(() => { imgEl.src = ''; }, 300);
+      setTimeout(() => {
+        imgEl.src = '';
+        imgEl.dataset.activeSrc = '';
+      }, 300);
     }
 
     function showPrev() {
-      const thumbs = collectThumbs();
-      if (currentIndex > 0) setStateForIndex(currentIndex - 1, thumbs);
+      if (!currentThumbs.length) currentThumbs = collectThumbs();
+      if (currentIndex > 0) setStateForIndex(currentIndex - 1);
     }
     function showNext() {
-      const thumbs = collectThumbs();
-      if (currentIndex < collectThumbs().length - 1) setStateForIndex(currentIndex + 1, thumbs);
+      if (!currentThumbs.length) currentThumbs = collectThumbs();
+      if (currentIndex < currentThumbs.length - 1) setStateForIndex(currentIndex + 1);
     }
 
     // Delegated click handler on the wrapper so anchors and new images are handled.
@@ -122,6 +183,7 @@
         console.warn('pv-lightbox: clicked thumbnail not found in list.');
         return;
       }
+      currentThumbs = thumbs;
       openAt(index);
     });
 
