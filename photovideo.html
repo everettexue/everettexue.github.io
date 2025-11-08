@@ -4,6 +4,32 @@
 " by Saief Al Emon on CodePen: https://codepen.io/iamsaief/pen/jObaoKo -->
 
 
+<nav class="navbar">
+	<a class="logo" href="index.html">
+		<img
+			src="/images/title.png"
+			srcset="/images/title.png 1x, /images/title.png 2x"
+			alt="Everette Xue"
+			class="logo-img"
+			loading="lazy"
+			width="60"
+			height="40"
+		/>
+	</a>
+	<div class="links">
+		<a href="photovideo.html" aria-current="page">Photos &amp; Videos</a>
+		<a href="index.html#about">About</a>
+		<a href="index.html#contact">Contact</a>
+	</div>
+</nav>
+
+
+<div id="pv-preloader" class="pv-preloader" role="status" aria-live="polite" aria-busy="true">
+	<div class="pv-spinner" aria-hidden="true"></div>
+	<p class="pv-preloader-text">Loading gallery...</p>
+</div>
+
+
 <div class="grid-wrapper">
 	<div class="big">
 		<img src="https://www.dropbox.com/scl/fi/pb7xu9yii9ewdwvgrmbt1/minewide-min.JPG?rlkey=mes6jfd1mdgnzpi5osrp8ffv2&st=xc5t95ia&dl=1" alt="" />
@@ -11,6 +37,105 @@
 	<div>
 		<img src="https://www.dropbox.com/scl/fi/imnusbw9hv6nez2i7gtcn/catsleep-min.JPG?rlkey=wn8us850z2wd1jdeikm0gcr80&st=h2qh91c9&dl=1" alt="" />
 	</div>
+	    <script>
+	(function () {
+		'use strict';
+
+		function initPreloader() {
+			const preloader = document.getElementById('pv-preloader');
+			const grid = document.querySelector('.grid-wrapper');
+			if (!preloader || !grid) return;
+
+			document.body.classList.add('pv-preloading');
+
+			const images = Array.from(grid.querySelectorAll('img'));
+			let pending = images.length;
+			let finished = false;
+			const statusText = preloader.querySelector('.pv-preloader-text');
+			const total = pending;
+
+			function updateStatus() {
+				if (!statusText || !total) return;
+				const loaded = Math.max(total - pending, 0);
+				const percent = Math.min(Math.round((loaded / total) * 100), 100);
+				statusText.textContent = percent >= 100 ? 'Preparing gallery...' : `Loading gallery... ${percent}%`;
+			}
+
+			function finalize() {
+				if (finished) return;
+				finished = true;
+				if (statusText) statusText.textContent = 'Gallery ready';
+				preloader.setAttribute('aria-busy', 'false');
+				preloader.setAttribute('aria-live', 'off');
+				document.body.classList.add('pv-gallery-ready');
+				document.body.classList.remove('pv-preloading');
+				requestAnimationFrame(() => {
+					preloader.classList.add('is-hidden');
+					setTimeout(() => {
+						if (preloader.parentNode) preloader.parentNode.removeChild(preloader);
+					}, 600);
+				});
+			}
+
+			if (!pending) {
+				finalize();
+				return;
+			}
+
+			const handleAssetSettled = () => {
+				pending -= 1;
+				updateStatus();
+				if (pending <= 0) finalize();
+			};
+
+			images.forEach((img) => {
+				if (img.complete && img.naturalWidth > 0) {
+					handleAssetSettled();
+					return;
+				}
+				img.addEventListener('load', handleAssetSettled, { once: true });
+				img.addEventListener('error', handleAssetSettled, { once: true });
+			});
+
+			updateStatus();
+			setTimeout(finalize, 8000);
+		}
+
+		function initNavbar() {
+			const navbar = document.querySelector('.navbar');
+			if (!navbar) return;
+
+			const threshold = 160;
+			let ticking = false;
+
+			function applyState() {
+				const shouldCondense = window.scrollY > threshold;
+				navbar.classList.toggle('is-condensed', shouldCondense);
+				ticking = false;
+			}
+
+			applyState();
+
+			window.addEventListener('scroll', () => {
+				if (!ticking) {
+					window.requestAnimationFrame(applyState);
+					ticking = true;
+				}
+			});
+		}
+
+		function onReady() {
+			initPreloader();
+			initNavbar();
+		}
+
+		if (document.readyState === 'loading') {
+			document.addEventListener('DOMContentLoaded', onReady, { once: true });
+		} else {
+			onReady();
+		}
+	})();
+	    </script>
 	<div class="tall">
 		<img src="https://www.dropbox.com/scl/fi/1ggl1t58f8chuix210q7d/IMG_5728.jpg?rlkey=w7ws2g131wntkjkcd57c07e54&st=k4dkl4w2&dl=1" alt="">
 	</div>
