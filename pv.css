@@ -193,6 +193,7 @@ img {
 	left: 12px;
 	top: 50%;
 	transform: translateY(-50%);
+	z-index: 1000;
 }
 .lb-next {
 	right: 12px;
