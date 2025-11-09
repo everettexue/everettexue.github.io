@@ -228,6 +228,20 @@ img {
 	transition: background 180ms var(--ease), transform 180ms var(--ease), color 180ms var(--ease), border-color 180ms var(--ease);
 }
 
+.pv-category-button.is-active {
+	background: rgba(126,231,255,0.18);
+	border-color: rgba(126,231,255,0.55);
+	color: rgba(255,255,255,0.98);
+	box-shadow: 0 14px 34px rgba(16,128,160,0.24);
+}
+
+.pv-category-button.is-active:hover,
+.pv-category-button.is-active:focus-visible {
+	background: rgba(126,231,255,0.24);
+	border-color: rgba(126,231,255,0.7);
+	color: rgba(255,255,255,1);
+}
+
 .pv-category-button:hover,
 .pv-category-button:focus-visible {
 	background: rgba(255,255,255,0.12);
@@ -239,6 +253,10 @@ img {
 .pv-category-count {
 	font-size: 12px;
 	color: rgba(255,255,255,0.62);
+}
+
+.pv-category-button.is-active .pv-category-count {
+	color: rgba(255,255,255,0.92);
 }
 
 .pv-edge-hotspot {
@@ -302,6 +320,38 @@ img {
 }
 
 /* the displayed image */
+.lb-image-stage {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: 1 1 auto;
+	max-width: min(1100px, 95vw);
+	max-height: 80vh;
+	width: min(95vw, 1100px);
+	min-height: 40vh;
+	overflow: hidden;
+}
+
+.lb-image-stage.is-loading::after {
+	content: '';
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	width: 48px;
+	height: 48px;
+	border-radius: 50%;
+	border: 3px solid rgba(255,255,255,0.15);
+	border-top-color: rgba(255,255,255,0.65);
+	animation: lb-spin 0.85s linear infinite;
+	pointer-events: none;
+}
+
+@keyframes lb-spin {
+	to { transform: rotate(360deg); }
+}
+
 .lb-image {
 	max-width: 100%;
 	max-height: 80vh;
@@ -319,6 +369,7 @@ img {
 	transform: translateY(0) scale(1);
 	opacity: 1;
 }
+
 
 /* Controls: prev / next / close / download */
 .lb-btn {
