@@ -12,9 +12,15 @@
       return;
     }
 
-    // collect images (we will compute the list on each open to handle dynamic content)
+  // track currently active filter
+  let activeCategory = 'iceland';
+
+    // collect images (we filter out hidden tiles to keep navigation in sync)
     function collectThumbs() {
-      return Array.from(wrapper.querySelectorAll('img'));
+      return Array.from(wrapper.querySelectorAll('img')).filter((img) => {
+        const tile = img.closest('[data-categories]');
+        return !tile || !tile.classList.contains('is-filtered');
+      });
     }
 
     // Build overlay DOM once
@@ -39,6 +45,195 @@
     const closeBtn = overlay.querySelector('.lb-close');
     const downloadBtn = overlay.querySelector('.lb-download');
     const captionEl = overlay.querySelector('.lb-caption');
+
+    const tileSelector = '[data-categories]';
+    const categoryPanelId = 'pv-category-panel';
+  const categoryButtons = new Map();
+  let categoryPanel = null;
+  let categoryToggle = null;
+  let edgeHotspot = null;
+  const OPEN_THRESHOLD = 55;
+  const PEEK_THRESHOLD = 260;
+
+    function normalizeCategory(name) {
+      return (name || '').toString().trim().toLowerCase();
+    }
+
+    function formatCategoryLabel(name) {
+      const normalized = normalizeCategory(name);
+      if (!normalized || normalized === 'all') return 'All';
+      return normalized.replace(/[-_]+/g, ' ').replace(/\b\w/g, (ch) => ch.toUpperCase());
+    }
+
+    function showCategoryPanel() {
+      if (!categoryPanel) return;
+      categoryPanel.classList.add('is-visible');
+      categoryPanel.classList.remove('is-peeking');
+      if (categoryToggle) categoryToggle.setAttribute('aria-expanded', 'true');
+    }
+
+    function peekCategoryPanel() {
+      if (!categoryPanel || categoryPanel.classList.contains('is-visible')) return;
+      categoryPanel.classList.add('is-peeking');
+    }
+
+    function hideCategoryPanel() {
+      if (!categoryPanel) return;
+      categoryPanel.classList.remove('is-visible');
+      categoryPanel.classList.remove('is-peeking');
+      if (categoryToggle) categoryToggle.setAttribute('aria-expanded', 'false');
+    }
+
+    function updateCategoryButtonPressed() {
+      categoryButtons.forEach((btn, key) => {
+        btn.setAttribute('aria-pressed', String(key === activeCategory));
+        btn.classList.toggle('is-active', key === activeCategory);
+      });
+    }
+
+    function applyCategory(category, force) {
+      const normalized = normalizeCategory(category) || 'all';
+      if (!force && normalized === activeCategory) return;
+      activeCategory = normalized;
+      updateCategoryButtonPressed();
+
+      const tiles = Array.from(wrapper.querySelectorAll(tileSelector));
+      tiles.forEach((tile) => {
+        const raw = tile.dataset.categories || '';
+        const entries = raw.split(/[\s,]+/).filter(Boolean).map(normalizeCategory);
+        const match = activeCategory === 'all' ? true : entries.includes(activeCategory);
+        if (match) {
+          tile.classList.remove('is-filtered');
+          tile.removeAttribute('aria-hidden');
+        } else {
+          tile.classList.add('is-filtered');
+          tile.setAttribute('aria-hidden', 'true');
+        }
+      });
+
+      currentThumbs = collectThumbs();
+
+      if (overlay.classList.contains('open')) {
+        closeOverlay();
+      }
+    }
+
+    function initCategoryPanel() {
+      const tiles = Array.from(wrapper.querySelectorAll(tileSelector));
+      if (!tiles.length) return;
+      if (document.querySelector('.pv-category-panel')) {
+        return;
+      }
+
+      const counts = new Map();
+      tiles.forEach((tile) => {
+        const raw = tile.dataset.categories || '';
+        const entries = raw.split(/[\s,]+/).filter(Boolean);
+        if (!entries.length) {
+          const key = 'uncategorized';
+          counts.set(key, (counts.get(key) || 0) + 1);
+          tile.dataset.categories = key;
+          return;
+        }
+        entries.forEach((name) => {
+          const key = normalizeCategory(name);
+          if (!key) return;
+          counts.set(key, (counts.get(key) || 0) + 1);
+        });
+      });
+
+      if (!counts.size) return;
+
+      if (!counts.has(activeCategory)) {
+        activeCategory = 'all';
+      }
+
+      categoryPanel = document.createElement('aside');
+      categoryPanel.className = 'pv-category-panel';
+      categoryPanel.setAttribute('role', 'navigation');
+      categoryPanel.setAttribute('aria-label', 'Gallery categories');
+      categoryPanel.id = categoryPanelId;
+      categoryPanel.setAttribute('tabindex', '-1');
+      categoryPanel.innerHTML = `
+        <div class="pv-category-header">Categories</div>
+        <ul class="pv-category-list" role="list"></ul>
+      `;
+
+      const listEl = categoryPanel.querySelector('.pv-category-list');
+      const totalCount = tiles.length;
+
+      categoryButtons.clear();
+
+      function createCategoryButton(catKey, count, label, opts) {
+        const item = document.createElement('li');
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'pv-category-button';
+        button.dataset.category = catKey;
+        button.setAttribute('aria-pressed', String(catKey === activeCategory));
+        if (catKey === activeCategory) {
+          button.classList.add('is-active');
+        }
+        button.innerHTML = `<span>${label}</span><span class="pv-category-count">${count}</span>`;
+        if (opts && opts.secondary) {
+          button.classList.add('is-secondary');
+        }
+        button.addEventListener('click', () => {
+          applyCategory(catKey);
+        });
+        item.appendChild(button);
+        listEl.appendChild(item);
+        categoryButtons.set(catKey, button);
+      }
+
+      const entries = Array.from(counts.entries());
+      const prioritizedEntries = entries
+        .filter(([key]) => key === 'iceland')
+        .concat(entries.filter(([key]) => key !== 'iceland').sort((a, b) => a[0].localeCompare(b[0])));
+
+      prioritizedEntries.forEach(([key, count]) => {
+        createCategoryButton(key, count, formatCategoryLabel(key));
+      });
+
+      createCategoryButton('all', totalCount, 'All', { secondary: true });
+
+      document.body.appendChild(categoryPanel);
+      edgeHotspot = document.createElement('div');
+      edgeHotspot.className = 'pv-edge-hotspot';
+      edgeHotspot.setAttribute('aria-hidden', 'true');
+      edgeHotspot.addEventListener('mouseenter', showCategoryPanel);
+      edgeHotspot.addEventListener('mouseleave', () => hideCategoryPanel());
+      document.body.appendChild(edgeHotspot);
+
+      categoryPanel.addEventListener('mouseenter', showCategoryPanel);
+      categoryPanel.addEventListener('mouseleave', () => hideCategoryPanel());
+      categoryPanel.addEventListener('focusin', showCategoryPanel);
+      categoryPanel.addEventListener('focusout', () => {
+        if (!categoryPanel.contains(document.activeElement)) hideCategoryPanel();
+      });
+
+      document.addEventListener('mousemove', (event) => {
+        if (!categoryPanel) return;
+        if (categoryPanel.classList.contains('is-visible')) return;
+        const x = event.clientX;
+        if (x <= OPEN_THRESHOLD) {
+          showCategoryPanel();
+        } else if (x <= PEEK_THRESHOLD) {
+          peekCategoryPanel();
+        } else {
+          hideCategoryPanel();
+        }
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && categoryPanel && categoryPanel.classList.contains('is-visible')) {
+          hideCategoryPanel();
+          if (categoryToggle) categoryToggle.focus();
+        }
+      });
+
+      applyCategory(activeCategory, true);
+    }
 
     let currentIndex = -1;
     let currentThumbs = [];
@@ -249,6 +444,8 @@
         }
       });
     })();
+
+    initCategoryPanel();
 
     // expose for debugging (optional)
     window.__pvLightbox = {
