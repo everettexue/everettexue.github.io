@@ -263,8 +263,13 @@
 
       createCategoryButton('all', 'All', totalCount, false);
 
-      const sorted = Array.from(counts.keys()).sort((a, b) => a.localeCompare(b));
-      sorted.forEach((key) => {
+      const keys = Array.from(counts.keys());
+      const trailingKeys = ['other'];
+      const sorted = keys
+        .filter((key) => !trailingKeys.includes(key))
+        .sort((a, b) => a.localeCompare(b));
+      const tail = trailingKeys.filter((key) => keys.includes(key));
+      [...sorted, ...tail].forEach((key) => {
         createCategoryButton(key, formatCategoryLabel(key), counts.get(key) || 0, false);
       });
 
