@@ -53,7 +53,6 @@
   let categoryToggle = null;
   let edgeHotspot = null;
   let categoryHint = null;
-  let categoryHintDismissed = false;
   const OPEN_THRESHOLD = 68;
   const PEEK_THRESHOLD = 260;
 
@@ -80,18 +79,13 @@
       categoryPanel.classList.add('is-visible');
       categoryPanel.classList.remove('is-peeking');
       if (categoryToggle) categoryToggle.setAttribute('aria-expanded', 'true');
-      if (categoryHint) {
-        categoryHint.classList.add('is-hidden');
-        categoryHintDismissed = true;
-      }
+      if (categoryHint) categoryHint.classList.add('is-hidden');
     }
 
     function peekCategoryPanel() {
       if (!categoryPanel || categoryPanel.classList.contains('is-visible')) return;
       categoryPanel.classList.add('is-peeking');
-      if (categoryHint && !categoryHintDismissed) {
-        categoryHint.classList.remove('is-hidden');
-      }
+      if (categoryHint) categoryHint.classList.remove('is-hidden');
     }
 
     function hideCategoryPanel() {
@@ -99,9 +93,7 @@
       categoryPanel.classList.remove('is-visible');
       categoryPanel.classList.remove('is-peeking');
       if (categoryToggle) categoryToggle.setAttribute('aria-expanded', 'false');
-      if (categoryHint && !categoryHintDismissed) {
-        categoryHint.classList.remove('is-hidden');
-      }
+      if (categoryHint) categoryHint.classList.remove('is-hidden');
     }
 
     function updateCategoryButtonPressed() {
@@ -221,7 +213,7 @@
       if (!categoryHint) {
         categoryHint = document.createElement('div');
         categoryHint.className = 'pv-category-hint';
-        categoryHint.textContent = 'Menu';
+        categoryHint.innerHTML = '<span></span><span></span><span></span>';
         document.body.appendChild(categoryHint);
       }
       edgeHotspot = document.createElement('div');
