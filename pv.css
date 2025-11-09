@@ -151,7 +151,7 @@ img {
 }
 
 .pv-category-panel.is-peeking {
-	transform: translateX(-88%);
+	transform: translateX(-94%);
 	opacity: 1;
 	pointer-events: auto;
 }
