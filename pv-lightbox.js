@@ -52,7 +52,7 @@
   let categoryPanel = null;
   let categoryToggle = null;
   let edgeHotspot = null;
-  const OPEN_THRESHOLD = 55;
+  const OPEN_THRESHOLD = 68;
   const PEEK_THRESHOLD = 260;
 
     function normalizeCategory(name) {
@@ -63,6 +63,14 @@
       const normalized = normalizeCategory(name);
       if (!normalized || normalized === 'all') return 'All';
       return normalized.replace(/[-_]+/g, ' ').replace(/\b\w/g, (ch) => ch.toUpperCase());
+    }
+
+    function isPointerOverNavbar(event) {
+      const navbar = document.querySelector('.navbar');
+      if (!navbar || !event) return false;
+      const rect = navbar.getBoundingClientRect();
+      if (!rect || rect.height <= 0 || rect.width <= 0) return false;
+      return event.clientY >= rect.top && event.clientY <= rect.bottom && event.clientX >= rect.left && event.clientX <= rect.right;
     }
 
     function showCategoryPanel() {
@@ -201,7 +209,10 @@
       edgeHotspot = document.createElement('div');
       edgeHotspot.className = 'pv-edge-hotspot';
       edgeHotspot.setAttribute('aria-hidden', 'true');
-      edgeHotspot.addEventListener('mouseenter', showCategoryPanel);
+      edgeHotspot.addEventListener('mouseenter', (event) => {
+        if (isPointerOverNavbar(event)) return;
+        showCategoryPanel();
+      });
       edgeHotspot.addEventListener('mouseleave', () => hideCategoryPanel());
       document.body.appendChild(edgeHotspot);
 
@@ -215,6 +226,10 @@
       document.addEventListener('mousemove', (event) => {
         if (!categoryPanel) return;
         if (categoryPanel.classList.contains('is-visible')) return;
+        if (isPointerOverNavbar(event)) {
+          hideCategoryPanel();
+          return;
+        }
         const x = event.clientX;
         if (x <= OPEN_THRESHOLD) {
           showCategoryPanel();
