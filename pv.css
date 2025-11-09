@@ -135,8 +135,8 @@ img {
 	position: fixed;
 	top: 0;
 	left: 0;
+	width: min(320px, 22vw);
 	height: 100vh;
-	width: 240px;
 	display: flex;
 	flex-direction: column;
 	gap: 18px;
@@ -160,6 +160,37 @@ img {
 	transform: translateX(0);
 	opacity: 1;
 	pointer-events: auto;
+}
+
+.pv-category-hint {
+	position: fixed;
+	top: 112px;
+	left: 0;
+	width: 60px;
+	height: 42px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 4px;
+	border-radius: 0 42px 42px 0;
+	background: rgba(46,32,70,0.92);
+	box-shadow: 8px 10px 22px rgba(0,0,0,0.32);
+	padding-right: 6px;
+	transform: translateX(-3px);
+	transition: opacity 200ms var(--ease), transform 220ms var(--ease);
+	z-index: 1600;
+	pointer-events: none;
+	opacity: 1;
+}
+
+.pv-category-hint span {
+	display: block;
+	width: 24px;
+	height: 3px;
+	border-radius: 999px;
+	background: rgba(255,255,255,0.9);
+	box-shadow: 0 1px 0 rgba(0,0,0,0.08);
 }
 
 .pv-category-header {
@@ -198,30 +229,11 @@ img {
 }
 
 .pv-category-button:hover,
-.pv-category-button:focus {
-	background: var(--btn-hover);
-	color: #fff;
+.pv-category-button:focus-visible {
+	background: rgba(255,255,255,0.12);
+	color: rgba(255,255,255,0.96);
+	border-color: rgba(255,255,255,0.26);
 	transform: translateX(4px);
-	outline: none;
-}
-
-.pv-category-button.is-active {
-	background: rgba(126,231,255,0.22);
-	border-color: rgba(126,231,255,0.5);
-	color: #fff;
-	box-shadow: 0 10px 24px rgba(0,0,0,0.32);
-	opacity: 1;
-}
-
-.pv-category-button.is-secondary {
-	margin-top: 12px;
-	opacity: 0.75;
-	font-size: 13px;
-}
-
-.pv-category-button.is-secondary:hover,
-.pv-category-button.is-secondary:focus {
-	opacity: 1;
 }
 
 .pv-category-count {
@@ -252,34 +264,9 @@ img {
 	}
 }
 
-.pv-category-hint {
-	position: fixed;
-	top: 112px;
-	left: 0;
-	width: 86px;
-	height: 42px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	border-radius: 0 42px 42px 0;
-	background: rgba(46,32,70,0.9);
-	color: rgba(255,255,255,0.9);
-	font-weight: 700;
-	letter-spacing: 0.08em;
-	text-transform: uppercase;
-	font-size: 11px;
-	box-shadow: 8px 10px 22px rgba(0,0,0,0.32);
-	padding-right: 10px;
-	transform: translateX(-6px);
-	transition: opacity 200ms var(--ease), transform 220ms var(--ease);
-	z-index: 1280;
-	pointer-events: none;
-	opacity: 1;
-}
-
 .pv-category-hint.is-hidden {
 	opacity: 0;
-	transform: translateX(-115%);
+	transform: translateX(-120%);
 }
 
 /* ---- Lightbox styles ---- */
