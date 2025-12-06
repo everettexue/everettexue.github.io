@@ -71,6 +71,24 @@
 				preloader.setAttribute('aria-live', 'off');
 				document.body.classList.add('pv-gallery-ready');
 				document.body.classList.remove('pv-preloading');
+				const tiles = Array.from(grid.querySelectorAll('.grid-wrapper > div'));
+				tiles.forEach((tile, index) => {
+					const jitterX = (Math.random() * 32 - 16).toFixed(1);
+					const jitterRot = (Math.random() * 6 - 3).toFixed(2);
+					const delay = 80 + index * 38;
+					const duration = 820 + Math.random() * 220; // vary a bit for realism
+					tile.style.setProperty('--pv-tile-x', `${jitterX}px`);
+					tile.style.setProperty('--pv-tile-rot', `${jitterRot}deg`);
+					tile.style.setProperty('--pv-tile-delay', `${delay}ms`);
+					tile.style.setProperty('--pv-tile-duration', `${Math.round(duration)}ms`);
+					tile.classList.add('pv-tile-drop');
+					tile.addEventListener('animationend', () => {
+						tile.classList.remove('pv-tile-drop');
+						tile.style.transform = '';
+						tile.style.removeProperty('--pv-tile-delay');
+						tile.style.removeProperty('--pv-tile-duration');
+					}, { once: true });
+				});
 				requestAnimationFrame(() => {
 					preloader.classList.add('is-hidden');
 					setTimeout(() => {
