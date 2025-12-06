@@ -38,12 +38,31 @@
     const downloadBtn = overlay.querySelector('.lb-download');
     const captionEl = overlay.querySelector('.lb-caption');
 
-  stageEl.classList.add('is-loading');
+  flagStageLoading();
 
     const tileSelector = '[data-categories]';
     const EDGE_OPEN_PX = 64;
     const EDGE_PEEK_PX = 240;
     const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
+    let stageHasAnimated = true; // disable per-image arrival animation in lightbox
+
+    function setPlayfulEntryVars(img) {
+      if (!img) return;
+      const jitterX = (Math.random() * 28 - 14).toFixed(1); // -14px..14px
+      const jitterRot = (Math.random() * 7 - 3.5).toFixed(2); // -3.5deg..3.5deg
+      img.style.setProperty('--lb-entry-x', `${jitterX}px`);
+      img.style.setProperty('--lb-entry-rot', `${jitterRot}deg`);
+    }
+
+    function flagStageLoading() {
+      stageEl.classList.add('is-loading');
+      stageEl.classList.remove('is-ready');
+    }
+
+    function playStageArrival() {
+      // Arrival animation is suppressed; just clear loading state once.
+      stageEl.classList.remove('is-loading');
+    }
 
     let currentIndex = -1;
     let currentThumbs = [];
@@ -159,7 +178,8 @@
       thumb.decoding = thumb.decoding || 'async';
 
       activeLightboxImg = thumb;
-      stageEl.classList.remove('is-loading');
+      setPlayfulEntryVars(activeLightboxImg);
+      playStageArrival();
       proxyImg.hidden = true;
       proxyImg.dataset.activeSrc = '';
       return thumb;
@@ -175,7 +195,8 @@
 
       adoptedPlacements.set(image, { marker: null, isFromGrid: false });
       stageEl.appendChild(image);
-      stageEl.classList.remove('is-loading');
+      setPlayfulEntryVars(image);
+      playStageArrival();
       proxyImg.hidden = true;
       proxyImg.dataset.activeSrc = '';
       activeLightboxImg = image;
@@ -187,7 +208,7 @@
         proxyImg.hidden = false;
         proxyImg.dataset.activeSrc = '';
         proxyImg.removeAttribute('src');
-        stageEl.classList.add('is-loading');
+        flagStageLoading();
       };
 
       if (!thumb) {
@@ -216,7 +237,7 @@
       function loadViaCache() {
         releaseActiveImage();
         proxyImg.hidden = false;
-        stageEl.classList.add('is-loading');
+        flagStageLoading();
         proxyImg.removeAttribute('src');
 
         const cached = getOrCreateImage(targetSrc);
@@ -252,7 +273,7 @@
 
       if (sameResource && !thumb.complete) {
         releaseActiveImage();
-        stageEl.classList.add('is-loading');
+        flagStageLoading();
         proxyImg.hidden = true;
         proxyImg.dataset.activeSrc = targetSrc;
 
@@ -505,7 +526,8 @@
       }
       if (index < 0) index = 0;
       if (index >= currentThumbs.length) index = currentThumbs.length - 1;
-      stageEl.classList.add('is-loading');
+      flagStageLoading();
+      stageHasAnimated = true;
       proxyImg.hidden = false;
       setStateForIndex(index);
       overlay.classList.add('open');
@@ -523,7 +545,8 @@
         proxyImg.src = '';
         proxyImg.dataset.activeSrc = '';
         proxyImg.alt = '';
-        stageEl.classList.add('is-loading');
+        flagStageLoading();
+        stageHasAnimated = true;
       }, 300);
     }
 
