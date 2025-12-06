@@ -57,6 +57,22 @@ img {
 	cursor: pointer;
 }
 
+/* hide tiles until gallery ready to enable entrance animation */
+body:not(.pv-gallery-ready) .grid-wrapper > div {
+	opacity: 0;
+	visibility: hidden;
+	transform: translateY(-120vh) scale(.9) rotate(-4deg);
+}
+
+body.pv-gallery-ready .grid-wrapper > div.pv-tile-drop {
+	animation: pv-tile-drop var(--pv-tile-duration, 920ms) cubic-bezier(.18, .9, .24, 1.18) both;
+	animation-delay: var(--pv-tile-delay, 0ms);
+}
+
+body.pv-gallery-ready .grid-wrapper > div {
+	visibility: visible;
+}
+
 /* Hover animations for tiles */
 .grid-wrapper > div:hover {
 	transform: translateY(-8px) scale(1.02);
@@ -367,10 +383,58 @@ img {
 	background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02));
 }
 
+.lb-image-stage.is-ready .lb-image-active {
+	animation: lb-drop-in 640ms cubic-bezier(.22, 1, .36, 1);
+	transform-origin: center top;
+	will-change: transform, opacity;
+}
+
 /* when overlay is open, animate image in */
 .lb-overlay.open .lb-image {
 	transform: translateY(0) scale(1);
 	opacity: 1;
+}
+
+@keyframes lb-drop-in {
+	0% {
+		opacity: 0;
+		transform: translate(var(--lb-entry-x, 0), -18vh) scale(.94) rotate(var(--lb-entry-rot, -2deg));
+	}
+	68% {
+		opacity: 1;
+		transform: translate(var(--lb-entry-x, 0), 10px) scale(1.03) rotate(calc(var(--lb-entry-rot, 0deg) * -0.45));
+	}
+	100% {
+		opacity: 1;
+		transform: translate(var(--lb-entry-x, 0), 0) scale(1) rotate(0deg);
+	}
+}
+
+@keyframes pv-tile-drop {
+	0% {
+		opacity: 0;
+		transform: translate(var(--pv-tile-x, 0), -28vh) scale(.9) rotate(var(--pv-tile-rot, -3deg));
+	}
+	55% {
+		opacity: 1;
+		transform: translate(var(--pv-tile-x, 0), 14px) scale(1.06) rotate(calc(var(--pv-tile-rot, 0deg) * -0.3));
+	}
+	70% {
+		opacity: 1;
+		transform: translate(var(--pv-tile-x, 0), -10px) scale(.98) rotate(calc(var(--pv-tile-rot, 0deg) * 0.15));
+	}
+	82% {
+		opacity: 1;
+		transform: translate(var(--pv-tile-x, 0), 6px) scale(1.02) rotate(calc(var(--pv-tile-rot, 0deg) * -0.08));
+	}
+	92% {
+		opacity: 1;
+		transform: translate(var(--pv-tile-x, 0), -4px) scale(.995) rotate(calc(var(--pv-tile-rot, 0deg) * 0.04));
+	}
+	100% {
+		opacity: 1;
+		transform: translate(0, 0) scale(1) rotate(0deg);
+	}
 }
 
 
