@@ -53,6 +53,10 @@
 			const images = Array.from(grid.querySelectorAll('img'));
 			let pending = images.length;
 			let finished = false;
+			const decodePromises = images.map((img) => (img.decode ? img.decode().catch(() => {}) : Promise.resolve()));
+			const tiles = Array.from(grid.querySelectorAll('.grid-wrapper > div'));
+			const MAX_DECODE_WAIT_MS = 720;
+			const FAILSAFE_MS = 8000;
 			const statusText = preloader.querySelector('.pv-preloader-text');
 			const total = pending;
 
@@ -63,37 +67,66 @@
 				statusText.textContent = percent >= 100 ? 'Preparing gallery...' : `Loading gallery... ${percent}%`;
 			}
 
+			function applyTileAnimationsChunked() {
+				return new Promise((resolve) => {
+					const CHUNK = 6;
+					let cursor = 0;
+					function applyChunk() {
+						const next = Math.min(cursor + CHUNK, tiles.length);
+						for (let i = cursor; i < next; i += 1) {
+							const tile = tiles[i];
+							const jitterX = (Math.random() * 32 - 16).toFixed(1);
+							const jitterRot = (Math.random() * 6 - 3).toFixed(2);
+							const delay = 80 + i * 38;
+							const duration = 820 + Math.random() * 220;
+							tile.style.setProperty('--pv-tile-x', `${jitterX}px`);
+							tile.style.setProperty('--pv-tile-rot', `${jitterRot}deg`);
+							tile.style.setProperty('--pv-tile-delay', `${delay}ms`);
+							tile.style.setProperty('--pv-tile-duration', `${Math.round(duration)}ms`);
+							tile.classList.add('pv-tile-drop');
+							tile.addEventListener('animationend', () => {
+								tile.classList.remove('pv-tile-drop');
+								tile.style.transform = '';
+								tile.style.removeProperty('--pv-tile-delay');
+								tile.style.removeProperty('--pv-tile-duration');
+							}, { once: true });
+						}
+						cursor = next;
+						if (cursor < tiles.length) {
+							requestAnimationFrame(applyChunk);
+						} else {
+							resolve();
+						}
+					}
+					requestAnimationFrame(applyChunk);
+				});
+			}
+
 			function finalize() {
 				if (finished) return;
 				finished = true;
-				if (statusText) statusText.textContent = 'Gallery ready';
-				preloader.setAttribute('aria-busy', 'false');
-				preloader.setAttribute('aria-live', 'off');
-				document.body.classList.add('pv-gallery-ready');
-				document.body.classList.remove('pv-preloading');
-				const tiles = Array.from(grid.querySelectorAll('.grid-wrapper > div'));
-				tiles.forEach((tile, index) => {
-					const jitterX = (Math.random() * 32 - 16).toFixed(1);
-					const jitterRot = (Math.random() * 6 - 3).toFixed(2);
-					const delay = 80 + index * 38;
-					const duration = 820 + Math.random() * 220; // vary a bit for realism
-					tile.style.setProperty('--pv-tile-x', `${jitterX}px`);
-					tile.style.setProperty('--pv-tile-rot', `${jitterRot}deg`);
-					tile.style.setProperty('--pv-tile-delay', `${delay}ms`);
-					tile.style.setProperty('--pv-tile-duration', `${Math.round(duration)}ms`);
-					tile.classList.add('pv-tile-drop');
-					tile.addEventListener('animationend', () => {
-						tile.classList.remove('pv-tile-drop');
-						tile.style.transform = '';
-						tile.style.removeProperty('--pv-tile-delay');
-						tile.style.removeProperty('--pv-tile-duration');
-					}, { once: true });
-				});
-				requestAnimationFrame(() => {
-					preloader.classList.add('is-hidden');
-					setTimeout(() => {
-						if (preloader.parentNode) preloader.parentNode.removeChild(preloader);
-					}, 600);
+				const settleAfterDecode = decodePromises.length
+					? Promise.race([
+						Promise.allSettled(decodePromises),
+						new Promise((resolve) => setTimeout(resolve, MAX_DECODE_WAIT_MS))
+					])
+					: Promise.resolve();
+
+				settleAfterDecode.finally(() => {
+					if (statusText) statusText.textContent = 'Gallery ready';
+					preloader.setAttribute('aria-busy', 'false');
+					preloader.setAttribute('aria-live', 'off');
+					document.body.classList.add('pv-gallery-ready', 'pv-animating');
+					document.body.classList.remove('pv-preloading');
+					applyTileAnimationsChunked().finally(() => {
+						document.body.classList.remove('pv-animating');
+						requestAnimationFrame(() => {
+							preloader.classList.add('is-hidden');
+							setTimeout(() => {
+								if (preloader.parentNode) preloader.parentNode.removeChild(preloader);
+							}, 600);
+						});
+					});
 				});
 			}
 
@@ -118,7 +151,7 @@
 			});
 
 			updateStatus();
-			setTimeout(finalize, 8000);
+			setTimeout(finalize, FAILSAFE_MS);
 		}
 
 		function initNavbar() {
