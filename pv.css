@@ -61,7 +61,21 @@ img {
 body:not(.pv-gallery-ready) .grid-wrapper > div {
 	opacity: 0;
 	visibility: hidden;
-	transform: translateY(-120vh) scale(.9) rotate(-4deg);
+	transform: translate3d(0, -120px, 0) scale(.96) rotate(-3deg);
+	backface-visibility: hidden;
+}
+
+/* keep tiles in their start pose until their animation begins to avoid visible snaps */
+body.pv-animating .grid-wrapper > div {
+	opacity: 0;
+	visibility: hidden;
+	transform: translate3d(0, -120px, 0) scale(.96) rotate(-3deg);
+}
+
+/* ensure animated tiles become visible as soon as the keyframes apply */
+.pv-tile-drop {
+	opacity: 1 !important;
+	visibility: visible !important;
 }
 
 body.pv-gallery-ready .grid-wrapper > div.pv-tile-drop {
@@ -413,27 +427,27 @@ body.pv-gallery-ready .grid-wrapper > div {
 @keyframes pv-tile-drop {
 	0% {
 		opacity: 0;
-		transform: translate(var(--pv-tile-x, 0), -28vh) scale(.9) rotate(var(--pv-tile-rot, -3deg));
+		transform: translate3d(var(--pv-tile-x, 0), -120px, 0) scale(.94) rotate(var(--pv-tile-rot, -3deg));
 	}
 	55% {
 		opacity: 1;
-		transform: translate(var(--pv-tile-x, 0), 14px) scale(1.06) rotate(calc(var(--pv-tile-rot, 0deg) * -0.3));
+		transform: translate3d(var(--pv-tile-x, 0), 14px, 0) scale(1.05) rotate(calc(var(--pv-tile-rot, 0deg) * -0.3));
 	}
 	70% {
 		opacity: 1;
-		transform: translate(var(--pv-tile-x, 0), -10px) scale(.98) rotate(calc(var(--pv-tile-rot, 0deg) * 0.15));
+		transform: translate3d(var(--pv-tile-x, 0), -8px, 0) scale(.99) rotate(calc(var(--pv-tile-rot, 0deg) * 0.15));
 	}
 	82% {
 		opacity: 1;
-		transform: translate(var(--pv-tile-x, 0), 6px) scale(1.02) rotate(calc(var(--pv-tile-rot, 0deg) * -0.08));
+		transform: translate3d(var(--pv-tile-x, 0), 5px, 0) scale(1.015) rotate(calc(var(--pv-tile-rot, 0deg) * -0.08));
 	}
 	92% {
 		opacity: 1;
-		transform: translate(var(--pv-tile-x, 0), -4px) scale(.995) rotate(calc(var(--pv-tile-rot, 0deg) * 0.04));
+		transform: translate3d(var(--pv-tile-x, 0), -3px, 0) scale(.997) rotate(calc(var(--pv-tile-rot, 0deg) * 0.04));
 	}
 	100% {
 		opacity: 1;
-		transform: translate(0, 0) scale(1) rotate(0deg);
+		transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
 	}
 }
 
