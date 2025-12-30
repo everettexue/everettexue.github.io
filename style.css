@@ -17,7 +17,8 @@
   position: relative;
   overflow: hidden;
   background-color: #fff3d0;
-  z-index: -2
+  z-index: -2;
+  min-height: 100vh;
 }
 
 .dot {
@@ -76,7 +77,7 @@ h2 {
   font-family: 'NMSGeoSans', sans-serif;
   font-size: 6.5rem;
   color: #1f1230;
-  opacity: 0;
+  opacity: 1;
 
   white-space: nowrap;
   text-align: center;
@@ -105,16 +106,16 @@ h2 {
 /* Layout */
 .project-entry {
   display: flex;
-  gap: 3.11vw;
+  gap: 3vw;
   align-items: flex-start;
   margin-top: 50px;
-  margin-left: -13vw;
+  margin-left: -4vw;
 }
 
 .project-image {
   width: 33vw;
   object-fit: cover; /* ensures image fills box nicely */
-  transform: translate(-7.45vw);
+  transform: translate(-2vw);
 
 }
 
@@ -123,7 +124,7 @@ h2 {
   max-width: 600px;
   margin-left: 6vh;
   margin-top: -55px;
-  transform: translate(-0.54vw);
+  transform: translate(0);
 
 }
 
@@ -174,7 +175,7 @@ h2 {
   padding: 0;
   outline: none;
   overflow: visible;
-  transform: translate(13.56vw, -11.58vh);
+  transform: translate(0, 0);
 }
 .ui-button__background {
   --gradient-background: #1f1230;
@@ -285,4 +286,47 @@ font-weight: bold;
 
 .navbar a:hover {
 color: #007bff;
+}
+
+/* Subpage layout */
+.subpage-content {
+  max-width: 960px;
+  margin: 140px auto 120px;
+  padding: 0 24px;
+}
+
+.subpage-title {
+  display: block;
+  height: auto;
+  margin: 0 0 32px;
+  font-family: 'NMSGeoSans', sans-serif;
+  font-size: 3.5rem;
+  color: #1f1230;
+  opacity: 1;
+  transform: none;
+  text-align: left;
+  white-space: normal;
+}
+
+.subpage-section {
+  margin-top: 48px;
+}
+
+.subpage-section-title {
+  display: block;
+  position: static;
+  margin: 0 0 16px;
+  font-family: 'NMSGeoSans', sans-serif;
+  font-size: 2.2rem;
+  color: #1f1230;
+  opacity: 1;
+  transform: none;
+  text-align: left;
+  white-space: normal;
+}
+
+.subpage-text {
+  font-size: 1.1rem;
+  color: #1f1230;
+  line-height: 1.6;
 }

@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+
+<html class="no-js" lang="en">
+
+<head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+	<!-- Page Info -->
+	<link rel="shortcut icon" href="../../images/favicon.ico" data-cms-original-href="/images/favicon.png" />
+	<title>Flex Splines</title>
+	<meta name="description" content="" />
+
+	<!-- Font Embed Code -->
+	<link rel="stylesheet" href="../../css/google-fonts.css" />
+
+	<!-- Styles -->
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<link rel="stylesheet" href="../../css/journal.css" data-cms-original-href="/css/style.css" />
+
+	<!-- Icons -->
+	<script defer src="../../js/solid.js"></script>
+	<script defer src="../../js/brands.js"></script>
+	<script defer src="../../js/fontawesome.js"></script>
+
+	<!-- Custom Styles -->
+	<style>
+		@font-face {
+			font-family: 'NMSGeoSans';
+			src: url('../../fonts/NMSGeoSans_Kerned.ttf') format('truetype');
+		}
+
+		html,
+		body,
+		h1,
+		h2,
+		h3,
+		h4,
+		h5,
+		h6,
+		p,
+		a,
+		button {
+			font-family: 'NMSGeoSans', sans-serif !important;
+		}
+
+		::selection {
+			background: Highlight;
+			color: HighlightText;
+		}
+
+		body {
+			background-color: #fff3da;
+			background-image: radial-gradient(rgba(0, 0, 0, 0.101) 1.25px, transparent 2px);
+			background-size: 32px 32px;
+		}
+
+		a:hover,
+		a:focus {
+			color: #1f1230;
+		}
+
+		.button,
+		.button--large {
+			color: #fff3da;
+			border: 2px solid #1f1230;
+			background: #1f1230;
+			transition: color 0.3s ease, background 0.3s ease, border-color 0.3s ease, text-shadow 0.3s ease;
+		}
+
+		.button:hover,
+		.button--large:hover {
+			color: #fff3da;
+			background: #1f1230;
+			border-color: #1f1230;
+			text-shadow: 0 0 8px rgba(255, 243, 218, 0.9), 0 0 14px rgba(255, 243, 218, 0.7);
+		}
+
+		.wrap.intro-wrap {
+			max-width: 880px;
+		}
+
+		.single .wrap {
+			max-width: 880px;
+		}
+
+		/* Page fade transitions */
+		body.page-fade-out {
+			opacity: 0;
+			pointer-events: none;
+			transition: opacity 0.4s ease;
+		}
+
+		.content-fade {
+			opacity: 0;
+			transition: opacity 0.65s ease;
+		}
+
+		.content-fade.is-visible {
+			opacity: 1;
+			transform: none;
+		}
+	</style>
+</head>
+
+<body>
+
+	<header class="header">
+		<div class="header-image header-image--on" style="background-image: url(../../images/harmonicdrive.jpg);" data-cms-original-style="background-image: url(/images/demo/home.jpg);"></div>
+		<div class="header-image"></div>
+		<div class="header-overlay"></div>
+
+		<div class="header__content">
+			<a class="header__title" href="../../index.html">
+				3D Printed Harmonic Drive
+			</a>
+			<p class="header__tagline">for a robot arm.</p>
+			<div class="menu">
+				<div class="menu__toggle js-menu-toggle">
+					<div class="menu__toggle__icon"><span></span></div>
+				</div>
+				<div class="menu__wrap">
+					<ul class="menu__list">
+						<li class="menu__list__item">
+							<a href="../../index.html" class="menu__list__item__link">Home</a>
+						</li>
+						<li class="menu__list__item">
+							<a href="../../photovideo.html" class="menu__list__item__link">Photos &amp; Videos</a>
+						</li>
+						<li class="menu__list__item">
+							<a href="#" class="menu__list__item__link">About</a>
+						</li>
+						<li class="menu__list__item">
+							<a href="#" class="menu__list__item__link">Contact</a>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</header>
+
+	<div class="page">
+		<div class="page__content content-fade" data-page-title="Hitting The Road – Journal" data-image="/images/demo/image-01.jpg" data-cms-content-wrapper="/_layouts/default.html">
+
+			<section class="intro">
+				<div class="wrap intro-wrap">
+					<h1>A New Driver</h1>
+					<p>27 December 2025</p>
+				</div>
+			</section>
+
+			<section class="single">
+				<div class="wrap">
+					<p>Switching from a L298N to a TMC2209 was much harder than I thought.</p>
+					<p>When I first got the TMC2209 I expected to connect my stepper motor and then start testing torque with it but I should've known that it would not be that easy.</p>
+					<p><img src="/images/oldvnew.jpg" alt="" data-cms-original-src="" /></p>
+					<p>The driver on the right is almost <strong>5 times</strong> older than the one on the left</p>
+					<p>So you would expect the new one to be</p>
+					<ul>
+						<li>Quieter</li>
+						<li>Easier to set up</li>
+						<li>And way faster</li>
+					</ul>
+					<p>But in reality it was</p>
+					<ul>
+						<li>Only slightly quieter</li>
+						<li><strong>And much harder to set up</strong></li>
+					</ul>
+					<p>When I plugged everything into the new driver my first impressions where very good, but that all dissapeared when I realized how little torque it was outputting.</p>
+					<p>So my first idea after googling my issue was to turn the potentiometer on the driver to increase torque but after turning it a bit too much the driver just stopped working.</p>
+					<p>I still don't know why it broke, but after that I decided to not use the potentiometer on my second driver.</p>
+					<p></p>
+					<p>After <strong>really long time</strong> of reconnecting, rewiring, and coding later I finally realized that the guide I told me to connect only <strong>one</strong>, not both, of my PDN pins into <strong>two</strong> of the microcontroller pins, one for input and the other for output, with a resistor.</p>
+					<p>In the end the result was a decently quiet motor and harmonic drive</p>
+					<video width="640" height="288" controls preload="metadata">
+						<source src="/images/IMG_6575.mp4" type="video/mp4" />
+						Your browser does not support the video tag.
+					</video>
+			
+					<p>It sounds louder in real life than in the recording </p>
+					<hr />
+<h3>Now i'm waiting for some stuff from amazon to arrive.</h3>
+			</section>
+
+		</div>
+
+	</div>
+
+	<!-- Javascript Assets -->
+	<script src="../../js/jquery.min.js"></script>
+	<script src="../../js/plugins-min.js" data-cms-original-src="/js/plugins-min.js"></script>
+	<script src="../../js/journal-min.js" data-cms-original-src="/js/journal-min.js"></script>
+	<script>
+		document.addEventListener('DOMContentLoaded', function () {
+			// Fade in content only (leave header/image untouched)
+			var contentBlocks = document.querySelectorAll('.content-fade');
+			contentBlocks.forEach(function (el) {
+				requestAnimationFrame(function () {
+					el.classList.add('is-visible');
+				});
+			});
+
+			// Fade out before navigating
+			var isTransitioning = false;
+			var links = Array.prototype.slice.call(document.querySelectorAll('a[href]'));
+			var buttons = Array.prototype.slice.call(document.querySelectorAll('button[href]'));
+			var navigables = links.concat(buttons);
+
+			navigables.forEach(function (el) {
+				el.addEventListener('click', function (e) {
+					var href = el.getAttribute('href');
+					if (!href || href.indexOf('#') === 0 || el.target === '_blank') {
+						return;
+					}
+
+					// Only intercept same-origin links
+					var url = new URL(href, window.location.href);
+					if (url.origin !== window.location.origin) {
+						return;
+					}
+
+					if (isTransitioning) {
+						e.preventDefault();
+						return;
+					}
+
+					isTransitioning = true;
+					e.preventDefault();
+					document.body.classList.add('page-fade-out');
+					setTimeout(function () {
+						window.location.href = url.href;
+					}, 400);
+				});
+			});
+		});
+	</script>
+
+</body>
+
+</html>

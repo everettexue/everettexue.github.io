@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+
+<html class="no-js" lang="en">
+
+<head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+	<!-- Page Info -->
+	<link rel="shortcut icon" href="../../images/favicon.ico" data-cms-original-href="/images/favicon.png" />
+	<title>Stuff From Amazon</title>
+	<meta name="description" content="" />
+
+	<!-- Font Embed Code -->
+	<link rel="stylesheet" href="../../css/google-fonts.css" />
+
+	<!-- Styles -->
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<link rel="stylesheet" href="../../css/journal.css" data-cms-original-href="/css/style.css" />
+
+	<!-- Icons -->
+	<script defer src="../../js/solid.js"></script>
+	<script defer src="../../js/brands.js"></script>
+	<script defer src="../../js/fontawesome.js"></script>
+
+	<!-- Custom Styles -->
+	<style>
+		@font-face {
+			font-family: 'NMSGeoSans';
+			src: url('../../fonts/NMSGeoSans_Kerned.ttf') format('truetype');
+		}
+
+		html,
+		body,
+		h1,
+		h2,
+		h3,
+		h4,
+		h5,
+		h6,
+		p,
+		a,
+		button {
+			font-family: 'NMSGeoSans', sans-serif !important;
+		}
+
+		::selection {
+			background: Highlight;
+			color: HighlightText;
+		}
+
+		body {
+			background-color: #fff3da;
+			background-image: radial-gradient(rgba(0, 0, 0, 0.101) 1.25px, transparent 2px);
+			background-size: 32px 32px;
+		}
+
+		a:hover,
+		a:focus {
+			color: #1f1230;
+		}
+
+		a,
+		a:visited {
+			text-decoration-color: #1f1230;
+		}
+
+		a1 {
+			color: #1f1230;
+			text-decoration: underline;
+			text-decoration-color: #1f1230;
+			cursor: pointer;
+		}
+
+		a1:hover,
+		a1:focus {
+			color: #1f1230;
+			text-decoration-color: #1f1230;
+		}
+
+		.button,
+		.button--large {
+			color: #fff3da;
+			border: 2px solid #1f1230;
+			background: #1f1230;
+			transition: color 0.3s ease, background 0.3s ease, border-color 0.3s ease, text-shadow 0.3s ease;
+		}
+
+		.button:hover,
+		.button--large:hover {
+			color: #fff3da;
+			background: #1f1230;
+			border-color: #1f1230;
+			text-shadow: 0 0 8px rgba(255, 243, 218, 0.9), 0 0 14px rgba(255, 243, 218, 0.7);
+		}
+
+		.wrap.intro-wrap {
+			max-width: 880px;
+		}
+
+		.single .wrap {
+			max-width: 880px;
+		}
+
+		/* Page fade transitions */
+		body.page-fade-out {
+			opacity: 0;
+			pointer-events: none;
+			transition: opacity 0.4s ease;
+		}
+
+		.content-fade {
+			opacity: 0;
+			transition: opacity 0.65s ease;
+		}
+
+		.content-fade.is-visible {
+			opacity: 1;
+			transform: none;
+		}
+	</style>
+</head>
+
+<body>
+
+	<header class="header">
+		<div class="header-image header-image--on" style="background-image: url(../../images/harmonicdrive.jpg);" data-cms-original-style="background-image: url(/images/demo/home.jpg);"></div>
+		<div class="header-image"></div>
+		<div class="header-overlay"></div>
+
+		<div class="header__content">
+			<a class="header__title" href="../../index.html">
+				3D Printed Harmonic Drive
+			</a>
+			<p class="header__tagline">for a robot arm.</p>
+			<div class="menu">
+				<div class="menu__toggle js-menu-toggle">
+					<div class="menu__toggle__icon"><span></span></div>
+				</div>
+				<div class="menu__wrap">
+					<ul class="menu__list">
+						<li class="menu__list__item">
+							<a href="../../index.html" class="menu__list__item__link">Home</a>
+						</li>
+						<li class="menu__list__item">
+							<a href="../../photovideo.html" class="menu__list__item__link">Photos &amp; Videos</a>
+						</li>
+						<li class="menu__list__item">
+							<a href="#" class="menu__list__item__link">About</a>
+						</li>
+						<li class="menu__list__item">
+							<a href="#" class="menu__list__item__link">Contact</a>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</header>
+
+	<div class="page">
+		<div class="page__content content-fade" data-page-title="Hitting The Road – Journal" data-image="/images/demo/image-01.jpg" data-cms-content-wrapper="/_layouts/default.html">
+
+			<section class="intro">
+				<div class="wrap intro-wrap">
+					<h1>Stuff From Amazon</h1>
+					<p>29 December 2025</p>
+				</div>
+			</section>
+
+			<section class="single">
+				<div class="wrap">
+					<p>Adding ball bearings and using heat set inserts.</p>
+					<p>When my ball bearings arrived I 3d modeled a way for them to be carried in the drive and started the print.</p>
+					<p><img src="/images/bearings.jpg" alt="" data-cms-original-src="" /></p>
+					<hr />
+                    <p>I switched from a version where there are ball bearings that connect to the wave generator</p>
+                    <p>to a version where the ball bearings are placed around the outside of the wave generator which from videos i've watched, is more efficient than my old design.</p>
+                    <p>The first issue I had was mostly my fault because I had to figure out size the wave generator so that, with the balls between it and the flex spline, it would still allow the flex spline to interface with the circular spline.</p>
+                    <p>But when I printed the first wave generator of this new version I realized that it was no where close to being able to fit all the balls</p>
+                    <p>so I checked the CAD again and realized that because I was drawing the ellipse of the wave generator with its diameter I needed to multiply the diameter of the ball by 2.</p>
+                    <p>For my second iteration I also decided to print the flex spline out of tpu because when I printed it out of pla the first time it cracked in half when I was adding balls.</p>
+                    <p>I my Bambulab h2d to print all of the parts but the one problem it has is that the ams doesn't support tpu, so Bambu recommends using the AMS HT which is another $100 on top of the already $2000 printer which I didn't want to pay.</p>
+                    <p>So the solution I used was to open the lid of the printer and put my AMS on the side of printer, then remove the ptfe tube and feed the tpu from the spool, which is in the ams so that it can roll around on the rollers, into the printer in a really akward setup, which is why I didn't want to print tpu for the first iteration.</p>
+
+                    <p><img src="/images/h2dsetup.jpg" alt="" data-cms-original-src="" /></p>
+                    <hr />
+                    <p>The first version of the new design had one big problem that because each ball bearing I used was 1/4" in diameter when I put them between the flex spline and wave generator there would be a very small gap, that when the peak of the wave generator touched it, it would cause the torque output to drop very low for a split second. The gap also caused a really loud rattling noise</p>
+                    <p>You can see the gap in this slow motion video I recorded</p>
+                    <video width="640" height="288" controls preload="metadata">
+						<source src="/images/IMG_6608.mp4" type="video/mp4" />
+						Your browser does not support the video tag.
+					</video>
+                    <hr />
+                    <p>I decided to make the inner diameter of the flex spline smaller so the gap would be smaller but after printing all the parts the gap was still there, just smaller. I also decided while I was designing the second version to make the gear ratio higher by adding more teeth.</p>
+                    <p>Also after that design I ran out of black filament so the new parts are red.</p>
+                    <p>The next iteration I made had ball bearings on the bottom because I saw that the motor was losing a lot of its torque to just the wave generator rubbing against the housing.</p>
+                    <p>You can see how I fixed it in this video</p>
+                    <video width="640" height="288" controls preload="metadata">
+						<source src="/images/IMG_6630.mp4" type="video/mp4" />
+						Your browser does not support the video tag.
+					</video>
+                    <hr />
+                    <p>And heres the <a1 href="https://cad.onshape.com/documents/0abb66e5a2a1ed2fbdeb3d1e/w/d398a1a57ebf2634a2977687/e/46f8cdb28a84deb965abf501?renderMode=0&uiState=69541daefc39cdbebb8f2c90">Onshape</a1> document.</p>
+                    <hr />
+                    <h3>This might be the last devlog on this project for a while because I think the current harmonic drive is good enough for the robot arm i'm making.</h3>
+			</section>
+
+		</div>
+
+	</div>
+
+	<!-- Javascript Assets -->
+	<script src="../../js/jquery.min.js"></script>
+	<script src="../../js/plugins-min.js" data-cms-original-src="/js/plugins-min.js"></script>
+	<script src="../../js/journal-min.js" data-cms-original-src="/js/journal-min.js"></script>
+	<script>
+			document.addEventListener('DOMContentLoaded', function () {
+			// Fade in content only (leave header/image untouched)
+			var contentBlocks = document.querySelectorAll('.content-fade');
+			contentBlocks.forEach(function (el) {
+				requestAnimationFrame(function () {
+					el.classList.add('is-visible');
+				});
+			});
+
+			// Fade out before navigating
+			var isTransitioning = false;
+			var links = Array.prototype.slice.call(document.querySelectorAll('a[href]'));
+			var linksAlt = Array.prototype.slice.call(document.querySelectorAll('a1[href]'));
+			var buttons = Array.prototype.slice.call(document.querySelectorAll('button[href]'));
+			var navigables = links.concat(linksAlt).concat(buttons);
+
+			navigables.forEach(function (el) {
+				el.addEventListener('click', function (e) {
+					var href = el.getAttribute('href');
+					if (!href || href.indexOf('#') === 0 || el.target === '_blank') {
+						return;
+					}
+
+					// Only intercept same-origin links
+					var url = new URL(href, window.location.href);
+					if (url.origin !== window.location.origin) {
+						return;
+					}
+
+					if (isTransitioning) {
+						e.preventDefault();
+						return;
+					}
+
+					isTransitioning = true;
+					e.preventDefault();
+					document.body.classList.add('page-fade-out');
+					setTimeout(function () {
+						window.location.href = url.href;
+					}, 400);
+				});
+			});
+
+			// Ensure custom <a1> elements navigate since they lack native link behavior
+			linksAlt.forEach(function (el) {
+				el.addEventListener('click', function (e) {
+					var href = el.getAttribute('href');
+					if (!href) return;
+					e.preventDefault();
+					window.location.href = href;
+				});
+			});
+		});
+	</script>
+
+</body>
+
+</html>

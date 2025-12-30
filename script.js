@@ -1,6 +1,7 @@
 gsap.registerPlugin(ScrollTrigger, ScrollSmoother, SplitText);
 
 const grid = document.querySelector('.background-grid');
+const enableGridHover = grid && !document.body.classList.contains('no-grid-animate');
 const spacing = 32; // space between dots
 const radius = 250; // effect radius
 const strength = 50; // max repulsion distance
@@ -19,32 +20,14 @@ window.addEventListener("load", () => {
 gsap.set("h1", { opacity: 1 });
 
 let split = SplitText.create("#heading", { type: "chars" });
-//now animate each character into place from 20px below, fading in:
+// now animate each character into place from 20px below, fading in:
 gsap.from(split.chars, {
   y: 56,
   autoAlpha: 0,
   stagger: 0.05
 });
 
-// Set initial opacity (if not already in CSS)
-gsap.set("h2", { opacity: 1 });
-
-// Split the text into characters
-let splitt = SplitText.create("#title", { type: "chars" });
-
-// Animate when it enters the viewport
-gsap.from(splitt.chars, {
-  y: 52,
-  autoAlpha: 0,
-  stagger: 0.05,
-  duration: 1,
-  ease: "power2.out",
-  scrollTrigger: {
-    trigger: "#title",
-    start: "top 80%",  // when top of h2 is 80% down the viewport
-    toggleActions: "play none none none" // play once
-  }
-});
+// No SplitText animation on h2/title (was removed intentionally)
 
 gsap.fromTo("#line-under-title",
   { width: "0%", opacity: 0 },
@@ -60,7 +43,6 @@ gsap.fromTo("#line-under-title",
     }
   }
 );
-
 
 
 
@@ -107,11 +89,22 @@ function handleMouseMove(e) {
   });
 }
 
-grid.addEventListener('mousemove', handleMouseMove);
-grid.addEventListener('mouseleave', () => {
-  dots.forEach(dot => dot.el.style.transform = 'translate(0, 0)');
-});
+if (grid) {
+  createGridDots();
 
+  if (enableGridHover) {
+    grid.addEventListener('mousemove', handleMouseMove);
+    grid.addEventListener('mouseleave', () => {
+      dots.forEach(dot => dot.el.style.transform = 'translate(0, 0)');
+    });
+  }
+
+  window.addEventListener('resize', () => {
+    dots.forEach(dot => dot.el.remove());
+    dots = [];
+    createGridDots();
+  });
+}
 
 
 window.addEventListener('scroll', () => {
@@ -125,29 +118,13 @@ window.addEventListener('scroll', () => {
 
 
 
-
-
-createGridDots();
-
-window.addEventListener('resize', () => {
-  dots.forEach(dot => dot.el.remove());
-  dots = [];
-  createGridDots();
-});
-
-
-
-
-
-
-
-
-// Animate the shine on hover/focus using GSAP
+// Animate the shine on hover/focus using GSAP (guard for missing button)
 const btn = document.getElementById('shine-btn');
 const gradient = document.getElementById('shine-gradient');
 let shineTween;
 
 function shine() {
+  if (!btn || !gradient) return;
   if (shineTween) shineTween.kill();
   gradient.style.transform = 'translateX(-440px)';
   shineTween = gsap.to(gradient, {
@@ -161,5 +138,7 @@ function shine() {
   });
 }
 
-btn.addEventListener('mouseenter', shine);
-btn.addEventListener('focus', shine);
+if (btn) {
+  btn.addEventListener('mouseenter', shine);
+  btn.addEventListener('focus', shine);
+}

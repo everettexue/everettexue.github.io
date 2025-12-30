@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+
+<html class="no-js" lang="en">
+
+<head>
+
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+	<!-- Page Info -->
+	<link rel="shortcut icon" href="images/favicon.ico" data-cms-original-href="/images/favicon.png" />
+	<title>3D Printed Harmonic Drive</title>
+
+	<!-- Font Embed Code -->
+	<link rel="stylesheet" href="css/google-fonts.css" />
+	<!-- Prefetch next pages so transitions feel instant -->
+	<link rel="prefetch" href="/devlogs/devlog1/new-driver.html" as="document" />
+	<link rel="prefetch" href="/photovideo.html" as="document" />
+	
+
+	<!-- Styles -->
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<link rel="stylesheet" href="css/journal.css" data-cms-original-href="/css/style.css" />
+	
+	<!-- Icons -->
+	<script defer src="js/solid.js"></script>
+	<script defer src="js/brands.js"></script>
+	<script defer src="js/fontawesome.js"></script>
+
+	
+	<!-- Custom Styles -->
+	<style>
+		@font-face {
+			font-family: 'NMSGeoSans';
+			src: url('fonts/NMSGeoSans_Kerned.ttf') format('truetype');
+		}
+
+		html,
+		body,
+		h1,
+		h2,
+		h3,
+		h4,
+		h5,
+		h6,
+		p,
+		a,
+		button {
+			font-family: 'NMSGeoSans', sans-serif !important;
+		}
+
+		/* Use OS/default selection colors */
+		::selection {
+			background: Highlight;
+			color: HighlightText;
+		}
+
+		/* Static dotted background to match index (no hover animation) */
+		body {
+			background-color: #fff3da;
+			background-image: radial-gradient(rgba(0, 0, 0, 0.101) 1.25px, transparent 2px);
+			background-size: 32px 32px;
+		}
+
+		/* Tighten pagination spacing so the button sits higher */
+		.pagination {
+			margin-top: 1.5rem;
+		}
+
+		.pagination__next {
+			margin-top: 0;
+		}
+
+		/* Fade-in for blog posts without AJAX loader */
+		.blog-post {
+			opacity: 0;
+			transition: opacity 0.6s ease;
+		}
+
+		body.page-ready .blog-post {
+			opacity: 1;
+		}
+
+		/* Re-style post buttons to match index theme with a shine on hover */
+		.blog-post .button,
+		.pagination__next .button {
+			position: relative;
+			overflow: hidden;
+			display: inline-block;
+			color: #fff3da;
+			border: 2px solid #1f1230;
+			background: #1f1230;
+			transition: color 0.3s ease, border-color 0.3s ease, background 0.3s ease, text-shadow 0.3s ease;
+		}
+
+		.blog-post .button:hover,
+		.pagination__next .button:hover {
+			color: #fff3da;
+			background: #1f1230;
+			border-color: #1f1230;
+			text-shadow: 0 0 8px rgba(255, 243, 218, 0.9), 0 0 14px rgba(255, 243, 218, 0.7);
+		}
+
+		/* Keep devlog titles on-brand (no green hover) */
+		.blog-post__title a:hover,
+		.blog-post__title a:focus {
+			color: #1f1230;
+		}
+	</style>
+</head>
+
+
+<body>
+
+
+	<header class="header">
+
+	<div class="header-image header-image--on" style="background-image: url(images/harmonicdrive.jpg);" data-cms-original-style="background-image: url(/images/demo/home.jpg);"></div>
+	<div class="header-image"></div>
+
+	<div class="header-overlay"></div>
+
+	<div class="header__content">
+
+		
+		<a class="header__title cc-active">
+			3D Printed Harmonic Drive
+		</a>
+		
+
+		<p class="header__tagline">for a robot arm.</p>
+
+		<div class="menu">
+			<div class="menu__toggle js-menu-toggle">
+				<div class="menu__toggle__icon"><span></span></div>
+			</div>
+			<div class="menu__wrap">
+				<ul class="menu__list">
+					<li class="menu__list__item">
+						<a href="index.html" class="menu__list__item__link">Home</a>
+					</li>
+					<li class="menu__list__item">
+						<a href="photovideo.html" class="menu__list__item__link">Photos &amp; Videos</a>
+					</li>
+					<li class="menu__list__item">
+						<a href="#" class="menu__list__item__link">About</a>
+					</li>
+					<li class="menu__list__item">
+						<a href="#" class="menu__list__item__link">Contact</a>
+					</li>
+				</ul>
+			</div>
+		</div>
+
+	</div>
+
+</header>
+
+
+	<div class="loader"><svg width="120" height="30" viewbox="0 0 120 30" xmlns="http://www.w3.org/2000/svg"><circle cx="15" cy="15" r="15" /><animate attributename="r" from="15" to="15" begin="0s" dur="0.8s" values="15;9;15" calcmode="linear" repeatcount="indefinite"><animate attributename="fill-opacity" from="1" to="1" begin="0s" dur="0.8s" values="1;.5;1" calcmode="linear" repeatcount="indefinite"><circle cx="60" cy="15" r="9" fill-opacity="0.3" /><animate attributename="r" from="9" to="9" begin="0s" dur="0.8s" values="9;15;9" calcmode="linear" repeatcount="indefinite"><animate attributename="fill-opacity" from="0.5" to="0.5" begin="0s" dur="0.8s" values=".5;1;.5" calcmode="linear" repeatcount="indefinite"><circle cx="105" cy="15" r="15" /><animate attributename="r" from="15" to="15" begin="0s" dur="0.8s" values="15;9;15" calcmode="linear" repeatcount="indefinite"><animate attributename="fill-opacity" from="1" to="1" begin="0s" dur="0.8s" values="1;.5;1" calcmode="linear" repeatcount="indefinite"></animate></animate></animate></animate></animate></animate></svg></div>
+
+	<div class="page-loader"></div>
+
+	
+	<div class="page">
+
+
+			<section class="blog single">
+
+	<div class="wrap">
+
+				<article class="blog-post">
+
+			<div class="blog-post__header">
+				<h2 class="blog-post__title"><a href="/devlogs/devlog1/new-driver.html">Stuff From Amazon</a></h2>
+				<p class="blog-post__subtitle">28 December 2025</p>
+			</div>
+
+			
+			<a href="/devlogs/devlog1/stuff-from-amazon.html" class="blog-post__image" style="background-image: url(/images/stuff-from-amazon.jpg);" data-cms-original-style="background-image: url(/images/demo/image-01.jpg);"></a>
+			
+
+			<div class="blog-post__content">
+				<p>Assembling parts from Amazon and also my first time using heat set inserts.</p>
+				<p><a href="/devlogs/devlog1/stuff-from-amazon.html" class="button">Read More</a>
+			</p></div>
+
+		</article>
+
+		<article class="blog-post">
+
+			<div class="blog-post__header">
+				<h2 class="blog-post__title"><a href="/devlogs/devlog1/new-driver.html">A New Driver</a></h2>
+				<p class="blog-post__subtitle">27 December 2025</p>
+			</div>
+
+			
+			<a href="/devlogs/devlog1/new-driver.html" class="blog-post__image" style="background-image: url(/images/new-driver.jpg);" data-cms-original-style="background-image: url(/images/demo/image-01.jpg);"></a>
+			
+
+			<div class="blog-post__content">
+				<p>Switching from a L298N to a TMC2209 was much harder than I thought.</p>
+				<p><a href="/devlogs/devlog1/new-driver.html" class="button">Read More</a>
+			</p></div>
+
+		</article>
+
+        
+
+		
+
+
+
+		
+
+	</div>
+
+</section>
+
+		</div>
+<hr></div>
+
+
+
+	<!-- Javascript Assets -->
+	<script src="js/jquery.min.js"></script>
+	<script src="js/plugins-min.js" data-cms-original-src="/js/plugins-min.js"></script>
+	<script src="js/journal-min.js" data-cms-original-src="/js/journal-min.js"></script>
+	<script>
+		// Trigger fade-in once DOM is ready (no AJAX loader needed)
+		document.addEventListener('DOMContentLoaded', function () {
+			document.body.classList.add('page-ready');
+		});
+	</script>
+
+	
+	<!-- Extra Footer JS Code -->
+	
+	
+
+
+</body>
+
+</html>
